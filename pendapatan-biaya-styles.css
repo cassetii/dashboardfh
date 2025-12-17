@@ -1,0 +1,420 @@
+/* ========================================
+   PENDAPATAN & BIAYA KONSOLIDASI STYLES
+   Bank Sulselbar Dashboard
+   ======================================== */
+
+/* Summary Grid */
+.pb-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.pb-summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.pb-summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.pb-summary-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.pb-summary-card.income::before { background: linear-gradient(180deg, #00b894, #00d68f); }
+.pb-summary-card.expense::before { background: linear-gradient(180deg, #e74c3c, #c0392b); }
+.pb-summary-card.profit::before { background: linear-gradient(180deg, #3498db, #2980b9); }
+.pb-summary-card.ratio::before { background: linear-gradient(180deg, #9b59b6, #8e44ad); }
+
+.pb-summary-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.pb-summary-card.income .pb-summary-icon { background: #e8f8f5; color: #00b894; }
+.pb-summary-card.expense .pb-summary-icon { background: #fef0ef; color: #e74c3c; }
+.pb-summary-card.profit .pb-summary-icon { background: #eaf4fc; color: #3498db; }
+.pb-summary-card.ratio .pb-summary-icon { background: #f5eef8; color: #9b59b6; }
+
+.pb-summary-content {
+    flex: 1;
+}
+
+.pb-summary-content h4 {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin: 0 0 0.25rem 0;
+    font-weight: 500;
+}
+
+.pb-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.pb-value span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.pb-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.pb-detail .status-good {
+    color: #00b894;
+    font-weight: 600;
+}
+
+.pb-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+}
+
+.pb-change.positive { background: #d4edda; color: #155724; }
+.pb-change.negative { background: #f8d7da; color: #721c24; }
+
+/* Tab Navigation */
+.pb-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.pb-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pb-tab:hover {
+    background: rgba(30, 58, 95, 0.1);
+    color: #1e3a5f;
+}
+
+.pb-tab.active {
+    background: #1e3a5f;
+    color: white;
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+}
+
+/* Laba Rugi Card */
+.pb-ringkasan-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.pb-labarugi-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.pb-labarugi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+    color: white;
+}
+
+.pb-labarugi-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.period-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.pb-labarugi-body {
+    padding: 1.5rem;
+}
+
+.labarugi-section {
+    margin-bottom: 1.5rem;
+}
+
+.labarugi-section:last-child {
+    margin-bottom: 0;
+}
+
+.labarugi-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.income-section .labarugi-section-title {
+    background: #e8f8f5;
+    color: #00b894;
+}
+
+.expense-section .labarugi-section-title {
+    background: #fef0ef;
+    color: #e74c3c;
+}
+
+.profit-section {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.labarugi-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.labarugi-row:last-child {
+    border-bottom: none;
+}
+
+.labarugi-row.sub {
+    padding-left: 2.5rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.labarugi-row.total {
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.labarugi-row.grand-total {
+    background: linear-gradient(135deg, #1e3a5f, #2c5282);
+    color: white;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+
+.row-label {
+    color: #495057;
+}
+
+.row-value {
+    font-weight: 500;
+    color: #1e3a5f;
+}
+
+.row-value.income { color: #00b894; }
+.row-value.expense { color: #e74c3c; }
+.row-value.profit { color: #fff; }
+
+/* Charts Row */
+.pb-charts-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.pb-chart-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.pb-chart-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.pb-chart-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.pb-chart-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e3a5f;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Detail Content */
+.pb-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.pb-detail-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.pb-detail-header {
+    padding: 1rem 1.25rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pb-detail-header.income-header {
+    background: linear-gradient(135deg, #00b894, #00d68f);
+}
+
+.pb-detail-header.expense-header {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.pb-detail-header h5 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.pb-detail-body {
+    padding: 1rem;
+}
+
+.pb-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid #f0f2f5;
+    transition: background 0.2s ease;
+}
+
+.pb-detail-item:hover {
+    background: #f8f9fa;
+}
+
+.pb-detail-item:last-child {
+    border-bottom: none;
+}
+
+.pb-detail-item.total-row {
+    background: #f8f9fa;
+    font-weight: 600;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+}
+
+.pb-item-name {
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.pb-item-value {
+    font-weight: 500;
+    color: #1e3a5f;
+}
+
+/* Trend Container */
+.pb-trend-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+    .pb-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .pb-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .pb-charts-row,
+    .pb-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .pb-summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .pb-tabs {
+        flex-direction: column;
+    }
+    
+    .pb-labarugi-header {
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: center;
+    }
+}

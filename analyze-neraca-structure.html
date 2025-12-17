@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analyze Neraca Excel Structure</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+        #log { background: #0f0f1a; padding: 15px; border-radius: 8px; white-space: pre-wrap; 
+               max-height: 80vh; overflow-y: auto; font-size: 12px; line-height: 1.4; }
+        input { margin: 10px 0; padding: 10px; }
+        .header { color: #00ff88; font-weight: bold; }
+        .sandi { color: #ffff00; }
+        .branch { color: #00bfff; }
+        .value { color: #ff88ff; }
+        .warning { color: #ff6b6b; }
+        h2 { color: #00ff88; }
+    </style>
+</head>
+<body>
+    <h2>🔍 Neraca Excel Structure Analyzer</h2>
+    <input type="file" id="fileInput" accept=".xlsx,.xls">
+    <div id="log"></div>
+
+    <script>
+        const logDiv = document.getElementById('log');
+        function log(msg, cls = '') {
+            const span = document.createElement('span');
+            span.className = cls;
+            span.textContent = msg + '\n';
+            logDiv.appendChild(span);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            logDiv.innerHTML = '';
+            log(`📂 File: ${file.name}`, 'header');
+            log(`📏 Size: ${(file.size / 1024).toFixed(1)} KB`);
+            
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array', raw: false, defval: '' });
+            
+            log(`\n📋 Sheets: ${workbook.SheetNames.join(', ')}`);
+            
+            if (!workbook.SheetNames.includes('Neraca')) {
+                log('❌ Sheet "Neraca" tidak ditemukan!', 'warning');
+                return;
+            }
+            
+            const ws = workbook.Sheets['Neraca'];
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            log(`📐 Range: ${ws['!ref']}`);
+            log(`   Start: Col ${range.s.c} (${XLSX.utils.encode_col(range.s.c)}), Row ${range.s.r}`);
+            log(`   End: Col ${range.e.c} (${XLSX.utils.encode_col(range.e.c)}), Row ${range.e.r}`);
+            
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+            
+            // Find header rows (usually row 3-5)
+            log('\n' + '='.repeat(60), 'header');
+            log('ANALYZING HEADER ROWS (Row 0-6)', 'header');
+            log('='.repeat(60), 'header');
+            
+            for (let r = 0; r <= 6; r++) {
+                const row = rows[r];
+                if (!row) continue;
+                log(`\nRow ${r}:`, 'header');
+                for (let c = 0; c < row.length; c++) {
+                    const val = String(row[c] || '').trim();
+                    if (val && val !== '') {
+                        log(`  [${c}] ${XLSX.utils.encode_col(c + range.s.c)}: "${val.substring(0, 50)}${val.length > 50 ? '...' : ''}"`);
+                    }
+                }
+            }
+            
+            // Find Sandi column
+            log('\n' + '='.repeat(60), 'header');
+            log('FINDING SANDI COLUMN', 'header');
+            log('='.repeat(60), 'header');
+            
+            const sandiPattern = /^\d{2}\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.\d{2}$/;
+            let sandiCol = -1;
+            
+            for (let r = 5; r < 15; r++) {
+                const row = rows[r];
+                if (!row) continue;
+                for (let c = 0; c < 20; c++) {
+                    const val = String(row[c] || '').trim();
+                    if (sandiPattern.test(val)) {
+                        sandiCol = c;
+                        log(`✅ Found sandi at Row ${r}, Col ${c} (${XLSX.utils.encode_col(c + range.s.c)}): "${val}"`, 'sandi');
+                        break;
+                    }
+                }
+                if (sandiCol >= 0) break;
+            }
+            
+            if (sandiCol < 0) {
+                log('❌ Sandi column not found!', 'warning');
+                return;
+            }
+            
+            // Find branch columns by looking at header rows
+            log('\n' + '='.repeat(60), 'header');
+            log('FINDING BRANCH COLUMNS', 'header');
+            log('='.repeat(60), 'header');
+            
+            const branchKeywords = ['MAROS', 'PANGKEP', 'JENEPONTO', 'TAKALAR', 'PAREPARE', 'BARRU', 
+                                   'BULUKUMBA', 'BANTAENG', 'SELAYAR', 'PINRANG', 'SINJAI', 'POLMAN',
+                                   'MAMUJU', 'MAJENE', 'MAMASA', 'PASANGKAYU', 'TOPOYO', 'BONE',
+                                   'PALOPO', 'MASAMBA', 'BELOPA', 'MALILI', 'SENGKANG', 'SOPPENG',
+                                   'MAKALE', 'RANTEPAO', 'SIDRAP', 'ENREKANG', 'MAKASSAR', 'GOWA',
+                                   'JAKARTA', 'KANTOR PUSAT', 'SYARIAH', 'UUS', 'Konvensional', 'Rupiah', 'Valas'];
+            
+            const foundBranches = [];
+            
+            // Check rows 2-5 for branch headers
+            for (let r = 2; r <= 5; r++) {
+                const row = rows[r];
+                if (!row) continue;
+                
+                for (let c = 0; c < row.length; c++) {
+                    const val = String(row[c] || '').trim().toUpperCase();
+                    if (!val) continue;
+                    
+                    for (const keyword of branchKeywords) {
+                        if (val.includes(keyword.toUpperCase())) {
+                            foundBranches.push({
+                                row: r,
+                                col: c,
+                                excelCol: XLSX.utils.encode_col(c + range.s.c),
+                                value: row[c],
+                                offset: c - sandiCol
+                            });
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Sort by column
+            foundBranches.sort((a, b) => a.col - b.col);
+            
+            log(`\nFound ${foundBranches.length} branch-related headers:\n`);
+            for (const b of foundBranches) {
+                log(`  Col ${b.col} (${b.excelCol}), Offset ${b.offset}: "${b.value}"`, 'branch');
+            }
+            
+            // Show first data row with all values
+            log('\n' + '='.repeat(60), 'header');
+            log('FIRST DATA ROW (Row 7) - ALL COLUMNS WITH VALUES', 'header');
+            log('='.repeat(60), 'header');
+            
+            const dataRow = rows[7];
+            if (dataRow) {
+                for (let c = 0; c < dataRow.length; c++) {
+                    const val = String(dataRow[c] || '').trim();
+                    if (val && val !== '') {
+                        const offset = c - sandiCol;
+                        log(`  Col ${c} (${XLSX.utils.encode_col(c + range.s.c)}), Offset ${offset >= 0 ? '+' : ''}${offset}: "${val.substring(0, 40)}${val.length > 40 ? '...' : ''}"`, 'value');
+                    }
+                }
+            }
+            
+            // Create mapping for parser
+            log('\n' + '='.repeat(60), 'header');
+            log('SUGGESTED PARSER CONFIG', 'header');
+            log('='.repeat(60), 'header');
+            
+            // Try to identify specific branch columns
+            log('\nSearching for specific branch patterns in headers...\n');
+            
+            const branchMap = {};
+            const branchCodes = {
+                'MAROS': '010', 'PANGKEP': '011', 'JENEPONTO': '020', 'TAKALAR': '021',
+                'PAREPARE': '030', 'BARRU': '031', 'BULUKUMBA': '040', 'BANTAENG': '041',
+                'SELAYAR': '042', 'PINRANG': '050', 'SINJAI': '060', 'POLMAN': '070',
+                'MAMUJU': '071', 'MAJENE': '072', 'MAMASA': '074', 'PASANGKAYU': '075',
+                'TOPOYO': '077', 'BONE': '080', 'PALOPO': '090', 'MASAMBA': '091',
+                'BELOPA': '092', 'MALILI': '093', 'SENGKANG': '100', 'SOPPENG': '101',
+                'MAKALE': '110', 'RANTEPAO': '111', 'SIDRAP': '120', 'ENREKANG': '121',
+                'GOWA': '131', 'JAKARTA': '400'
+            };
+            
+            // Search in all header rows
+            for (let r = 0; r <= 5; r++) {
+                const row = rows[r];
+                if (!row) continue;
+                
+                for (let c = sandiCol + 1; c < row.length; c++) {
+                    const val = String(row[c] || '').trim().toUpperCase();
+                    if (!val) continue;
+                    
+                    for (const [name, code] of Object.entries(branchCodes)) {
+                        if (val.includes(name) && !branchMap[code]) {
+                            branchMap[code] = {
+                                nama: val,
+                                col: c,
+                                offset: c - sandiCol
+                            };
+                        }
+                    }
+                    
+                    // Special cases
+                    if (val.includes('UTAMA') && val.includes('MAKASSAR') && !branchMap['130']) {
+                        branchMap['130'] = { nama: val, col: c, offset: c - sandiCol };
+                    }
+                    if (val.includes('KANTOR PUSAT') && !branchMap['001']) {
+                        branchMap['001'] = { nama: val, col: c, offset: c - sandiCol };
+                    }
+                    if (val.includes('SYARIAH') && val.includes('MAKASSAR') && !branchMap['510']) {
+                        branchMap['510'] = { nama: val, col: c, offset: c - sandiCol };
+                    }
+                    if (val.includes('SYARIAH') && val.includes('SENGKANG') && !branchMap['520']) {
+                        branchMap['520'] = { nama: val, col: c, offset: c - sandiCol };
+                    }
+                    if (val.includes('SYARIAH') && val.includes('MAROS') && !branchMap['530']) {
+                        branchMap['530'] = { nama: val, col: c, offset: c - sandiCol };
+                    }
+                    if (val.includes('SYARIAH') && val.includes('MAMUJU') && !branchMap['540']) {
+                        branchMap['540'] = { nama: val, col: c, offset: c - sandiCol };
+                    }
+                    if (val === 'UUS' && !branchMap['500']) {
+                        branchMap['500'] = { nama: 'UUS', col: c, offset: c - sandiCol };
+                    }
+                }
+            }
+            
+            log('\nBranch Column Mapping:\n');
+            const sortedCodes = Object.keys(branchMap).sort((a, b) => branchMap[a].col - branchMap[b].col);
+            for (const code of sortedCodes) {
+                const b = branchMap[code];
+                log(`  '${code}': { nama: '${b.nama}', offset: ${b.offset} }, // col ${b.col}`, 'branch');
+            }
+            
+            // Show sample values for first few branches
+            log('\n' + '='.repeat(60), 'header');
+            log('SAMPLE VALUES (Row 7-9)', 'header');
+            log('='.repeat(60), 'header');
+            
+            const sampleBranches = sortedCodes.slice(0, 5);
+            for (let r = 7; r <= 9; r++) {
+                const row = rows[r];
+                if (!row) continue;
+                
+                const sandi = row[sandiCol];
+                log(`\nRow ${r}, Sandi: ${sandi}`, 'sandi');
+                
+                for (const code of sampleBranches) {
+                    const b = branchMap[code];
+                    const rupiahVal = row[b.col];
+                    const valasVal = row[b.col + 1];
+                    log(`  ${code} (${b.nama.substring(0, 20)}): Rupiah="${rupiahVal}", Valas="${valasVal}"`, 'value');
+                }
+            }
+            
+            log('\n✅ ANALYSIS COMPLETE!', 'header');
+        });
+    </script>
+</body>
+</html>

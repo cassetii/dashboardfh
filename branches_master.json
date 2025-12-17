@@ -1,0 +1,224 @@
+{
+  "010": {
+    "kode": "010",
+    "nama": "Cabang Maros",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "011": {
+    "kode": "011",
+    "nama": "Cabang Pangkep",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "020": {
+    "kode": "020",
+    "nama": "Cabang Jeneponto",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "021": {
+    "kode": "021",
+    "nama": "Cabang Takalar",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "030": {
+    "kode": "030",
+    "nama": "Cabang Parepare",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "031": {
+    "kode": "031",
+    "nama": "Cabang Barru",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "040": {
+    "kode": "040",
+    "nama": "Cabang Bulukumba",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "041": {
+    "kode": "041",
+    "nama": "Cabang Bantaeng",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "042": {
+    "kode": "042",
+    "nama": "Cabang Selayar",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "050": {
+    "kode": "050",
+    "nama": "Cabang Pinrang",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "060": {
+    "kode": "060",
+    "nama": "Cabang Sinjai",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "070": {
+    "kode": "070",
+    "nama": "Cabang Polman",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "071": {
+    "kode": "071",
+    "nama": "Cabang Utama Mamuju",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "072": {
+    "kode": "072",
+    "nama": "Cabang Majene",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "074": {
+    "kode": "074",
+    "nama": "Cabang Mamasa",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "075": {
+    "kode": "075",
+    "nama": "Cabang Pasangkayu",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "077": {
+    "kode": "077",
+    "nama": "Cabang Topoyo",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "080": {
+    "kode": "080",
+    "nama": "Cabang Utama Bone",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "090": {
+    "kode": "090",
+    "nama": "Cabang Palopo",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "091": {
+    "kode": "091",
+    "nama": "Cabang Masamba",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "092": {
+    "kode": "092",
+    "nama": "Cabang Belopa",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "093": {
+    "kode": "093",
+    "nama": "Cabang Malili",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "100": {
+    "kode": "100",
+    "nama": "Cabang Sengkang",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "101": {
+    "kode": "101",
+    "nama": "Cabang Soppeng",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "110": {
+    "kode": "110",
+    "nama": "Cabang Makale",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "111": {
+    "kode": "111",
+    "nama": "Cabang Rantepao",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "120": {
+    "kode": "120",
+    "nama": "Cabang Sidrap",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "121": {
+    "kode": "121",
+    "nama": "Cabang Enrekang",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "130": {
+    "kode": "130",
+    "nama": "Cabang Utama Makassar",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "131": {
+    "kode": "131",
+    "nama": "Cabang Gowa",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "400": {
+    "kode": "400",
+    "nama": "Cabang Khusus Jakarta",
+    "type": "konvensional",
+    "status": "aktif"
+  },
+  "001": {
+    "kode": "001",
+    "nama": "Kantor Pusat",
+    "type": "pusat",
+    "status": "aktif"
+  },
+  "510": {
+    "kode": "510",
+    "nama": "KCS Makassar",
+    "type": "syariah",
+    "status": "aktif"
+  },
+  "520": {
+    "kode": "520",
+    "nama": "KCS Sengkang",
+    "type": "syariah",
+    "status": "aktif"
+  },
+  "530": {
+    "kode": "530",
+    "nama": "KCS Maros",
+    "type": "syariah",
+    "status": "aktif"
+  },
+  "540": {
+    "kode": "540",
+    "nama": "KCS Mamuju",
+    "type": "syariah",
+    "status": "aktif"
+  },
+  "500": {
+    "kode": "500",
+    "nama": "UUS",
+    "type": "syariah",
+    "status": "aktif"
+  }
+}

@@ -1,0 +1,145 @@
+<!-- ========================================
+     NERACA SECTION - UPDATED
+     Tambahkan card Total Kredit terpisah
+     Replace bagian neraca-grid di dashboard-enhanced.html
+     ======================================== -->
+
+<!-- Layer 1: Main Indicators -->
+<div class="layer-header">
+    <h3><span class="layer-badge">Layer 1</span> Indikator Neraca Utama</h3>
+</div>
+
+<div class="neraca-grid">
+    <!-- Total Asset -->
+    <div class="neraca-card orange neraca-clickable" data-metric="asset" onclick="openNeracaLayer2Modal('aset')">
+        <div class="neraca-icon">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <div class="neraca-content">
+            <p class="neraca-label">Total Asset</p>
+            <h3 class="neraca-value" id="neracaAsset">Rp 31.64 <span>Triliun</span></h3>
+            <div class="neraca-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span id="neracaAssetChange">+0.47% MoM</span>
+            </div>
+        </div>
+        <div class="neraca-sparkline" id="assetSparkline"></div>
+        <div class="neraca-click-hint">
+            <i class="fas fa-list-ul"></i> Klik untuk Detail POS Aset
+        </div>
+    </div>
+
+    <!-- Total Kredit (BARU) -->
+    <div class="neraca-card green neraca-clickable" data-metric="kredit" onclick="openNeracaLayer2Modal('kredit')">
+        <div class="neraca-icon">
+            <i class="fas fa-credit-card"></i>
+        </div>
+        <div class="neraca-content">
+            <p class="neraca-label">Total Kredit</p>
+            <h3 class="neraca-value" id="neracaKredit">Rp 21.83 <span>Triliun</span></h3>
+            <div class="neraca-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span id="neracaKreditChange">+0.01% MoM</span>
+            </div>
+        </div>
+        <div class="neraca-sparkline" id="kreditTotalSparkline"></div>
+        <div class="neraca-click-hint">
+            <i class="fas fa-list-ul"></i> Klik untuk Detail Total Kredit
+        </div>
+    </div>
+
+    <!-- Kredit Pembiayaan -->
+    <div class="neraca-card red neraca-clickable" data-metric="kreditPembiayaan" onclick="openNeracaLayer2Modal('kredit-pembiayaan')">
+        <div class="neraca-icon">
+            <i class="fas fa-hand-holding-usd"></i>
+        </div>
+        <div class="neraca-content">
+            <p class="neraca-label">Kredit Pembiayaan</p>
+            <h3 class="neraca-value" id="neracaKreditPembiayaan">Rp 18.42 <span>Triliun</span></h3>
+            <div class="neraca-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span id="neracaKreditPembiayaanChange">+2.15% MoM</span>
+            </div>
+        </div>
+        <div class="neraca-sparkline" id="kreditPembiayaanSparkline"></div>
+        <div class="neraca-click-hint">
+            <i class="fas fa-list-ul"></i> Klik untuk Detail Kredit Pembiayaan
+        </div>
+    </div>
+
+    <!-- DPK Total -->
+    <div class="neraca-card blue neraca-clickable" data-metric="dpk" onclick="openNeracaLayer2Modal('liabilitas')">
+        <div class="neraca-icon">
+            <i class="fas fa-university"></i>
+        </div>
+        <div class="neraca-content">
+            <p class="neraca-label">Dana Pihak Ketiga (DPK)</p>
+            <h3 class="neraca-value" id="neracaDPK">Rp 23.10 <span>Triliun</span></h3>
+            <div class="neraca-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span id="neracaDPKChange">+0.77% MoM</span>
+            </div>
+        </div>
+        <div class="neraca-sparkline" id="dpkSparkline"></div>
+        <div class="neraca-click-hint">
+            <i class="fas fa-list-ul"></i> Klik untuk Detail POS Liabilitas
+        </div>
+    </div>
+
+    <!-- ATI -->
+    <div class="neraca-card teal neraca-clickable" data-metric="ati" onclick="openNeracaLayer2Modal('aset')">
+        <div class="neraca-icon">
+            <i class="fas fa-building"></i>
+        </div>
+        <div class="neraca-content">
+            <p class="neraca-label">ATI (Aktiva Tetap & Inventaris)</p>
+            <h3 class="neraca-value" id="neracaATI">Rp 884.60 <span>Miliar</span></h3>
+            <div class="neraca-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span id="neracaATIChange">+4.2% MoM</span>
+            </div>
+        </div>
+        <div class="neraca-sparkline" id="atiSparkline"></div>
+        <div class="neraca-click-hint">
+            <i class="fas fa-list-ul"></i> Klik untuk Detail POS Aset
+        </div>
+    </div>
+
+    <!-- Laba Bersih -->
+    <div class="neraca-card purple neraca-clickable" data-metric="laba" onclick="openNeracaLayer2Modal('ekuitas')">
+        <div class="neraca-icon">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="neraca-content">
+            <p class="neraca-label">Laba Bersih</p>
+            <h3 class="neraca-value" id="neracaLaba">Rp 814.13 <span>Miliar</span></h3>
+            <div class="neraca-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span id="neracaLabaChange">+13.83% MoM</span>
+            </div>
+        </div>
+        <div class="neraca-sparkline" id="labaSparkline"></div>
+        <div class="neraca-click-hint">
+            <i class="fas fa-mouse-pointer"></i> Klik untuk lihat Detail POS Ekuitas
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="neraca-card cyan neraca-clickable" data-metric="modal" onclick="openNeracaLayer2Modal('ekuitas')">
+        <div class="neraca-icon">
+            <i class="fas fa-coins"></i>
+        </div>
+        <div class="neraca-content">
+            <p class="neraca-label">Total Modal</p>
+            <h3 class="neraca-value" id="neracaModal">Rp 4.00 <span>Triliun</span></h3>
+            <div class="neraca-change neutral">
+                <i class="fas fa-minus"></i>
+                <span id="neracaModalChange">0% MoM</span>
+            </div>
+        </div>
+        <div class="neraca-sparkline" id="modalSparkline"></div>
+        <div class="neraca-click-hint">
+            <i class="fas fa-mouse-pointer"></i> Klik untuk lihat Detail POS Ekuitas
+        </div>
+    </div>
+</div>

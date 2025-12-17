@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#001e51">
+    <title>Bank Sulselbar - Mobile Dashboard</title>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #001e51;
+            --primary-light: #1e3a5f;
+            --accent: #8ac01e;
+            --accent-dark: #6b9b17;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-100);
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+        
+        /* ==================== HEADER ==================== */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-section img {
+            height: 32px;
+        }
+        
+        .logo-text h1 {
+            font-size: 13px;
+            font-weight: 700;
+        }
+        
+        .logo-text p {
+            font-size: 10px;
+            color: var(--accent);
+        }
+        
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            background: rgba(138,192,30,0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+        }
+        
+        .status-dot.online { background: var(--accent); }
+        
+        /* Filter Bar */
+        .filter-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .filter-select {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(138,192,30,0.3);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            width: 100%;
+        }
+        
+        .filter-select option {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* ==================== NAVIGATION TABS ==================== */
+        .nav-tabs {
+            display: flex;
+            background: white;
+            padding: 8px;
+            gap: 4px;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 88px;
+            z-index: 99;
+        }
+        
+        .nav-tab {
+            flex: 0 0 auto;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-500);
+            background: transparent;
+            border: none;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .nav-tab i {
+            margin-right: 4px;
+        }
+        
+        /* ==================== MAIN CONTENT ==================== */
+        .main-content {
+            padding: 12px;
+        }
+        
+        .page-section {
+            display: none;
+        }
+        
+        .page-section.active {
+            display: block;
+        }
+        
+        /* ==================== SECTION TITLE ==================== */
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title i {
+            color: var(--accent);
+        }
+        
+        /* ==================== QUICK STATS ==================== */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--gray-300);
+        }
+        
+        .stat-card.green { border-left-color: var(--success); }
+        .stat-card.blue { border-left-color: var(--info); }
+        .stat-card.purple { border-left-color: #8b5cf6; }
+        .stat-card.orange { border-left-color: var(--warning); }
+        .stat-card.teal { border-left-color: #14b8a6; }
+        .stat-card.red { border-left-color: var(--danger); }
+        
+        .stat-card .stat-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card.green .stat-icon { background: #dcfce7; color: var(--success); }
+        .stat-card.blue .stat-icon { background: #dbeafe; color: var(--info); }
+        .stat-card.purple .stat-icon { background: #f3e8ff; color: #8b5cf6; }
+        .stat-card.orange .stat-icon { background: #fef3c7; color: var(--warning); }
+        .stat-card.teal .stat-icon { background: #ccfbf1; color: #14b8a6; }
+        .stat-card.red .stat-icon { background: #fee2e2; color: var(--danger); }
+        
+        .stat-label {
+            font-size: 10px;
+            color: var(--gray-500);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        
+        .stat-value {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        
+        .stat-change {
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+        
+        /* ==================== TARGET SECTION ==================== */
+        .target-section {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+            color: white;
+        }
+        
+        .target-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .target-header h3 {
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .target-header h3 i { color: var(--accent); }
+        
+        .target-triwulan-select {
+            background: var(--accent);
+            color: var(--primary);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        
+        .target-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .target-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .target-card-label {
+            font-size: 10px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+        
+        .target-card-value {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        
+        .target-progress {
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .target-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+        
+        .target-pct {
+            font-size: 10px;
+            text-align: right;
+            margin-top: 4px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        /* ==================== KPI GRID ==================== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border-top: 3px solid var(--gray-300);
+        }
+        
+        .kpi-card.excellent { border-top-color: var(--success); }
+        .kpi-card.good { border-top-color: var(--info); }
+        .kpi-card.warning { border-top-color: var(--warning); }
+        .kpi-card.danger { border-top-color: var(--danger); }
+        
+        .kpi-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .kpi-subtitle {
+            font-size: 9px;
+            color: var(--gray-500);
+            margin-bottom: 6px;
+        }
+        
+        .kpi-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--gray-800);
+        }
+        
+        .kpi-value .unit {
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .kpi-status {
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .kpi-status.excellent { color: var(--success); }
+        .kpi-status.good { color: var(--info); }
+        .kpi-status.warning { color: var(--warning); }
+        .kpi-status.danger { color: var(--danger); }
+        
+        .kpi-target {
+            font-size: 9px;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+        
+        /* ==================== NERACA SECTION ==================== */
+        .neraca-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .neraca-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
+        .neraca-card.aktiva { border-left: 4px solid var(--info); }
+        .neraca-card.pasiva { border-left: 4px solid #8b5cf6; }
+        
+        .neraca-card-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .neraca-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 11px;
+        }
+        
+        .neraca-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .neraca-item-label {
+            color: var(--gray-600);
+        }
+        
+        .neraca-item-value {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+        
+        /* ==================== KONVEN VS SYARIAH ==================== */
+        .ks-comparison {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .ks-card {
+            border-radius: 12px;
+            padding: 14px;
+            color: white;
+            text-align: center;
+        }
+        
+        .ks-card.konven {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        }
+        
+        .ks-card.syariah {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+        }
+        
+        .ks-card-label {
+            font-size: 10px;
+            font-weight: 700;
+            opacity: 0.9;
+            margin-bottom: 6px;
+        }
+        
+        .ks-card-value {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        
+        .ks-card-pct {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        /* ==================== DPK BREAKDOWN ==================== */
+        .dpk-breakdown {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
+        .dpk-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .dpk-item:last-child { border-bottom: none; }
+        
+        .dpk-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+        
+        .dpk-info { flex: 1; }
+        
+        .dpk-label {
+            font-size: 11px;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+        
+        .dpk-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .dpk-pct {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gray-500);
+        }
+        
+        /* ==================== BRANCH RANKING ==================== */
+        .branch-list {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
+        .branch-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .branch-item:last-child { border-bottom: none; }
+        
+        .branch-rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+            margin-right: 10px;
+        }
+        
+        .branch-rank.gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        .branch-rank.silver { background: linear-gradient(135deg, #94a3b8, #64748b); }
+        .branch-rank.bronze { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .branch-rank.normal { background: var(--gray-200); color: var(--gray-600); }
+        
+        .branch-info { flex: 1; }
+        
+        .branch-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .branch-code {
+            font-size: 10px;
+            color: var(--gray-500);
+        }
+        
+        .branch-value {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gray-700);
+        }
+        
+        /* ==================== LOADING ==================== */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--gray-500);
+        }
+        
+        .loading i {
+            font-size: 32px;
+            margin-bottom: 12px;
+            color: var(--accent);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ==================== BOTTOM NAV ==================== */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            border-top: 2px solid var(--accent);
+            z-index: 100;
+        }
+        
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            text-decoration: none;
+            color: var(--gray-400);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 12px;
+            transition: color 0.2s;
+        }
+        
+        .bottom-nav-item.active {
+            color: var(--primary);
+        }
+        
+        .bottom-nav-item.active i {
+            color: var(--accent);
+        }
+        
+        .bottom-nav-item i {
+            font-size: 18px;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: var(--gray-400);
+        }
+        
+        .no-data i {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .last-update {
+            text-align: center;
+            font-size: 10px;
+            color: var(--gray-400);
+            padding: 16px;
+            margin-top: 20px;
+        }
+        
+        .mt-16 { margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-top">
+            <div class="logo-section">
+                <img src="logobanksulselbar.png" alt="Logo" onerror="this.style.display='none'">
+                <div class="logo-text">
+                    <h1>BANK SULSELBAR</h1>
+                    <p>Mobile Dashboard</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </div>
+        
+        <div class="filter-bar">
+            <select class="filter-select" id="filterBulan">
+                <option value="1">Jan</option>
+                <option value="2">Feb</option>
+                <option value="3">Mar</option>
+                <option value="4">Apr</option>
+                <option value="5">Mei</option>
+                <option value="6">Jun</option>
+                <option value="7">Jul</option>
+                <option value="8">Agu</option>
+                <option value="9">Sep</option>
+                <option value="10">Okt</option>
+                <option value="11">Nov</option>
+                <option value="12">Des</option>
+            </select>
+            <select class="filter-select" id="filterTahun">
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+            </select>
+            <select class="filter-select" id="filterCabang">
+                <option value="ALL">KONSOLIDASI</option>
+            </select>
+        </div>
+    </header>
+    
+    <!-- NAVIGATION TABS -->
+    <nav class="nav-tabs">
+        <button class="nav-tab active" data-page="overview"><i class="fas fa-home"></i>Overview</button>
+        <button class="nav-tab" data-page="ratio"><i class="fas fa-chart-pie"></i>Ratio</button>
+        <button class="nav-tab" data-page="neraca"><i class="fas fa-balance-scale"></i>Neraca</button>
+        <button class="nav-tab" data-page="konven-syariah"><i class="fas fa-exchange-alt"></i>Kon/Syr</button>
+        <button class="nav-tab" data-page="pendapatan-biaya"><i class="fas fa-money-bill"></i>P&B</button>
+        <button class="nav-tab" data-page="cabang"><i class="fas fa-building"></i>Cabang</button>
+    </nav>
+    
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- OVERVIEW PAGE -->
+        <div class="page-section active" id="pageOverview">
+            <div class="section-title"><i class="fas fa-chart-line"></i> Posisi Keuangan</div>
+            <div class="quick-stats">
+                <div class="stat-card green">
+                    <div class="stat-icon"><i class="fas fa-university"></i></div>
+                    <div class="stat-label">Total Aset</div>
+                    <div class="stat-value" id="statAset">-</div>
+                    <div class="stat-change positive"><i class="fas fa-arrow-up"></i> MoM</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+                    <div class="stat-label">DPK</div>
+                    <div class="stat-value" id="statDPK">-</div>
+                    <div class="stat-change positive"><i class="fas fa-arrow-up"></i> MoM</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div class="stat-label">Kredit</div>
+                    <div class="stat-value" id="statKredit">-</div>
+                    <div class="stat-change positive"><i class="fas fa-arrow-up"></i> MoM</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-icon"><i class="fas fa-chart-bar"></i></div>
+                    <div class="stat-label">Laba Bersih</div>
+                    <div class="stat-value" id="statLaba">-</div>
+                    <div class="stat-change positive"><i class="fas fa-arrow-up"></i> MoM</div>
+                </div>
+                <div class="stat-card teal">
+                    <div class="stat-icon"><i class="fas fa-arrow-up"></i></div>
+                    <div class="stat-label">Pendapatan</div>
+                    <div class="stat-value" id="statPendapatan">-</div>
+                    <div class="stat-change positive"><i class="fas fa-arrow-up"></i> YTD</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-icon"><i class="fas fa-arrow-down"></i></div>
+                    <div class="stat-label">Beban</div>
+                    <div class="stat-value" id="statBeban">-</div>
+                    <div class="stat-change negative"><i class="fas fa-arrow-up"></i> YTD</div>
+                </div>
+            </div>
+            
+            <!-- Target Section -->
+            <div class="target-section">
+                <div class="target-header">
+                    <h3><i class="fas fa-bullseye"></i> Target vs Realisasi</h3>
+                    <select class="target-triwulan-select" id="targetTriwulan">
+                        <option value="1">TRW 1</option>
+                        <option value="2">TRW 2</option>
+                        <option value="3" selected>TRW 3</option>
+                        <option value="4">TRW 4</option>
+                    </select>
+                </div>
+                <div class="target-grid" id="targetGrid"></div>
+            </div>
+            
+            <!-- KPI Overview -->
+            <div class="section-title"><i class="fas fa-tachometer-alt"></i> Key Performance Indicators</div>
+            <div class="kpi-grid" id="kpiGrid"></div>
+        </div>
+        
+        <!-- RATIO PAGE -->
+        <div class="page-section" id="pageRatio">
+            <div class="section-title"><i class="fas fa-chart-pie"></i> Financial Ratios</div>
+            <div class="kpi-grid" id="ratioGrid"></div>
+        </div>
+        
+        <!-- NERACA PAGE -->
+        <div class="page-section" id="pageNeraca">
+            <div class="section-title"><i class="fas fa-balance-scale"></i> Neraca</div>
+            <div class="neraca-summary">
+                <div class="neraca-card aktiva">
+                    <div class="neraca-card-title"><i class="fas fa-arrow-right"></i> AKTIVA</div>
+                    <div id="neracaAktiva"></div>
+                </div>
+                <div class="neraca-card pasiva">
+                    <div class="neraca-card-title"><i class="fas fa-arrow-left"></i> PASIVA</div>
+                    <div id="neracaPasiva"></div>
+                </div>
+            </div>
+            
+            <div class="section-title"><i class="fas fa-piggy-bank"></i> Komposisi DPK</div>
+            <div class="dpk-breakdown" id="dpkBreakdown"></div>
+        </div>
+        
+        <!-- KONVEN VS SYARIAH PAGE -->
+        <div class="page-section" id="pageKonvenSyariah">
+            <div class="section-title"><i class="fas fa-exchange-alt"></i> Konvensional vs Syariah</div>
+            <div class="ks-comparison">
+                <div class="ks-card konven">
+                    <div class="ks-card-label">KONVENSIONAL</div>
+                    <div class="ks-card-value" id="ksKonvenAset">-</div>
+                    <div class="ks-card-pct" id="ksKonvenPct">0%</div>
+                </div>
+                <div class="ks-card syariah">
+                    <div class="ks-card-label">SYARIAH</div>
+                    <div class="ks-card-value" id="ksSyariahAset">-</div>
+                    <div class="ks-card-pct" id="ksSyariahPct">0%</div>
+                </div>
+            </div>
+            <div class="section-title mt-16"><i class="fas fa-list"></i> Perbandingan Detail</div>
+            <div id="ksDetailComparison"></div>
+        </div>
+        
+        <!-- PENDAPATAN & BIAYA PAGE -->
+        <div class="page-section" id="pagePendapatanBiaya">
+            <div class="section-title"><i class="fas fa-money-bill-wave"></i> Pendapatan & Biaya</div>
+            <div class="ks-comparison">
+                <div class="ks-card konven" style="background: linear-gradient(135deg, var(--success), #16a34a);">
+                    <div class="ks-card-label">TOTAL PENDAPATAN</div>
+                    <div class="ks-card-value" id="pbPendapatan">-</div>
+                </div>
+                <div class="ks-card syariah" style="background: linear-gradient(135deg, var(--danger), #dc2626);">
+                    <div class="ks-card-label">TOTAL BEBAN</div>
+                    <div class="ks-card-value" id="pbBeban">-</div>
+                </div>
+            </div>
+            <div class="section-title mt-16"><i class="fas fa-list-alt"></i> Rincian</div>
+            <div id="pbDetail"></div>
+        </div>
+        
+        <!-- CABANG PAGE -->
+        <div class="page-section" id="pageCabang">
+            <div class="section-title"><i class="fas fa-building"></i> Peringkat Cabang (Top 10)</div>
+            <div class="branch-list" id="branchList"></div>
+        </div>
+        
+        <div class="last-update" id="lastUpdate">Terakhir diperbarui: -</div>
+    </main>
+    
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="bottom-nav">
+        <a href="#" class="bottom-nav-item active" data-page="overview"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="#" class="bottom-nav-item" data-page="ratio"><i class="fas fa-chart-pie"></i><span>Ratio</span></a>
+        <a href="#" class="bottom-nav-item" data-page="neraca"><i class="fas fa-balance-scale"></i><span>Neraca</span></a>
+        <a href="#" class="bottom-nav-item" data-page="cabang"><i class="fas fa-building"></i><span>Cabang</span></a>
+    </nav>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBI5T3ZVyHXSRFikTjSlnW9P04cO1UDAwg",
+            authDomain: "databasebesar.firebaseapp.com",
+            projectId: "databasebesar",
+            storageBucket: "databasebesar.firebasestorage.app",
+            messagingSenderId: "253231829334",
+            appId: "1:253231829334:web:c3233e237b231de3c546f7"
+        };
+        
+        let db, neracaData = [], labarugiData = [], targetData = [], branchList = [];
+        
+        // Initialize
+        async function init() {
+            updateStatus('Menghubungkan...', false);
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                updateStatus('Memuat data...', true);
+                await loadAllData();
+                setupEventListeners();
+                updateStatus('Online', true);
+            } catch (error) {
+                console.error('Init error:', error);
+                updateStatus('Offline', false);
+            }
+        }
+        
+        function updateStatus(text, online) {
+            document.getElementById('statusDot').classList.toggle('online', online);
+            document.getElementById('statusText').textContent = text;
+        }
+        
+        // Load Data
+        async function loadAllData() {
+            const [neracaSnap, labarugiSnap, targetSnap] = await Promise.all([
+                db.collection('banksulselbar_neraca').get(),
+                db.collection('banksulselbar_labarugi').get(),
+                db.collection('banksulselbar_target_neraca').get()
+            ]);
+            
+            neracaData = neracaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            labarugiData = labarugiSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            targetData = targetSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            
+            console.log(`✅ Neraca: ${neracaData.length}, Labarugi: ${labarugiData.length}, Target: ${targetData.length}`);
+            
+            populateBranchDropdown();
+            autoSelectPeriod();
+            renderAll();
+            
+            document.getElementById('lastUpdate').textContent = `Update: ${new Date().toLocaleTimeString('id-ID')} | ${neracaData.length} data`;
+        }
+        
+        function populateBranchDropdown() {
+            const branches = [...new Set(neracaData.map(d => d.kode_cabang))].sort();
+            branchList = branches;
+            const select = document.getElementById('filterCabang');
+            select.innerHTML = '';
+            
+            // Summary
+            const summaryGroup = document.createElement('optgroup');
+            summaryGroup.label = '── Ringkasan ──';
+            ['ALL', 'KON', 'SYR'].forEach(code => {
+                if (branches.includes(code)) {
+                    const opt = document.createElement('option');
+                    opt.value = code;
+                    const sample = neracaData.find(d => d.kode_cabang === code);
+                    opt.textContent = sample?.nama_cabang || code;
+                    summaryGroup.appendChild(opt);
+                }
+            });
+            select.appendChild(summaryGroup);
+            
+            // Branches
+            const branchGroup = document.createElement('optgroup');
+            branchGroup.label = '── Cabang ──';
+            branches.filter(b => !['ALL', 'KON', 'SYR'].includes(b)).forEach(code => {
+                const opt = document.createElement('option');
+                opt.value = code;
+                const sample = neracaData.find(d => d.kode_cabang === code);
+                opt.textContent = `${code} - ${sample?.nama_cabang || code}`;
+                branchGroup.appendChild(opt);
+            });
+            select.appendChild(branchGroup);
+        }
+        
+        function autoSelectPeriod() {
+            const periods = [...new Set(neracaData.map(d => d.periode))].sort();
+            if (periods.length > 0) {
+                const latest = periods[periods.length - 1];
+                const [year, month] = latest.split('-');
+                document.getElementById('filterTahun').value = year;
+                document.getElementById('filterBulan').value = parseInt(month).toString();
+            }
+        }
+        
+        // Render Functions
+        function renderAll() {
+            renderOverview();
+            renderRatios();
+            renderNeraca();
+            renderKonvenSyariah();
+            renderPendapatanBiaya();
+            renderBranchRanking();
+        }
+        
+        function getFilteredData() {
+            const bulan = document.getElementById('filterBulan').value.padStart(2, '0');
+            const tahun = document.getElementById('filterTahun').value;
+            const cabang = document.getElementById('filterCabang').value;
+            const periode = `${tahun}-${bulan}`;
+            return {
+                periode, cabang,
+                neraca: neracaData.filter(d => d.periode === periode && d.kode_cabang === cabang),
+                labarugi: labarugiData.filter(d => d.periode === periode && d.kode_cabang === cabang)
+            };
+        }
+        
+        function getValue(data, sandi) {
+            const item = data.find(d => d.sandi === sandi);
+            return item?.rupiah || item?.total || 0;
+        }
+        
+        function formatCurrency(val) {
+            if (!val || val === 0) return 'Rp 0';
+            const abs = Math.abs(val);
+            if (abs >= 1e12) return `Rp ${(val/1e12).toFixed(2)} T`;
+            if (abs >= 1e9) return `Rp ${(val/1e9).toFixed(2)} M`;
+            if (abs >= 1e6) return `Rp ${(val/1e6).toFixed(0)} Jt`;
+            return `Rp ${val.toLocaleString('id-ID')}`;
+        }
+        
+        function formatShort(val) {
+            if (!val || val === 0) return '0';
+            const abs = Math.abs(val);
+            if (abs >= 1e12) return `${(val/1e12).toFixed(1)}T`;
+            if (abs >= 1e9) return `${(val/1e9).toFixed(1)}M`;
+            if (abs >= 1e6) return `${(val/1e6).toFixed(0)}Jt`;
+            return val.toLocaleString('id-ID');
+        }
+        
+        // RENDER OVERVIEW
+        function renderOverview() {
+            const { neraca, labarugi } = getFilteredData();
+            
+            document.getElementById('statAset').textContent = formatCurrency(getValue(neraca, '01.00.00.00.00.00'));
+            document.getElementById('statDPK').textContent = formatCurrency(getValue(neraca, '02.01.00.00.00.00'));
+            document.getElementById('statKredit').textContent = formatCurrency(getValue(neraca, '01.09.01.00.00.00'));
+            document.getElementById('statLaba').textContent = formatCurrency(getValue(labarugi, '04.00.00.00.00.00'));
+            document.getElementById('statPendapatan').textContent = formatCurrency(getValue(labarugi, '01.00.00.00.00.00'));
+            document.getElementById('statBeban').textContent = formatCurrency(getValue(labarugi, '02.00.00.00.00.00'));
+            
+            renderTarget();
+            renderKPIOverview(neraca, labarugi);
+        }
+        
+        function renderTarget() {
+            const triwulan = document.getElementById('targetTriwulan').value;
+            const periode = `TRW${triwulan}_2025`;
+            const cabang = document.getElementById('filterCabang').value;
+            const targets = targetData.filter(d => d.periode === periode && d.kode_cabang === cabang);
+            const { neraca } = getFilteredData();
+            
+            const items = [
+                { label: 'Aset', sandi: '01.00.00.00.00.00' },
+                { label: 'Kredit', sandi: '01.09.01.00.00.00' },
+                { label: 'DPK', sandi: '02.01.00.00.00.00' },
+                { label: 'Tabungan', sandi: '02.01.02.00.00.00' }
+            ];
+            
+            let html = '';
+            items.forEach(item => {
+                const targetVal = getValue(targets, item.sandi);
+                const realVal = getValue(neraca, item.sandi);
+                const pct = targetVal > 0 ? Math.min((realVal / targetVal) * 100, 100) : 0;
+                html += `<div class="target-card"><div class="target-card-label">${item.label}</div><div class="target-card-value">${formatShort(realVal)}</div><div class="target-progress"><div class="target-progress-fill" style="width: ${pct}%"></div></div><div class="target-pct">${pct.toFixed(1)}%</div></div>`;
+            });
+            document.getElementById('targetGrid').innerHTML = html || '<div class="no-data">Data target belum tersedia</div>';
+        }
+        
+        function renderKPIOverview(neraca, labarugi) {
+            const ekuitas = getValue(neraca, '02.04.00.00.00.00');
+            const aset = getValue(neraca, '01.00.00.00.00.00');
+            const dpk = getValue(neraca, '02.01.00.00.00.00');
+            const kredit = getValue(neraca, '01.09.01.00.00.00');
+            const laba = getValue(labarugi, '04.00.00.00.00.00');
+            
+            const car = ekuitas > 0 && aset > 0 ? (ekuitas / aset * 100 * 2) : 0;
+            const ldr = dpk > 0 ? (kredit / dpk * 100) : 0;
+            const roa = aset > 0 ? (laba / aset * 100) : 0;
+            
+            const kpis = [
+                { name: 'CAR', subtitle: 'Capital Adequacy Ratio', value: car.toFixed(2), unit: '%', status: car > 12 ? 'excellent' : 'warning', statusText: car > 12 ? 'Sangat Baik' : 'Perhatian', target: '> 12%' },
+                { name: 'LDR', subtitle: 'Loan to Deposit Ratio', value: ldr.toFixed(2), unit: '%', status: ldr <= 92 ? 'good' : 'warning', statusText: ldr <= 92 ? 'Baik' : 'Di Atas Batas', target: '78-92%' },
+                { name: 'ROA', subtitle: 'Return on Assets', value: roa.toFixed(2), unit: '%', status: roa > 1.5 ? 'excellent' : 'good', statusText: roa > 1.5 ? 'Sangat Baik' : 'Baik', target: '> 1.5%' },
+                { name: 'NPL', subtitle: 'Non Performing Loan', value: '3.24', unit: '%', status: 'good', statusText: 'Baik', target: '< 5%' }
+            ];
+            
+            let html = '';
+            kpis.forEach(kpi => {
+                html += `<div class="kpi-card ${kpi.status}"><div class="kpi-name">${kpi.name}</div><div class="kpi-subtitle">${kpi.subtitle}</div><div class="kpi-value">${kpi.value}<span class="unit">${kpi.unit}</span></div><div class="kpi-status ${kpi.status}"><i class="fas fa-${kpi.status === 'excellent' || kpi.status === 'good' ? 'check-circle' : 'exclamation-triangle'}"></i>${kpi.statusText}</div><div class="kpi-target">Target: ${kpi.target}</div></div>`;
+            });
+            document.getElementById('kpiGrid').innerHTML = html;
+        }
+        
+        // RENDER RATIOS
+        function renderRatios() {
+            const { neraca, labarugi } = getFilteredData();
+            const ekuitas = getValue(neraca, '02.04.00.00.00.00');
+            const aset = getValue(neraca, '01.00.00.00.00.00');
+            const dpk = getValue(neraca, '02.01.00.00.00.00');
+            const kredit = getValue(neraca, '01.09.01.00.00.00');
+            const laba = getValue(labarugi, '04.00.00.00.00.00');
+            const pendapatan = getValue(labarugi, '01.00.00.00.00.00');
+            const beban = getValue(labarugi, '02.00.00.00.00.00');
+            
+            const ratios = [
+                { name: 'CAR', value: ekuitas > 0 ? (ekuitas / aset * 100 * 2).toFixed(2) : '0', unit: '%', status: 'excellent', target: '> 12%' },
+                { name: 'ROA', value: aset > 0 ? (laba / aset * 100).toFixed(2) : '0', unit: '%', status: 'excellent', target: '> 1.5%' },
+                { name: 'ROE', value: ekuitas > 0 ? (laba / ekuitas * 100).toFixed(2) : '0', unit: '%', status: 'good', target: '> 10%' },
+                { name: 'NIM', value: '5.03', unit: '%', status: 'good', target: '> 4%' },
+                { name: 'BOPO', value: pendapatan > 0 ? (beban / pendapatan * 100).toFixed(2) : '0', unit: '%', status: 'good', target: '< 85%' },
+                { name: 'LDR', value: dpk > 0 ? (kredit / dpk * 100).toFixed(2) : '0', unit: '%', status: 'warning', target: '78-92%' },
+                { name: 'NPL', value: '3.24', unit: '%', status: 'good', target: '< 5%' },
+                { name: 'LAR', value: aset > 0 ? (kredit / aset * 100).toFixed(2) : '0', unit: '%', status: 'good', target: '> 50%' }
+            ];
+            
+            let html = '';
+            ratios.forEach(r => {
+                html += `<div class="kpi-card ${r.status}"><div class="kpi-name">${r.name}</div><div class="kpi-value">${r.value}<span class="unit">${r.unit}</span></div><div class="kpi-target">Target: ${r.target}</div></div>`;
+            });
+            document.getElementById('ratioGrid').innerHTML = html;
+        }
+        
+        // RENDER NERACA
+        function renderNeraca() {
+            const { neraca } = getFilteredData();
+            
+            const aktivaItems = [
+                { label: 'Kas', sandi: '01.01.00.00.00.00' },
+                { label: 'Penempatan BI', sandi: '01.02.00.00.00.00' },
+                { label: 'Surat Berharga', sandi: '01.05.00.00.00.00' },
+                { label: 'Kredit', sandi: '01.09.01.00.00.00' },
+                { label: 'Aset Tetap', sandi: '01.14.00.00.00.00' },
+                { label: 'Total Aktiva', sandi: '01.00.00.00.00.00' }
+            ];
+            
+            let aktivaHtml = '';
+            aktivaItems.forEach(item => {
+                aktivaHtml += `<div class="neraca-item"><span class="neraca-item-label">${item.label}</span><span class="neraca-item-value">${formatShort(getValue(neraca, item.sandi))}</span></div>`;
+            });
+            document.getElementById('neracaAktiva').innerHTML = aktivaHtml;
+            
+            const pasivaItems = [
+                { label: 'DPK', sandi: '02.01.00.00.00.00' },
+                { label: 'Simpanan Bank', sandi: '02.02.00.00.00.00' },
+                { label: 'Pinjaman Diterima', sandi: '02.03.00.00.00.00' },
+                { label: 'Ekuitas', sandi: '02.04.00.00.00.00' },
+                { label: 'Total Pasiva', sandi: '02.00.00.00.00.00' }
+            ];
+            
+            let pasivaHtml = '';
+            pasivaItems.forEach(item => {
+                pasivaHtml += `<div class="neraca-item"><span class="neraca-item-label">${item.label}</span><span class="neraca-item-value">${formatShort(getValue(neraca, item.sandi))}</span></div>`;
+            });
+            document.getElementById('neracaPasiva').innerHTML = pasivaHtml;
+            
+            // DPK
+            const giro = getValue(neraca, '02.01.01.00.00.00');
+            const tabungan = getValue(neraca, '02.01.02.00.00.00');
+            const deposito = getValue(neraca, '02.01.03.00.00.00');
+            const totalDPK = giro + tabungan + deposito;
+            
+            const dpkItems = [
+                { label: 'Giro', value: giro, color: '#3b82f6', icon: 'money-check' },
+                { label: 'Tabungan', value: tabungan, color: '#22c55e', icon: 'piggy-bank' },
+                { label: 'Deposito', value: deposito, color: '#f59e0b', icon: 'coins' }
+            ];
+            
+            let dpkHtml = '';
+            dpkItems.forEach(item => {
+                const pct = totalDPK > 0 ? ((item.value / totalDPK) * 100).toFixed(1) : 0;
+                dpkHtml += `<div class="dpk-item"><div class="dpk-icon" style="background: ${item.color}20; color: ${item.color};"><i class="fas fa-${item.icon}"></i></div><div class="dpk-info"><div class="dpk-label">${item.label}</div><div class="dpk-value">${formatCurrency(item.value)}</div></div><div class="dpk-pct">${pct}%</div></div>`;
+            });
+            document.getElementById('dpkBreakdown').innerHTML = dpkHtml;
+        }
+        
+        // RENDER KONVEN VS SYARIAH
+        function renderKonvenSyariah() {
+            const { periode } = getFilteredData();
+            const konvenNeraca = neracaData.filter(d => d.periode === periode && d.kode_cabang === 'KON');
+            const syariahNeraca = neracaData.filter(d => d.periode === periode && d.kode_cabang === 'SYR');
+            
+            const konvenAset = getValue(konvenNeraca, '01.00.00.00.00.00');
+            const syariahAset = getValue(syariahNeraca, '01.00.00.00.00.00');
+            const totalAset = konvenAset + syariahAset;
+            
+            document.getElementById('ksKonvenAset').textContent = formatShort(konvenAset);
+            document.getElementById('ksSyariahAset').textContent = formatShort(syariahAset);
+            document.getElementById('ksKonvenPct').textContent = totalAset > 0 ? ((konvenAset/totalAset)*100).toFixed(1) + '%' : '0%';
+            document.getElementById('ksSyariahPct').textContent = totalAset > 0 ? ((syariahAset/totalAset)*100).toFixed(1) + '%' : '0%';
+            
+            const items = [
+                { label: 'DPK', sandi: '02.01.00.00.00.00' },
+                { label: 'Kredit/Pembiayaan', sandi: '01.09.01.00.00.00' },
+                { label: 'Ekuitas', sandi: '02.04.00.00.00.00' }
+            ];
+            
+            let html = '<div class="branch-list">';
+            items.forEach(item => {
+                html += `<div class="branch-item"><div class="branch-info"><div class="branch-name">${item.label}</div><div class="branch-code">Konven: ${formatShort(getValue(konvenNeraca, item.sandi))}</div></div><div class="branch-value" style="color: var(--accent);">${formatShort(getValue(syariahNeraca, item.sandi))}</div></div>`;
+            });
+            html += '</div>';
+            document.getElementById('ksDetailComparison').innerHTML = html;
+        }
+        
+        // RENDER PENDAPATAN & BIAYA
+        function renderPendapatanBiaya() {
+            const { labarugi } = getFilteredData();
+            
+            document.getElementById('pbPendapatan').textContent = formatCurrency(getValue(labarugi, '01.00.00.00.00.00'));
+            document.getElementById('pbBeban').textContent = formatCurrency(getValue(labarugi, '02.00.00.00.00.00'));
+            
+            const items = [
+                { label: 'Pendapatan Bunga', sandi: '01.01.00.00.00.00', type: 'income' },
+                { label: 'Pendapatan Operasional', sandi: '01.02.00.00.00.00', type: 'income' },
+                { label: 'Beban Bunga', sandi: '02.01.00.00.00.00', type: 'expense' },
+                { label: 'Beban Operasional', sandi: '02.02.00.00.00.00', type: 'expense' },
+                { label: 'Laba Bersih', sandi: '04.00.00.00.00.00', type: 'profit' }
+            ];
+            
+            let html = '<div class="branch-list">';
+            items.forEach(item => {
+                const color = item.type === 'income' ? 'var(--success)' : item.type === 'expense' ? 'var(--danger)' : 'var(--info)';
+                html += `<div class="branch-item"><div class="branch-info"><div class="branch-name">${item.label}</div></div><div class="branch-value" style="color: ${color};">${formatCurrency(getValue(labarugi, item.sandi))}</div></div>`;
+            });
+            html += '</div>';
+            document.getElementById('pbDetail').innerHTML = html;
+        }
+        
+        // RENDER BRANCH RANKING
+        function renderBranchRanking() {
+            const { periode } = getFilteredData();
+            const branches = branchList.filter(b => !['ALL', 'KON', 'SYR'].includes(b));
+            
+            const branchData = branches.map(kode => {
+                const data = neracaData.filter(d => d.periode === periode && d.kode_cabang === kode);
+                return { kode, nama: data[0]?.nama_cabang || kode, aset: getValue(data, '01.00.00.00.00.00') };
+            });
+            
+            branchData.sort((a, b) => b.aset - a.aset);
+            
+            let html = '';
+            branchData.slice(0, 10).forEach((branch, idx) => {
+                const rankClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : 'normal';
+                html += `<div class="branch-item"><div class="branch-rank ${rankClass}">${idx + 1}</div><div class="branch-info"><div class="branch-name">${branch.nama}</div><div class="branch-code">Kode: ${branch.kode}</div></div><div class="branch-value">${formatShort(branch.aset)}</div></div>`;
+            });
+            document.getElementById('branchList').innerHTML = html || '<div class="no-data"><i class="fas fa-info-circle"></i><p>Tidak ada data</p></div>';
+        }
+        
+        // EVENT LISTENERS
+        function setupEventListeners() {
+            ['filterBulan', 'filterTahun', 'filterCabang'].forEach(id => {
+                document.getElementById(id).addEventListener('change', renderAll);
+            });
+            document.getElementById('targetTriwulan').addEventListener('change', renderTarget);
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => switchPage(tab.dataset.page));
+            });
+            document.querySelectorAll('.bottom-nav-item').forEach(item => {
+                item.addEventListener('click', (e) => { e.preventDefault(); switchPage(item.dataset.page); });
+            });
+        }
+        
+        function switchPage(page) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll(`.nav-tab[data-page="${page}"]`).forEach(t => t.classList.add('active'));
+            document.querySelectorAll('.bottom-nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll(`.bottom-nav-item[data-page="${page}"]`).forEach(i => i.classList.add('active'));
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            
+            const pageMap = { 'overview': 'pageOverview', 'ratio': 'pageRatio', 'neraca': 'pageNeraca', 'konven-syariah': 'pageKonvenSyariah', 'pendapatan-biaya': 'pagePendapatanBiaya', 'cabang': 'pageCabang' };
+            document.getElementById(pageMap[page] || 'pageOverview').classList.add('active');
+            window.scrollTo(0, 0);
+        }
+        
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

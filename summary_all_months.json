@@ -1,0 +1,150 @@
+{
+  "metadata": {
+    "extractedAt": "2025-12-09T06:29:03.677103",
+    "totalMonths": 10,
+    "periods": [
+      "2025-01",
+      "2025-02",
+      "2025-03",
+      "2025-04",
+      "2025-05",
+      "2025-06",
+      "2025-07",
+      "2025-08",
+      "2025-09",
+      "2025-10"
+    ]
+  },
+  "monthlySummary": {
+    "2025-01": {
+      "totalAset": 31941456342745.0,
+      "totalDPK": 20148106412507.0,
+      "totalKredit": 21416973521005.0,
+      "labaBersih": 0,
+      "pendapatanBunga": 14523585487.0,
+      "bebanBunga": 0,
+      "roa": 0.0,
+      "ldr": 106.3,
+      "totalCabang": 37,
+      "cabangKonvensional": 31,
+      "cabangSyariah": 5
+    },
+    "2025-02": {
+      "totalAset": 31440312639390.0,
+      "totalDPK": 19765377875217.0,
+      "totalKredit": 21482618855388.0,
+      "labaBersih": 0,
+      "pendapatanBunga": 26314482837.0,
+      "bebanBunga": 0,
+      "roa": 0.0,
+      "ldr": 108.69,
+      "totalCabang": 37,
+      "cabangKonvensional": 31,
+      "cabangSyariah": 5
+    },
+    "2025-03": {
+      "totalAset": 32171574432868.0,
+      "totalDPK": 18813478052936.0,
+      "totalKredit": 21508101431363.0,
+      "labaBersih": 0,
+      "pendapatanBunga": 38977056283.0,
+      "bebanBunga": 0,
+      "roa": 0.0,
+      "ldr": 114.32,
+      "totalCabang": 37,
+      "cabangKonvensional": 31,
+      "cabangSyariah": 5
+    },
+    "2025-04": {
+      "totalAset": 32335840491991.0,
+      "totalDPK": 20538238485093.0,
+      "totalKredit": 21436265436579.0,
+      "labaBersih": 0,
+      "pendapatanBunga": 53385771991.0,
+      "bebanBunga": 0,
+      "roa": 0.0,
+      "ldr": 104.37,
+      "totalCabang": 37,
+      "cabangKonvensional": 31,
+      "cabangSyariah": 5
+    },
+    "2025-05": {
+      "totalAset": 32814041948687.0,
+      "totalDPK": 20881958330177.0,
+      "totalKredit": 21444053242910.0,
+      "labaBersih": 0,
+      "pendapatanBunga": 65658834232.0,
+      "bebanBunga": 0,
+      "roa": 0.0,
+      "ldr": 102.69,
+      "totalCabang": 37,
+      "cabangKonvensional": 31,
+      "cabangSyariah": 5
+    },
+    "2025-06": {
+      "totalAset": 33132275015000.0,
+      "totalDPK": 20477675662643.0,
+      "totalKredit": 21489629336041.0,
+      "labaBersih": 0,
+      "pendapatanBunga": 79532730728.0,
+      "bebanBunga": 0,
+      "roa": 0.0,
+      "ldr": 104.94,
+      "totalCabang": 37,
+      "cabangKonvensional": 31,
+      "cabangSyariah": 5
+    },
+    "2025-07": {
+      "totalAset": 33062179451821.0,
+      "totalDPK": 21369423935678.0,
+      "totalKredit": 21444840999582.0,
+      "labaBersih": 0,
+      "pendapatanBunga": 94787932853.0,
+      "bebanBunga": 0,
+      "roa": 0.0,
+      "ldr": 100.35,
+      "totalCabang": 37,
+      "cabangKonvensional": 31,
+      "cabangSyariah": 5
+    },
+    "2025-08": {
+      "totalAset": 34863238379403.0,
+      "totalDPK": 23623446611870.0,
+      "totalKredit": 21461218654762.0,
+      "labaBersih": 0,
+      "pendapatanBunga": 107262849587.0,
+      "bebanBunga": 0,
+      "roa": 0.0,
+      "ldr": 90.85,
+      "totalCabang": 37,
+      "cabangKonvensional": 31,
+      "cabangSyariah": 5
+    },
+    "2025-09": {
+      "totalAset": 34199346897957.0,
+      "totalDPK": 22709569680481.0,
+      "totalKredit": 21500916272772.0,
+      "labaBersih": 0,
+      "pendapatanBunga": 122681057470.0,
+      "bebanBunga": 0,
+      "roa": 0.0,
+      "ldr": 94.68,
+      "totalCabang": 37,
+      "cabangKonvensional": 31,
+      "cabangSyariah": 5
+    },
+    "2025-10": {
+      "totalAset": 34451934471535.0,
+      "totalDPK": 22970791277522.0,
+      "totalKredit": 21507189079859.0,
+      "labaBersih": 0,
+      "pendapatanBunga": 138995933356.0,
+      "bebanBunga": 0,
+      "roa": 0.0,
+      "ldr": 93.63,
+      "totalCabang": 37,
+      "cabangKonvensional": 31,
+      "cabangSyariah": 5
+    }
+  }
+}

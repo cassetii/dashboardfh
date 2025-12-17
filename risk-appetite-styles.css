@@ -1,0 +1,807 @@
+/* ========================================
+   RATIO DETAIL MODAL STYLES
+   Layer 2 Chart dalam Card Layer 1
+   ======================================== */
+
+/* Modal Overlay */
+.ratio-detail-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.ratio-detail-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Modal Container */
+.ratio-detail-modal {
+    background: white;
+    border-radius: 16px;
+    width: 95%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+}
+
+.ratio-detail-modal-overlay.active .ratio-detail-modal {
+    transform: scale(1) translateY(0);
+}
+
+/* Modal Header */
+.ratio-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+    color: white;
+}
+
+.ratio-detail-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ratio-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.ratio-detail-title h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.ratio-detail-title p {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
+
+.ratio-detail-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.ratio-detail-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+/* Modal Body */
+.ratio-detail-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Summary Cards */
+.ratio-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.ratio-summary-card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.ratio-summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.ratio-summary-card .summary-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.ratio-summary-card.current .summary-icon {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.ratio-summary-card.target .summary-icon {
+    background: #f0fdf4;
+    color: #10b981;
+}
+
+.ratio-summary-card.appetite .summary-icon {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.ratio-summary-card.tolerance .summary-icon {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.ratio-summary-card.status .summary-icon {
+    background: #f0fdf4;
+    color: #10b981;
+}
+
+.ratio-summary-card.status.optimal .summary-icon {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.ratio-summary-card.status.warning .summary-icon {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.ratio-summary-card.status.danger .summary-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.ratio-summary-card .summary-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ratio-summary-card .summary-label {
+    font-size: 0.7rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ratio-summary-card .summary-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e3a5f;
+}
+
+/* Chart Container */
+.ratio-chart-container {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid #e5e7eb;
+}
+
+.ratio-chart-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.ratio-chart-header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e3a5f;
+}
+
+.ratio-chart-header i {
+    color: #3b82f6;
+}
+
+.ratio-chart-area {
+    min-height: 320px;
+}
+
+/* Risk Zone Indicator */
+.ratio-zone-indicator {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.zone-legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.zone-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.zone-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.zone-item.breach .zone-color {
+    background: #fee2e2;
+    border: 1px solid #dc2626;
+}
+
+.zone-item.tolerance .zone-color {
+    background: #fef3c7;
+    border: 1px solid #d97706;
+}
+
+.zone-item.appetite .zone-color {
+    background: #d1fae5;
+    border: 1px solid #10b981;
+}
+
+/* Modal Footer */
+.ratio-detail-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    background: #f8fafc;
+}
+
+.ratio-btn-primary,
+.ratio-btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.ratio-btn-primary {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+    color: white;
+}
+
+.ratio-btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+    transform: translateY(-1px);
+}
+
+.ratio-btn-secondary {
+    background: white;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+}
+
+.ratio-btn-secondary:hover {
+    background: #f3f4f6;
+}
+
+/* Card Click Hint */
+.card-click-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: linear-gradient(135deg, #1e3a5f10, #3b82f610);
+    border-radius: 6px;
+    font-size: 0.7rem;
+    color: #1e3a5f;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.indicator-card.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.indicator-card.clickable:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.indicator-card.clickable:hover .card-click-hint {
+    opacity: 1;
+    background: linear-gradient(135deg, #1e3a5f20, #3b82f620);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ratio-detail-modal {
+        width: 98%;
+        max-height: 95vh;
+    }
+    
+    .ratio-summary-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .ratio-summary-card:nth-child(5) {
+        grid-column: span 2;
+    }
+    
+    .ratio-detail-footer {
+        flex-direction: column;
+    }
+    
+    .ratio-btn-primary,
+    .ratio-btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .zone-legend {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+}
+
+/* ========================================
+   RISK APPETITE & TOLERANCE STYLES
+   Bank Sulselbar Dashboard
+   ======================================== */
+
+/* ========================================
+   MODAL OVERLAY
+   ======================================== */
+
+.risk-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.risk-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ========================================
+   MODAL CONTAINER
+   ======================================== */
+
+.risk-modal {
+    background: white;
+    border-radius: 16px;
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.risk-modal-overlay.active .risk-modal {
+    transform: scale(1) translateY(0);
+}
+
+/* ========================================
+   MODAL HEADER
+   ======================================== */
+
+.risk-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+    border-radius: 16px 16px 0 0;
+}
+
+.risk-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: white;
+}
+
+.risk-modal-title i {
+    font-size: 2rem;
+    opacity: 0.9;
+}
+
+.risk-modal-title h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.risk-modal-title p {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.risk-modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.risk-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+/* ========================================
+   MODAL BODY
+   ======================================== */
+
+.risk-modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.risk-info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: #1e40af;
+}
+
+.risk-info-banner i {
+    font-size: 1.25rem;
+    margin-top: 2px;
+}
+
+/* ========================================
+   RISK TABLE
+   ======================================== */
+
+.risk-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.risk-table th {
+    background: #f8fafc;
+    padding: 1rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.risk-table td {
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+.risk-table tr:hover {
+    background: #f8fafc;
+}
+
+.risk-table td:first-child {
+    font-weight: 500;
+}
+
+.risk-table td:first-child small {
+    display: block;
+    color: #6b7280;
+    font-weight: 400;
+    margin-top: 2px;
+}
+
+.risk-input {
+    width: 70px;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.risk-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.risk-type {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.risk-type.higher {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.risk-type.lower {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.risk-type.range {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+/* ========================================
+   MODAL FOOTER
+   ======================================== */
+
+.risk-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    background: #f8fafc;
+    border-radius: 0 0 16px 16px;
+}
+
+.risk-btn-primary,
+.risk-btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.risk-btn-primary {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+    color: white;
+}
+
+.risk-btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+    transform: translateY(-1px);
+}
+
+.risk-btn-secondary {
+    background: white;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+}
+
+.risk-btn-secondary:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+/* ========================================
+   NOTIFICATION
+   ======================================== */
+
+.risk-notification {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+}
+
+.risk-notification.show {
+    transform: translateX(0);
+}
+
+.risk-notification.success {
+    border-left: 4px solid #10b981;
+}
+
+.risk-notification.success i {
+    color: #10b981;
+}
+
+.risk-notification.info {
+    border-left: 4px solid #3b82f6;
+}
+
+.risk-notification.info i {
+    color: #3b82f6;
+}
+
+/* ========================================
+   RISK INFO ON CARDS
+   ======================================== */
+
+.risk-info {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.risk-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.risk-info-row:last-of-type {
+    margin-bottom: 0.5rem;
+}
+
+.risk-label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.risk-value {
+    color: #1e3a5f;
+    font-weight: 600;
+}
+
+.risk-zone {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+.risk-zone.appetite,
+.risk-zone.optimal {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.risk-zone.tolerance {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.risk-zone.breach {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.risk-zone i {
+    font-size: 0.8rem;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .risk-modal {
+        width: 98%;
+        max-height: 95vh;
+        margin: 1rem;
+    }
+    
+    .risk-modal-header {
+        padding: 1rem;
+    }
+    
+    .risk-modal-title h2 {
+        font-size: 1rem;
+    }
+    
+    .risk-modal-body {
+        padding: 1rem;
+    }
+    
+    .risk-table {
+        font-size: 0.8rem;
+    }
+    
+    .risk-table th,
+    .risk-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .risk-input {
+        width: 55px;
+        padding: 0.4rem;
+        font-size: 0.8rem;
+    }
+    
+    .risk-modal-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .risk-btn-primary,
+    .risk-btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}

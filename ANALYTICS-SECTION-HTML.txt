@@ -1,0 +1,108 @@
+<!-- 
+    ANALYTICS SECTION HTML
+    ======================
+    Ganti isi <section class="content-section" id="analyticsSection">...</section>
+    dengan kode di bawah ini
+-->
+
+<section class="content-section" id="analyticsSection">
+    <!-- Section Header -->
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-chart-line"></i>
+            Analisis Kinerja Keuangan
+        </h2>
+        <div class="section-controls" style="display: flex; gap: 10px; align-items: center;">
+            <select id="analyticsViewType" class="form-control" style="width: auto; padding: 8px 12px;">
+                <option value="overview">Ringkasan Utama</option>
+                <option value="neraca">Neraca Detail</option>
+                <option value="ratios">Rasio Keuangan</option>
+            </select>
+            <button id="btnRefreshAnalytics" class="btn-icon" title="Refresh">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <button id="btnExportAnalytics" class="btn-primary" style="padding: 8px 16px;">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="analytics-summary-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px;">
+        <div class="summary-stat-card" style="background: linear-gradient(135deg, #1e40af, #3b82f6); color: white; padding: 20px; border-radius: 12px;">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">Total Aset</div>
+            <div id="analyticsTotalAset" style="font-size: 24px; font-weight: 700;">-</div>
+            <div id="analyticsTotalAsetMom" style="font-size: 13px; margin-top: 8px; opacity: 0.9;">MoM: -</div>
+        </div>
+        <div class="summary-stat-card" style="background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 20px; border-radius: 12px;">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">DPK</div>
+            <div id="analyticsDpk" style="font-size: 24px; font-weight: 700;">-</div>
+            <div id="analyticsDpkMom" style="font-size: 13px; margin-top: 8px; opacity: 0.9;">MoM: -</div>
+        </div>
+        <div class="summary-stat-card" style="background: linear-gradient(135deg, #d97706, #f59e0b); color: white; padding: 20px; border-radius: 12px;">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">Kredit</div>
+            <div id="analyticsKredit" style="font-size: 24px; font-weight: 700;">-</div>
+            <div id="analyticsKreditMom" style="font-size: 13px; margin-top: 8px; opacity: 0.9;">MoM: -</div>
+        </div>
+        <div class="summary-stat-card" style="background: linear-gradient(135deg, #7c3aed, #a78bfa); color: white; padding: 20px; border-radius: 12px;">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">Laba Bersih</div>
+            <div id="analyticsLaba" style="font-size: 24px; font-weight: 700;">-</div>
+            <div id="analyticsLabaMom" style="font-size: 13px; margin-top: 8px; opacity: 0.9;">MoM: -</div>
+        </div>
+    </div>
+
+    <!-- Analytics Grid -->
+    <div class="analytics-main-grid" style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-bottom: 25px;">
+        <!-- Analytics Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-table"></i> Perbandingan Periode (MoM, YTD, YoY)</h3>
+            </div>
+            <div class="card-body" id="analyticsTableContainer" style="overflow-x: auto;">
+                <p style="color: #64748b; text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin"></i> Memuat data...
+                </p>
+            </div>
+        </div>
+
+        <!-- Trend Chart -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3><i class="fas fa-chart-area"></i> Trend 12 Bulan</h3>
+                <select id="chartIndicatorSelect" class="form-control" style="width: auto; padding: 6px 10px; font-size: 13px;">
+                    <option value="totalAset">Total Aset</option>
+                    <option value="dpk">DPK</option>
+                    <option value="kredit">Kredit</option>
+                    <option value="labaBersih">Laba Bersih</option>
+                    <option value="ldr">LDR</option>
+                    <option value="bopo">BOPO</option>
+                    <option value="npl">NPL</option>
+                    <option value="car">CAR</option>
+                </select>
+            </div>
+            <div class="card-body">
+                <div id="analyticsTrendChart" style="height: 280px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Narrative Panel -->
+    <div class="card" style="margin-bottom: 25px;">
+        <div class="card-header" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe);">
+            <h3 style="color: #0369a1;"><i class="fas fa-robot"></i> Analisis Otomatis (AI-Generated)</h3>
+        </div>
+        <div class="card-body" id="analyticsNarrativeContainer" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); line-height: 1.8;">
+            <p style="color: #64748b; text-align: center; padding: 20px;">
+                <i class="fas fa-spinner fa-spin"></i> Menganalisis data...
+            </p>
+        </div>
+    </div>
+
+    <!-- Ratio Cards Grid -->
+    <div class="section-header" style="margin-top: 30px;">
+        <h3><i class="fas fa-percentage"></i> Detail Rasio Keuangan</h3>
+    </div>
+    <div id="analyticsRatioGrid" class="ratio-analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <!-- Ratio cards will be rendered here by JS -->
+    </div>
+</section>

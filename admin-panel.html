@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Bank Sulselbar</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- SheetJS for Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5; 
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e40af, #1e3a8a);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+        .status-dot.connected { background: #22c55e; }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            margin-bottom: 15px;
+            color: #1e40af;
+            font-size: 18px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-primary { background: #1e40af; color: white; }
+        .btn-success { background: #059669; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-warning { background: #d97706; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+        .log-container {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .log-entry { margin-bottom: 4px; }
+        .log-info { color: #60a5fa; }
+        .log-success { color: #4ade80; }
+        .log-error { color: #f87171; }
+        .log-warning { color: #fbbf24; }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .tab {
+            padding: 8px 16px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+        .tab:hover { background: #e5e7eb; }
+        .tab.active { background: #1e40af; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .upload-zone {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+        .upload-zone:hover { border-color: #1e40af; background: #f8fafc; }
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            transition: width 0.3s;
+        }
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+        .preview-table th, .preview-table td {
+            padding: 8px;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+        }
+        .preview-table th { background: #f8fafc; font-weight: 600; }
+        .preview-table tr:hover { background: #f8fafc; }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 15px 0;
+            padding: 12px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 6px;
+        }
+        .checkbox-group input { width: 18px; height: 18px; cursor: pointer; }
+        .checkbox-group label { cursor: pointer; color: #166534; font-weight: 500; }
+        .info-box {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .info-box h4 { color: #0369a1; margin-bottom: 8px; }
+        .info-box p { font-size: 13px; color: #0c4a6e; line-height: 1.5; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-card h3 { font-size: 24px; color: #1e40af; }
+        .stat-card p { font-size: 12px; color: #64748b; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>🏦 Admin Panel - Bank Sulselbar</h1>
+            <p style="opacity:0.8;margin-top:5px;">Upload Data Neraca, Laba Rugi & Ratio ke Firebase</p>
+        </div>
+        <div class="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Disconnected</span>
+        </div>
+    </div>
+
+    <!-- Firebase Connection -->
+    <div class="card">
+        <h2>🔌 Firebase Connection</h2>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="connectFirebase()">Connect to Firebase</button>
+            <button class="btn btn-danger" onclick="clearAllData()" id="clearBtn" disabled>🗑️ Clear All Data</button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card" id="statsCard" style="display:none;">
+        <h2>📊 Data Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="neracaCount">0</h3>
+                <p>Neraca Records</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="labarugiCount">0</h3>
+                <p>Laba Rugi Records</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="ratioCount">0</h3>
+                <p>Ratio Records</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="periodeCount">0</h3>
+                <p>Periode Available</p>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="loadStats()">🔄 Refresh Stats</button>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="card">
+        <h2>📁 Upload Excel Data</h2>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('neraca')">📋 Neraca + Ratio</button>
+            <button class="tab" onclick="switchTab('labarugi')">💰 Laba Rugi</button>
+            <button class="tab" onclick="switchTab('target')" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white;">🎯 Target</button>
+        </div>
+        
+        <!-- Neraca Tab -->
+        <div class="tab-content active" id="neracaTab">
+            <div class="info-box">
+                <h4>📌 Info Upload Neraca + Ratio</h4>
+                <p>Upload file Excel Neraca bulanan. Data <strong>RATIO</strong> (LDR, BOPO, ROA, NIM, ROE, CAR, NPL, CASA, NSFR, LCR) akan <strong>otomatis diekstrak</strong> dari baris 143-152 di file Excel.</p>
+            </div>
+            
+            <div class="upload-zone" onclick="document.getElementById('neracaFile').click()">
+                <div style="font-size:40px;margin-bottom:10px;">📄</div>
+                <div>Klik untuk pilih file <strong>Neraca</strong> (xlsx)</div>
+                <div style="font-size:12px;color:#888;margin-top:5px;">Format: Neraca_DDMMYYYY.xlsx</div>
+                <input type="file" id="neracaFile" accept=".xlsx" style="display:none" onchange="handleNeracaFile(event)">
+            </div>
+            
+            <div id="neracaInfo" style="display:none">
+                <p><strong>File:</strong> <span id="neracaFileName">-</span></p>
+                <p><strong>Periode:</strong> <span id="neracaPeriode">-</span></p>
+                <p><strong>Neraca Records:</strong> <span id="neracaRecords">0</span></p>
+                <p><strong>Ratio Records:</strong> <span id="ratioRecordsNeraca">0</span></p>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="includeRatio" checked>
+                <label for="includeRatio">✅ Include Ratio Data (LDR, BOPO, ROA, NIM, ROE, CAR, NPL, CASA, NSFR, LCR)</label>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" id="parseNeracaBtn" disabled onclick="parseNeraca()">📊 Parse Data</button>
+                <button class="btn btn-success" id="uploadNeracaBtn" disabled onclick="uploadNeraca()">🚀 Upload to Firebase</button>
+            </div>
+            
+            <div class="progress-bar" id="neracaProgress" style="display:none">
+                <div class="progress-fill" id="neracaProgressFill" style="width:0%"></div>
+            </div>
+            <div id="neracaPreview"></div>
+        </div>
+        
+        <!-- Laba Rugi Tab -->
+        <div class="tab-content" id="labarugiTab">
+            <div class="info-box">
+                <h4>📌 Info Upload Laba Rugi</h4>
+                <p>Upload file Excel Laba Rugi bulanan dengan format yang sama seperti Neraca.</p>
+            </div>
+            
+            <div class="upload-zone" onclick="document.getElementById('labarugiFile').click()">
+                <div style="font-size:40px;margin-bottom:10px;">💰</div>
+                <div>Klik untuk pilih file <strong>Laba Rugi</strong> (xlsx)</div>
+                <input type="file" id="labarugiFile" accept=".xlsx" style="display:none" onchange="handleLabarugiFile(event)">
+            </div>
+            
+            <div id="labarugiInfo" style="display:none">
+                <p><strong>File:</strong> <span id="labarugiFileName">-</span></p>
+                <p><strong>Records:</strong> <span id="labarugiRecords">0</span></p>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" id="parseLabarugiBtn" disabled onclick="parseLabarugi()">📊 Parse</button>
+                <button class="btn btn-success" id="uploadLabarugiBtn" disabled onclick="uploadLabarugi()">🚀 Upload to Firebase</button>
+            </div>
+            
+            <div class="progress-bar" id="labarugiProgress" style="display:none">
+                <div class="progress-fill" id="labarugiProgressFill" style="width:0%"></div>
+            </div>
+            <div id="labarugiPreview"></div>
+        </div>
+        
+        <!-- Target Tab -->
+        <div class="tab-content" id="targetTab">
+            <div class="info-box" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-left: 4px solid #8b5cf6;">
+                <h4>🎯 Info Upload Data Target</h4>
+                <p>Upload file Excel Target Neraca & Laba Rugi per Triwulan. Format: 4 sheet (TRW 1, TRW 2, TRW 3, TRW 4) dengan struktur kolom cabang.</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <!-- Target Neraca -->
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <h4 style="color: #1e293b; margin-bottom: 15px;">📊 Target Neraca</h4>
+                    <div class="upload-zone" onclick="document.getElementById('targetNeracaFile').click()" style="background: white;">
+                        <div style="font-size:30px;margin-bottom:10px;">📋</div>
+                        <div>Upload <strong>Target Neraca 2025</strong></div>
+                        <input type="file" id="targetNeracaFile" accept=".xlsx" style="display:none" onchange="handleTargetFile(event, 'neraca')">
+                    </div>
+                    <div id="targetNeracaInfo" style="display:none; margin-top: 10px; padding: 10px; background: #ecfdf5; border-radius: 6px;">
+                        <p><strong>File:</strong> <span id="targetNeracaFileName">-</span></p>
+                        <p><strong>Records:</strong> <span id="targetNeracaRecords">0</span></p>
+                    </div>
+                </div>
+                
+                <!-- Target Laba Rugi -->
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <h4 style="color: #1e293b; margin-bottom: 15px;">💰 Target Laba Rugi</h4>
+                    <div class="upload-zone" onclick="document.getElementById('targetLabarugiFile').click()" style="background: white;">
+                        <div style="font-size:30px;margin-bottom:10px;">📈</div>
+                        <div>Upload <strong>Target Laba Rugi 2025</strong></div>
+                        <input type="file" id="targetLabarugiFile" accept=".xlsx" style="display:none" onchange="handleTargetFile(event, 'labarugi')">
+                    </div>
+                    <div id="targetLabarugiInfo" style="display:none; margin-top: 10px; padding: 10px; background: #ecfdf5; border-radius: 6px;">
+                        <p><strong>File:</strong> <span id="targetLabarugiFileName">-</span></p>
+                        <p><strong>Records:</strong> <span id="targetLabarugiRecords">0</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn btn-primary" id="parseTargetBtn" disabled onclick="parseAllTarget()">📊 Parse Target Data</button>
+                <button class="btn btn-success" id="uploadTargetBtn" disabled onclick="uploadAllTarget()">🚀 Upload Target to Firebase</button>
+            </div>
+            
+            <div class="progress-bar" id="targetProgress" style="display:none">
+                <div class="progress-fill" id="targetProgressFill" style="width:0%; background: linear-gradient(90deg, #8b5cf6, #6366f1);"></div>
+            </div>
+            <div id="targetPreview" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+        <h2>📋 Activity Log</h2>
+        <div class="log-container" id="logContainer"></div>
+        <button class="btn btn-warning" onclick="document.getElementById('logContainer').innerHTML=''" style="margin-top:10px;">🗑️ Clear Log</button>
+    </div>
+
+    <script>
+        // ==========================================
+        // FIREBASE CONFIG
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBI5T3ZVyHXSRFikTjSlnW9P04cO1UDAwg",
+            authDomain: "databasebesar.firebaseapp.com",
+            projectId: "databasebesar",
+            storageBucket: "databasebesar.firebasestorage.app",
+            messagingSenderId: "253231829334",
+            appId: "1:253231829334:web:c3233e237b231de3c546f7"
+        };
+
+        // ==========================================
+        // GLOBAL STATE
+        // ==========================================
+        let db = null;
+        let isConnected = false;
+        let neracaData = null;
+        let ratioData = null;
+        let labarugiData = null;
+        let neracaFile = null;
+        let labarugiFile = null;
+
+        // ==========================================
+        // CONFIGURATION - Mapping kolom Excel
+        // ==========================================
+        const CONFIG = {
+            neraca: {
+                sheetName: 'Neraca',
+                dataStartRow: 8,
+                dataEndRow: 141,
+                sandiColumn: 9,
+                summaryColumns: {
+                    'KON': { nama: 'KONVENSIONAL', rupiahCol: 10, valasCol: 11, totalCol: 12, tipe: 'konvensional' },
+                    'SYR': { nama: 'SYARIAH', rupiahCol: 14, valasCol: 15, totalCol: 16, tipe: 'syariah' },
+                    'ALL': { nama: 'KONSOLIDASI', rupiahCol: 18, valasCol: 19, totalCol: 20, tipe: 'konsolidasi' }
+                },
+                branches: {
+                    '001': { nama: 'KANTOR PUSAT', rupiahCol: 87, valasCol: 88, tipe: 'konvensional' },
+                    '010': { nama: 'CABANG MAROS', rupiahCol: 25, valasCol: 26, tipe: 'konvensional' },
+                    '011': { nama: 'CABANG PANGKEP', rupiahCol: 27, valasCol: 28, tipe: 'konvensional' },
+                    '020': { nama: 'CABANG JENEPONTO', rupiahCol: 29, valasCol: 30, tipe: 'konvensional' },
+                    '021': { nama: 'CABANG TAKALAR', rupiahCol: 31, valasCol: 32, tipe: 'konvensional' },
+                    '030': { nama: 'CABANG PAREPARE', rupiahCol: 33, valasCol: 34, tipe: 'konvensional' },
+                    '031': { nama: 'CABANG BARRU', rupiahCol: 35, valasCol: 36, tipe: 'konvensional' },
+                    '040': { nama: 'CABANG BULUKUMBA', rupiahCol: 37, valasCol: 38, tipe: 'konvensional' },
+                    '041': { nama: 'CABANG BANTAENG', rupiahCol: 39, valasCol: 40, tipe: 'konvensional' },
+                    '042': { nama: 'CABANG SELAYAR', rupiahCol: 41, valasCol: 42, tipe: 'konvensional' },
+                    '050': { nama: 'CABANG PINRANG', rupiahCol: 43, valasCol: 44, tipe: 'konvensional' },
+                    '060': { nama: 'CABANG SINJAI', rupiahCol: 45, valasCol: 46, tipe: 'konvensional' },
+                    '070': { nama: 'CABANG POLMAN', rupiahCol: 47, valasCol: 48, tipe: 'konvensional' },
+                    '071': { nama: 'CABANG UTAMA MAMUJU', rupiahCol: 49, valasCol: 50, tipe: 'konvensional' },
+                    '072': { nama: 'CABANG MAJENE', rupiahCol: 51, valasCol: 52, tipe: 'konvensional' },
+                    '073': { nama: 'CAPEM WONOMULYO', rupiahCol: 112, valasCol: 113, tipe: 'konvensional' },
+                    '074': { nama: 'CABANG MAMASA', rupiahCol: 53, valasCol: 54, tipe: 'konvensional' },
+                    '075': { nama: 'CABANG PASANGKAYU', rupiahCol: 55, valasCol: 56, tipe: 'konvensional' },
+                    '077': { nama: 'CABANG TOPOYO', rupiahCol: 57, valasCol: 58, tipe: 'konvensional' },
+                    '080': { nama: 'CABANG UTAMA BONE', rupiahCol: 59, valasCol: 60, tipe: 'konvensional' },
+                    '088': { nama: 'CAPEM KAHU', rupiahCol: 114, valasCol: 115, tipe: 'konvensional' },
+                    '090': { nama: 'CABANG PALOPO', rupiahCol: 61, valasCol: 62, tipe: 'konvensional' },
+                    '091': { nama: 'CABANG MASAMBA', rupiahCol: 63, valasCol: 64, tipe: 'konvensional' },
+                    '092': { nama: 'CABANG BELOPA', rupiahCol: 65, valasCol: 66, tipe: 'konvensional' },
+                    '093': { nama: 'CABANG MALILI', rupiahCol: 67, valasCol: 68, tipe: 'konvensional' },
+                    '094': { nama: 'CAPEM WALENRANG', rupiahCol: 116, valasCol: 117, tipe: 'konvensional' },
+                    '100': { nama: 'CABANG SENGKANG', rupiahCol: 69, valasCol: 70, tipe: 'konvensional' },
+                    '101': { nama: 'CABANG SOPPENG', rupiahCol: 71, valasCol: 72, tipe: 'konvensional' },
+                    '102': { nama: 'CAPEM SIWA', rupiahCol: 118, valasCol: 119, tipe: 'konvensional' },
+                    '103': { nama: 'CAPEM CABENGE', rupiahCol: 120, valasCol: 121, tipe: 'konvensional' },
+                    '110': { nama: 'CABANG MAKALE', rupiahCol: 73, valasCol: 74, tipe: 'konvensional' },
+                    '111': { nama: 'CABANG RANTEPAO', rupiahCol: 75, valasCol: 76, tipe: 'konvensional' },
+                    '120': { nama: 'CABANG SIDRAP', rupiahCol: 77, valasCol: 78, tipe: 'konvensional' },
+                    '121': { nama: 'CABANG ENREKANG', rupiahCol: 79, valasCol: 80, tipe: 'konvensional' },
+                    '123': { nama: 'CAPEM ALLA', rupiahCol: 122, valasCol: 123, tipe: 'konvensional' },
+                    '130': { nama: 'CABANG UTAMA MAKASSAR', rupiahCol: 81, valasCol: 82, tipe: 'konvensional' },
+                    '131': { nama: 'CABANG GOWA', rupiahCol: 83, valasCol: 84, tipe: 'konvensional' },
+                    '138': { nama: 'CAPEM DAYA', rupiahCol: 124, valasCol: 125, tipe: 'konvensional' },
+                    '139': { nama: 'CAPEM ANTANG', rupiahCol: 126, valasCol: 127, tipe: 'konvensional' },
+                    '400': { nama: 'CABANG KHUSUS JAKARTA', rupiahCol: 85, valasCol: 86, tipe: 'konvensional' },
+                    '500': { nama: 'UUS', rupiahCol: 89, valasCol: 90, tipe: 'syariah' },
+                    '510': { nama: 'CABANG SYARIAH MAKASSAR', rupiahCol: 91, valasCol: 92, tipe: 'syariah' },
+                    '520': { nama: 'CABANG SYARIAH SENGKANG', rupiahCol: 93, valasCol: 94, tipe: 'syariah' },
+                    '530': { nama: 'CABANG SYARIAH MAROS', rupiahCol: 95, valasCol: 96, tipe: 'syariah' },
+                    '540': { nama: 'CABANG SYARIAH MAMUJU', rupiahCol: 97, valasCol: 98, tipe: 'syariah' }
+                }
+            },
+            // RATIO CONFIG - Baris di Excel yang berisi data ratio (dari analisis Excel Anda)
+            ratio: {
+                rows: {
+                    143: 'LDR',
+                    144: 'BOPO',
+                    145: 'ROA',
+                    146: 'NIM',
+                    147: 'ROE',
+                    148: 'CAR',  // KPMM
+                    149: 'NPL',
+                    150: 'CASA',
+                    151: 'NSFR',
+                    152: 'LCR'
+                },
+                // Kolom untuk summary (index 0-based)
+                summaryColumns: {
+                    'KON': 11,  // Kolom L (index 11) - Total Konvensional
+                    'SYR': 15,  // Kolom P (index 15) - Total Syariah  
+                    'ALL': 19   // Kolom T (index 19) - Total Konsolidasi
+                },
+                // Untuk cabang individual, ratio ada di kolom Rupiah (rupiahCol - 1 untuk 0-based)
+                useBranchRupiahCol: true
+            },
+            labarugi: {
+                sheetName: 'LabaRugi',
+                dataStartRow: 8
+            }
+        };
+
+        // Copy branches config to labarugi
+        CONFIG.labarugi.summaryColumns = CONFIG.neraca.summaryColumns;
+        CONFIG.labarugi.branches = CONFIG.neraca.branches;
+        CONFIG.labarugi.sandiColumn = CONFIG.neraca.sandiColumn;
+
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+        function log(message, type = 'info') {
+            const container = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.innerHTML = `[${time}] ${message}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function parseNumber(val) {
+            if (val === null || val === undefined || val === '' || val === '-') return 0;
+            const cleanVal = String(val).replace(/[\s,]/g, '').replace(/^-$/, '0');
+            return parseFloat(cleanVal) || 0;
+        }
+
+        function extractPeriode(filename) {
+            const name = filename.toLowerCase();
+            const bulanMap = {
+                'jan': '01', 'januari': '01', 'feb': '02', 'februari': '02',
+                'mar': '03', 'maret': '03', 'apr': '04', 'april': '04',
+                'mei': '05', 'may': '05', 'jun': '06', 'juni': '06',
+                'jul': '07', 'juli': '07', 'agu': '08', 'agustus': '08', 'aug': '08',
+                'sep': '09', 'september': '09', 'okt': '10', 'oktober': '10', 'oct': '10',
+                'nov': '11', 'november': '11', 'des': '12', 'desember': '12', 'dec': '12'
+            };
+            
+            let bulan = '01';
+            let tahun = '2025';
+            
+            // Try to extract from DDMMYYYY format first
+            const dateMatch = name.match(/(\d{2})(\d{2})(20\d{2})/);
+            if (dateMatch) {
+                bulan = dateMatch[2];
+                tahun = dateMatch[3];
+            } else {
+                for (const [key, val] of Object.entries(bulanMap)) {
+                    if (name.includes(key)) {
+                        bulan = val;
+                        break;
+                    }
+                }
+                const tahunMatch = name.match(/20\d{2}/);
+                if (tahunMatch) tahun = tahunMatch[0];
+            }
+            
+            return { periode: `${tahun}-${bulan}`, bulan, tahun };
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        // ==========================================
+        // FIREBASE CONNECTION
+        // ==========================================
+        async function connectFirebase() {
+            try {
+                log('Connecting to Firebase...', 'info');
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                
+                await db.collection('banksulselbar_neraca').limit(1).get();
+                
+                isConnected = true;
+                document.getElementById('statusDot').classList.add('connected');
+                document.getElementById('statusText').textContent = 'Connected';
+                document.getElementById('clearBtn').disabled = false;
+                document.getElementById('statsCard').style.display = 'block';
+                
+                log('✅ Connected to Firebase successfully!', 'success');
+                loadStats();
+                
+            } catch (error) {
+                log(`❌ Firebase connection error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadStats() {
+            if (!db) return;
+            
+            try {
+                log('Loading statistics...', 'info');
+                
+                const neracaSnap = await db.collection('banksulselbar_neraca').get();
+                const labarugiSnap = await db.collection('banksulselbar_labarugi').get();
+                
+                let ratioCount = 0;
+                const periodes = new Set();
+                
+                neracaSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.is_ratio) ratioCount++;
+                    if (data.periode) periodes.add(data.periode);
+                });
+                
+                document.getElementById('neracaCount').textContent = (neracaSnap.size - ratioCount).toLocaleString();
+                document.getElementById('labarugiCount').textContent = labarugiSnap.size.toLocaleString();
+                document.getElementById('ratioCount').textContent = ratioCount.toLocaleString();
+                document.getElementById('periodeCount').textContent = periodes.size;
+                
+                log(`✅ Stats: ${neracaSnap.size - ratioCount} neraca, ${labarugiSnap.size} labarugi, ${ratioCount} ratios, ${periodes.size} periods`, 'success');
+                
+            } catch (error) {
+                log(`❌ Error loading stats: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearAllData() {
+            if (!confirm('⚠️ PERINGATAN!\n\nSemua data neraca dan laba rugi akan dihapus.\nApakah Anda yakin?')) return;
+            
+            try {
+                log('🗑️ Clearing all data...', 'warning');
+                
+                const neracaBatch = await db.collection('banksulselbar_neraca').get();
+                for (const doc of neracaBatch.docs) {
+                    await doc.ref.delete();
+                }
+                
+                const labarugiBatch = await db.collection('banksulselbar_labarugi').get();
+                for (const doc of labarugiBatch.docs) {
+                    await doc.ref.delete();
+                }
+                
+                log('✅ All data cleared!', 'success');
+                loadStats();
+                
+            } catch (error) {
+                log(`❌ Error clearing data: ${error.message}`, 'error');
+            }
+        }
+
+        // ==========================================
+        // FILE HANDLERS
+        // ==========================================
+        function handleNeracaFile(event) {
+            neracaFile = event.target.files[0];
+            if (neracaFile) {
+                const periodeInfo = extractPeriode(neracaFile.name);
+                document.getElementById('neracaInfo').style.display = 'block';
+                document.getElementById('neracaFileName').textContent = neracaFile.name;
+                document.getElementById('neracaPeriode').textContent = periodeInfo.periode;
+                document.getElementById('parseNeracaBtn').disabled = false;
+                log(`📄 File selected: ${neracaFile.name} (Periode: ${periodeInfo.periode})`, 'info');
+            }
+        }
+
+        function handleLabarugiFile(event) {
+            labarugiFile = event.target.files[0];
+            if (labarugiFile) {
+                document.getElementById('labarugiInfo').style.display = 'block';
+                document.getElementById('labarugiFileName').textContent = labarugiFile.name;
+                document.getElementById('parseLabarugiBtn').disabled = false;
+                log(`📄 File laba rugi selected: ${labarugiFile.name}`, 'info');
+            }
+        }
+
+        // ==========================================
+        // PARSE NERACA + RATIO
+        // ==========================================
+        function parseNeraca() {
+            if (!neracaFile) {
+                log('Pilih file terlebih dahulu', 'error');
+                return;
+            }
+
+            log('📊 Parsing neraca + ratio...', 'info');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    const cfg = CONFIG.neraca;
+                    if (!workbook.SheetNames.includes(cfg.sheetName)) {
+                        throw new Error(`Sheet "${cfg.sheetName}" tidak ditemukan`);
+                    }
+
+                    const worksheet = workbook.Sheets[cfg.sheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null, raw: true });
+                    
+                    const periodeInfo = extractPeriode(neracaFile.name);
+                    const parsedData = [];
+                    let sandiCount = 0;
+
+                    // ========== PARSE NERACA DATA ==========
+                    for (let i = cfg.dataStartRow - 1; i < Math.min(rows.length, cfg.dataEndRow); i++) {
+                        const row = rows[i];
+                        if (!row) continue;
+
+                        const sandiCol = cfg.sandiColumn - 1;
+                        const sandiVal = row[sandiCol];
+                        if (!sandiVal) continue;
+
+                        const sandiStr = String(sandiVal).trim();
+                        const sandiMatch = sandiStr.match(/^(\d{2}\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.\d{2})/);
+                        if (!sandiMatch) continue;
+
+                        const cleanSandi = sandiMatch[1];
+                        sandiCount++;
+
+                        const posParts = [];
+                        for (let col = 1; col <= 7; col++) {
+                            if (row[col] && String(row[col]).trim() !== '') {
+                                posParts.push(String(row[col]).trim());
+                            }
+                        }
+                        const pos = posParts.join(' ').trim() || '-';
+
+                        // Process branches
+                        for (const [kode, info] of Object.entries(cfg.branches)) {
+                            const rupiah = parseNumber(row[info.rupiahCol - 1]);
+                            const valas = parseNumber(row[info.valasCol - 1]);
+
+                            parsedData.push({
+                                id: `${periodeInfo.periode}_${kode}_${cleanSandi.replace(/\./g, '')}`,
+                                periode: periodeInfo.periode,
+                                bulan: periodeInfo.bulan,
+                                tahun: periodeInfo.tahun,
+                                kode_cabang: kode,
+                                nama_cabang: info.nama,
+                                tipe: info.tipe,
+                                sandi: cleanSandi,
+                                pos: pos,
+                                rupiah: rupiah,
+                                valas: valas,
+                                total: rupiah + valas,
+                                is_ratio: false,
+                                created_at: new Date().toISOString()
+                            });
+                        }
+
+                        // Process summary columns
+                        for (const [kode, info] of Object.entries(cfg.summaryColumns)) {
+                            const rupiah = parseNumber(row[info.rupiahCol - 1]);
+                            const valas = parseNumber(row[info.valasCol - 1]);
+
+                            parsedData.push({
+                                id: `${periodeInfo.periode}_${kode}_${cleanSandi.replace(/\./g, '')}`,
+                                periode: periodeInfo.periode,
+                                bulan: periodeInfo.bulan,
+                                tahun: periodeInfo.tahun,
+                                kode_cabang: kode,
+                                nama_cabang: info.nama,
+                                tipe: info.tipe,
+                                sandi: cleanSandi,
+                                pos: pos,
+                                rupiah: rupiah,
+                                valas: valas,
+                                total: rupiah + valas,
+                                is_summary: true,
+                                is_ratio: false,
+                                created_at: new Date().toISOString()
+                            });
+                        }
+                    }
+
+                    // ========== PARSE RATIO DATA ==========
+                    ratioData = [];
+                    const includeRatio = document.getElementById('includeRatio').checked;
+                    
+                    if (includeRatio) {
+                        log('📊 Extracting ratio data from rows 143-152...', 'info');
+                        
+                        const ratioCfg = CONFIG.ratio;
+                        
+                        for (const [rowNum, ratioName] of Object.entries(ratioCfg.rows)) {
+                            const rowIndex = parseInt(rowNum) - 1;
+                            const row = rows[rowIndex];
+                            
+                            if (!row) {
+                                log(`⚠️ Row ${rowNum} for ${ratioName} not found`, 'warning');
+                                continue;
+                            }
+                            
+                            // 1. Parse ratio untuk SUMMARY (ALL, KON, SYR)
+                            for (const [kode, colIndex] of Object.entries(ratioCfg.summaryColumns)) {
+                                const value = parseNumber(row[colIndex]);
+                                
+                                if (value === 0 || isNaN(value)) continue;
+                                
+                                const tipeMap = { 'KON': 'konvensional', 'SYR': 'syariah', 'ALL': 'konsolidasi' };
+                                const namaMap = { 'KON': 'KONVENSIONAL', 'SYR': 'SYARIAH', 'ALL': 'KONSOLIDASI' };
+                                
+                                ratioData.push({
+                                    id: `${periodeInfo.periode}_${kode}_RATIO_${ratioName}`,
+                                    periode: periodeInfo.periode,
+                                    bulan: periodeInfo.bulan,
+                                    tahun: periodeInfo.tahun,
+                                    kode_cabang: kode,
+                                    nama_cabang: namaMap[kode],
+                                    tipe: tipeMap[kode],
+                                    sandi: `RATIO_${ratioName}`,
+                                    pos: ratioName,
+                                    ratio_name: ratioName,
+                                    value: value,
+                                    value_percent: value * 100,
+                                    is_ratio: true,
+                                    is_summary: true,
+                                    created_at: new Date().toISOString()
+                                });
+                            }
+                            
+                            // 2. Parse ratio untuk SETIAP CABANG
+                            for (const [kode, info] of Object.entries(cfg.branches)) {
+                                // Ratio ada di kolom Rupiah (rupiahCol), bukan valas
+                                const colIndex = info.rupiahCol - 1; // 0-based index
+                                const value = parseNumber(row[colIndex]);
+                                
+                                if (value === 0 || isNaN(value)) continue;
+                                
+                                ratioData.push({
+                                    id: `${periodeInfo.periode}_${kode}_RATIO_${ratioName}`,
+                                    periode: periodeInfo.periode,
+                                    bulan: periodeInfo.bulan,
+                                    tahun: periodeInfo.tahun,
+                                    kode_cabang: kode,
+                                    nama_cabang: info.nama,
+                                    tipe: info.tipe,
+                                    sandi: `RATIO_${ratioName}`,
+                                    pos: ratioName,
+                                    ratio_name: ratioName,
+                                    value: value,
+                                    value_percent: value * 100,
+                                    is_ratio: true,
+                                    is_summary: false,
+                                    created_at: new Date().toISOString()
+                                });
+                            }
+                        }
+                        
+                        log(`✅ Extracted ${ratioData.length} ratio records (summary + branches)`, 'success');
+                        
+                        // Log summary ratio values only (to avoid spam)
+                        const summaryRatios = ratioData.filter(r => r.is_summary === true);
+                        summaryRatios.forEach(r => {
+                            log(`   ${r.kode_cabang} ${r.ratio_name}: ${r.value_percent.toFixed(2)}%`, 'info');
+                        });
+                        log(`   + ${ratioData.length - summaryRatios.length} ratio records for individual branches`, 'info');
+                    }
+
+                    neracaData = parsedData;
+                    document.getElementById('neracaRecords').textContent = parsedData.length.toLocaleString();
+                    document.getElementById('ratioRecordsNeraca').textContent = ratioData.length;
+                    document.getElementById('uploadNeracaBtn').disabled = !isConnected;
+
+                    // Preview
+                    let preview = '<h4 style="margin:15px 0 10px;">📋 Preview Neraca:</h4>';
+                    preview += '<table class="preview-table"><thead><tr><th>Kode</th><th>Sandi</th><th>Pos</th><th>Total</th></tr></thead><tbody>';
+                    parsedData.slice(0, 8).forEach(item => {
+                        preview += `<tr><td>${item.kode_cabang}</td><td>${item.sandi}</td><td>${item.pos.substring(0,30)}</td><td>${item.total.toLocaleString()}</td></tr>`;
+                    });
+                    preview += '</tbody></table>';
+                    
+                    if (ratioData.length > 0) {
+                        preview += '<h4 style="margin:15px 0 10px;">📊 Preview Ratio (Sample):</h4>';
+                        preview += '<table class="preview-table"><thead><tr><th>Kode</th><th>Ratio</th><th>Value</th></tr></thead><tbody>';
+                        // Show summary ratios first, then some branch samples
+                        const summaryRatios = ratioData.filter(r => ['ALL', 'KON', 'SYR'].includes(r.kode_cabang));
+                        const branchRatios = ratioData.filter(r => !['ALL', 'KON', 'SYR'].includes(r.kode_cabang));
+                        
+                        summaryRatios.slice(0, 15).forEach(item => {
+                            preview += `<tr style="background:#f0fdf4;"><td><strong>${item.kode_cabang}</strong></td><td>${item.ratio_name}</td><td>${item.value_percent.toFixed(2)}%</td></tr>`;
+                        });
+                        branchRatios.slice(0, 10).forEach(item => {
+                            preview += `<tr><td>${item.kode_cabang}</td><td>${item.ratio_name}</td><td>${item.value_percent.toFixed(2)}%</td></tr>`;
+                        });
+                        if (ratioData.length > 25) {
+                            preview += `<tr><td colspan="3" style="text-align:center;color:#666;">... dan ${ratioData.length - 25} ratio records lainnya</td></tr>`;
+                        }
+                        preview += '</tbody></table>';
+                    }
+                    
+                    document.getElementById('neracaPreview').innerHTML = preview;
+
+                    log(`✅ Parsed ${sandiCount} sandi → ${parsedData.length.toLocaleString()} neraca + ${ratioData.length} ratio records`, 'success');
+
+                } catch (error) {
+                    log(`❌ Parse error: ${error.message}`, 'error');
+                    console.error(error);
+                }
+            };
+            reader.readAsArrayBuffer(neracaFile);
+        }
+
+        // ==========================================
+        // PARSE LABA RUGI
+        // ==========================================
+        function parseLabarugi() {
+            if (!labarugiFile) {
+                log('Pilih file terlebih dahulu', 'error');
+                return;
+            }
+
+            log('📊 Parsing laba rugi...', 'info');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    let sheetName = CONFIG.labarugi.sheetName;
+                    if (!workbook.SheetNames.includes(sheetName)) {
+                        const alternatives = ['Laba Rugi', 'LabaRugi', 'L/R', 'PL', 'Laba_Rugi'];
+                        for (const alt of alternatives) {
+                            if (workbook.SheetNames.includes(alt)) {
+                                sheetName = alt;
+                                break;
+                            }
+                        }
+                        if (!workbook.SheetNames.includes(sheetName)) {
+                            sheetName = workbook.SheetNames[0];
+                            log(`⚠️ Using first sheet: ${sheetName}`, 'warning');
+                        }
+                    }
+
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null, raw: true });
+                    
+                    const periodeInfo = extractPeriode(labarugiFile.name);
+                    const parsedData = [];
+                    const cfg = CONFIG.labarugi;
+
+                    for (let i = cfg.dataStartRow - 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (!row) continue;
+
+                        const sandiCol = cfg.sandiColumn - 1;
+                        const sandiVal = row[sandiCol];
+                        if (!sandiVal) continue;
+
+                        const sandiStr = String(sandiVal).trim();
+                        const sandiMatch = sandiStr.match(/^(\d{2}\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.\d{2})/);
+                        if (!sandiMatch) continue;
+
+                        const cleanSandi = sandiMatch[1];
+
+                        const posParts = [];
+                        for (let col = 1; col <= 7; col++) {
+                            if (row[col] && String(row[col]).trim() !== '') {
+                                posParts.push(String(row[col]).trim());
+                            }
+                        }
+                        const pos = posParts.join(' ').trim() || '-';
+
+                        for (const [kode, info] of Object.entries(cfg.branches)) {
+                            const rupiah = parseNumber(row[info.rupiahCol - 1]);
+                            const valas = parseNumber(row[info.valasCol - 1]);
+
+                            parsedData.push({
+                                id: `${periodeInfo.periode}_${kode}_${cleanSandi.replace(/\./g, '')}`,
+                                periode: periodeInfo.periode,
+                                kode_cabang: kode,
+                                nama_cabang: info.nama,
+                                tipe: info.tipe,
+                                sandi: cleanSandi,
+                                pos: pos,
+                                rupiah: rupiah,
+                                valas: valas,
+                                total: rupiah + valas,
+                                created_at: new Date().toISOString()
+                            });
+                        }
+
+                        for (const [kode, info] of Object.entries(cfg.summaryColumns)) {
+                            const rupiah = parseNumber(row[info.rupiahCol - 1]);
+                            const valas = parseNumber(row[info.valasCol - 1]);
+
+                            parsedData.push({
+                                id: `${periodeInfo.periode}_${kode}_${cleanSandi.replace(/\./g, '')}`,
+                                periode: periodeInfo.periode,
+                                kode_cabang: kode,
+                                nama_cabang: info.nama,
+                                tipe: info.tipe,
+                                sandi: cleanSandi,
+                                pos: pos,
+                                rupiah: rupiah,
+                                valas: valas,
+                                total: rupiah + valas,
+                                is_summary: true,
+                                created_at: new Date().toISOString()
+                            });
+                        }
+                    }
+
+                    labarugiData = parsedData;
+                    document.getElementById('labarugiRecords').textContent = parsedData.length.toLocaleString();
+                    document.getElementById('uploadLabarugiBtn').disabled = !isConnected;
+
+                    let preview = '<table class="preview-table"><thead><tr><th>Kode</th><th>Sandi</th><th>Pos</th><th>Total</th></tr></thead><tbody>';
+                    parsedData.slice(0, 10).forEach(item => {
+                        preview += `<tr><td>${item.kode_cabang}</td><td>${item.sandi}</td><td>${item.pos.substring(0,30)}</td><td>${item.total.toLocaleString()}</td></tr>`;
+                    });
+                    preview += '</tbody></table>';
+                    document.getElementById('labarugiPreview').innerHTML = preview;
+
+                    log(`✅ Parsed ${parsedData.length.toLocaleString()} laba rugi records`, 'success');
+
+                } catch (error) {
+                    log(`❌ Parse error: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(labarugiFile);
+        }
+
+        // ==========================================
+        // UPLOAD NERACA + RATIO
+        // ==========================================
+        async function uploadNeraca() {
+            if (!neracaData || neracaData.length === 0) {
+                log('Tidak ada data untuk diupload', 'error');
+                return;
+            }
+
+            if (!db) {
+                log('Firebase belum terkoneksi', 'error');
+                return;
+            }
+
+            const allData = [...neracaData, ...(ratioData || [])];
+            
+            log(`🚀 Uploading ${allData.length.toLocaleString()} records (${neracaData.length} neraca + ${ratioData?.length || 0} ratio)...`, 'info');
+            
+            document.getElementById('neracaProgress').style.display = 'block';
+            document.getElementById('uploadNeracaBtn').disabled = true;
+
+            try {
+                const collection = db.collection('banksulselbar_neraca');
+                const batchSize = 500;
+                let uploaded = 0;
+
+                for (let i = 0; i < allData.length; i += batchSize) {
+                    const batch = db.batch();
+                    const chunk = allData.slice(i, i + batchSize);
+
+                    for (const item of chunk) {
+                        const docRef = collection.doc(item.id);
+                        batch.set(docRef, item);
+                    }
+
+                    await batch.commit();
+                    uploaded += chunk.length;
+
+                    const progress = Math.round((uploaded / allData.length) * 100);
+                    document.getElementById('neracaProgressFill').style.width = progress + '%';
+                    
+                    log(`📤 Uploaded ${uploaded.toLocaleString()}/${allData.length.toLocaleString()} (${progress}%)`, 'info');
+                }
+
+                log(`✅ Upload complete! ${uploaded.toLocaleString()} records uploaded`, 'success');
+                loadStats();
+                
+            } catch (error) {
+                log(`❌ Upload error: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('uploadNeracaBtn').disabled = false;
+            }
+        }
+
+        // ==========================================
+        // UPLOAD LABA RUGI
+        // ==========================================
+        async function uploadLabarugi() {
+            if (!labarugiData || labarugiData.length === 0) {
+                log('Tidak ada data untuk diupload', 'error');
+                return;
+            }
+
+            if (!db) {
+                log('Firebase belum terkoneksi', 'error');
+                return;
+            }
+
+            log(`🚀 Uploading ${labarugiData.length.toLocaleString()} laba rugi records...`, 'info');
+            
+            document.getElementById('labarugiProgress').style.display = 'block';
+            document.getElementById('uploadLabarugiBtn').disabled = true;
+
+            try {
+                const collection = db.collection('banksulselbar_labarugi');
+                const batchSize = 500;
+                let uploaded = 0;
+
+                for (let i = 0; i < labarugiData.length; i += batchSize) {
+                    const batch = db.batch();
+                    const chunk = labarugiData.slice(i, i + batchSize);
+
+                    for (const item of chunk) {
+                        const docRef = collection.doc(item.id);
+                        batch.set(docRef, item);
+                    }
+
+                    await batch.commit();
+                    uploaded += chunk.length;
+
+                    const progress = Math.round((uploaded / labarugiData.length) * 100);
+                    document.getElementById('labarugiProgressFill').style.width = progress + '%';
+                }
+
+                log(`✅ Upload laba rugi complete! ${uploaded.toLocaleString()} records`, 'success');
+                loadStats();
+                
+            } catch (error) {
+                log(`❌ Upload error: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('uploadLabarugiBtn').disabled = false;
+            }
+        }
+
+        // ==========================================
+        // TARGET DATA HANDLING
+        // ==========================================
+        let targetNeracaFile = null;
+        let targetLabarugiFile = null;
+        let targetNeracaData = [];
+        let targetLabarugiData = [];
+
+        function handleTargetFile(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (type === 'neraca') {
+                targetNeracaFile = file;
+                document.getElementById('targetNeracaFileName').textContent = file.name;
+                document.getElementById('targetNeracaInfo').style.display = 'block';
+                log(`📋 Target Neraca file selected: ${file.name}`, 'info');
+            } else {
+                targetLabarugiFile = file;
+                document.getElementById('targetLabarugiFileName').textContent = file.name;
+                document.getElementById('targetLabarugiInfo').style.display = 'block';
+                log(`💰 Target Laba Rugi file selected: ${file.name}`, 'info');
+            }
+            
+            document.getElementById('parseTargetBtn').disabled = !(targetNeracaFile || targetLabarugiFile);
+        }
+
+        async function parseAllTarget() {
+            log('🔄 Parsing target data...', 'info');
+            targetNeracaData = [];
+            targetLabarugiData = [];
+            
+            if (targetNeracaFile) {
+                targetNeracaData = await parseTargetFile(targetNeracaFile, 'neraca');
+                document.getElementById('targetNeracaRecords').textContent = targetNeracaData.length.toLocaleString();
+            }
+            
+            if (targetLabarugiFile) {
+                targetLabarugiData = await parseTargetFile(targetLabarugiFile, 'labarugi');
+                document.getElementById('targetLabarugiRecords').textContent = targetLabarugiData.length.toLocaleString();
+            }
+            
+            const total = targetNeracaData.length + targetLabarugiData.length;
+            log(`✅ Parsed ${total.toLocaleString()} target records`, 'success');
+            
+            // Show preview
+            showTargetPreview();
+            
+            document.getElementById('uploadTargetBtn').disabled = !isConnected || total === 0;
+        }
+
+        async function parseTargetFile(file, type) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const records = [];
+                        
+                        // Process each TRW sheet (TRW 1, TRW 2, TRW 3, TRW 4)
+                        workbook.SheetNames.forEach((sheetName, idx) => {
+                            const trwMatch = sheetName.match(/TRW\s*(\d)/i) || sheetName.match(/Triwulan\s*(\d)/i);
+                            const triwulan = trwMatch ? trwMatch[1] : (idx + 1);
+                            const periode = `TRW${triwulan}_2025`;
+                            
+                            const sheet = workbook.Sheets[sheetName];
+                            const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                            
+                            if (jsonData.length < 5) return;
+                            
+                            // Find header row (contains branch codes)
+                            const headerRow = jsonData[0] || [];
+                            
+                            // Map column index to branch info
+                            const branchColumns = [];
+                            headerRow.forEach((cell, colIdx) => {
+                                if (colIdx < 3) return; // Skip sandi, pos columns
+                                const cellStr = String(cell || '');
+                                // Check if it's a branch code (3 digits) or name
+                                if (cellStr && cellStr.trim()) {
+                                    branchColumns.push({
+                                        colIdx,
+                                        header: cellStr.trim()
+                                    });
+                                }
+                            });
+                            
+                            log(`   Sheet ${sheetName}: ${branchColumns.length} columns found`, 'info');
+                            
+                            // Process data rows
+                            for (let i = 1; i < jsonData.length; i++) {
+                                const row = jsonData[i];
+                                if (!row || row.length < 3) continue;
+                                
+                                const sandi = String(row[0] || '').trim();
+                                const pos = String(row[1] || row[2] || '').trim();
+                                
+                                if (!sandi || sandi === '' || sandi.toLowerCase() === 'sandi') continue;
+                                
+                                // Get value for each branch column
+                                branchColumns.forEach(bc => {
+                                    const value = parseNumber(row[bc.colIdx]);
+                                    if (value === 0) return;
+                                    
+                                    // Determine branch code and name
+                                    let kodeCabang = bc.header;
+                                    let namaCabang = bc.header;
+                                    let tipe = 'konvensional';
+                                    
+                                    // Check for special codes
+                                    if (bc.header === 'TOTAL' || bc.header.includes('TOTAL')) {
+                                        kodeCabang = 'ALL';
+                                        namaCabang = 'Konsolidasi';
+                                    } else if (bc.header === 'KONVENSIONAL' || bc.header.includes('KON')) {
+                                        kodeCabang = 'KON';
+                                        namaCabang = 'Total Konvensional';
+                                    } else if (bc.header === 'SYARIAH' || bc.header.includes('SYR')) {
+                                        kodeCabang = 'SYR';
+                                        namaCabang = 'Total Syariah';
+                                        tipe = 'syariah';
+                                    } else if (bc.header.match(/^5\d{2}$/)) {
+                                        tipe = 'syariah';
+                                    }
+                                    
+                                    records.push({
+                                        periode,
+                                        triwulan: parseInt(triwulan),
+                                        tahun: 2025,
+                                        kode_cabang: kodeCabang,
+                                        nama_cabang: namaCabang,
+                                        tipe,
+                                        sandi,
+                                        pos,
+                                        total: value,
+                                        rupiah: value
+                                    });
+                                });
+                            }
+                        });
+                        
+                        log(`   ${type}: Parsed ${records.length} records from ${workbook.SheetNames.length} sheets`, 'success');
+                        resolve(records);
+                        
+                    } catch (error) {
+                        log(`❌ Parse error: ${error.message}`, 'error');
+                        reject(error);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function showTargetPreview() {
+            const preview = document.getElementById('targetPreview');
+            let html = '<h4 style="margin: 15px 0;">📊 Preview Data Target</h4>';
+            
+            if (targetNeracaData.length > 0) {
+                html += '<p><strong>Target Neraca:</strong></p>';
+                html += '<table class="preview-table"><thead><tr><th>Periode</th><th>Cabang</th><th>Sandi</th><th>Pos</th><th>Total</th></tr></thead><tbody>';
+                targetNeracaData.slice(0, 10).forEach(r => {
+                    html += `<tr><td>${r.periode}</td><td>${r.kode_cabang}</td><td>${r.sandi}</td><td>${r.pos?.substring(0,30) || '-'}</td><td>${formatRupiah(r.total)}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                if (targetNeracaData.length > 10) {
+                    html += `<p style="color:#666;font-size:12px;">...dan ${targetNeracaData.length - 10} records lainnya</p>`;
+                }
+            }
+            
+            if (targetLabarugiData.length > 0) {
+                html += '<p style="margin-top:15px;"><strong>Target Laba Rugi:</strong></p>';
+                html += '<table class="preview-table"><thead><tr><th>Periode</th><th>Cabang</th><th>Sandi</th><th>Pos</th><th>Total</th></tr></thead><tbody>';
+                targetLabarugiData.slice(0, 10).forEach(r => {
+                    html += `<tr><td>${r.periode}</td><td>${r.kode_cabang}</td><td>${r.sandi}</td><td>${r.pos?.substring(0,30) || '-'}</td><td>${formatRupiah(r.total)}</td></tr>`;
+                });
+                html += '</tbody></table>';
+            }
+            
+            preview.innerHTML = html;
+        }
+
+        function formatRupiah(val) {
+            if (!val) return 'Rp 0';
+            const abs = Math.abs(val);
+            if (abs >= 1e12) return `Rp ${(val/1e12).toFixed(2)} T`;
+            if (abs >= 1e9) return `Rp ${(val/1e9).toFixed(2)} M`;
+            if (abs >= 1e6) return `Rp ${(val/1e6).toFixed(2)} Jt`;
+            return `Rp ${val.toLocaleString()}`;
+        }
+
+        async function uploadAllTarget() {
+            if (!isConnected) {
+                log('❌ Firebase not connected!', 'error');
+                return;
+            }
+            
+            document.getElementById('uploadTargetBtn').disabled = true;
+            document.getElementById('targetProgress').style.display = 'block';
+            
+            try {
+                let totalUploaded = 0;
+                const totalRecords = targetNeracaData.length + targetLabarugiData.length;
+                
+                // Upload Target Neraca
+                if (targetNeracaData.length > 0) {
+                    log(`📤 Uploading ${targetNeracaData.length} target neraca records...`, 'info');
+                    
+                    const batchSize = 400;
+                    for (let i = 0; i < targetNeracaData.length; i += batchSize) {
+                        const chunk = targetNeracaData.slice(i, i + batchSize);
+                        const batch = db.batch();
+                        
+                        chunk.forEach(record => {
+                            const docId = `${record.periode}_${record.kode_cabang}_${record.sandi}`.replace(/[\/\.]/g, '_');
+                            const ref = db.collection('banksulselbar_target_neraca').doc(docId);
+                            batch.set(ref, record);
+                        });
+                        
+                        await batch.commit();
+                        totalUploaded += chunk.length;
+                        
+                        const progress = Math.round((totalUploaded / totalRecords) * 100);
+                        document.getElementById('targetProgressFill').style.width = progress + '%';
+                    }
+                    
+                    log(`✅ Target Neraca uploaded: ${targetNeracaData.length} records`, 'success');
+                }
+                
+                // Upload Target Laba Rugi
+                if (targetLabarugiData.length > 0) {
+                    log(`📤 Uploading ${targetLabarugiData.length} target labarugi records...`, 'info');
+                    
+                    const batchSize = 400;
+                    for (let i = 0; i < targetLabarugiData.length; i += batchSize) {
+                        const chunk = targetLabarugiData.slice(i, i + batchSize);
+                        const batch = db.batch();
+                        
+                        chunk.forEach(record => {
+                            const docId = `${record.periode}_${record.kode_cabang}_${record.sandi}`.replace(/[\/\.]/g, '_');
+                            const ref = db.collection('banksulselbar_target_labarugi').doc(docId);
+                            batch.set(ref, record);
+                        });
+                        
+                        await batch.commit();
+                        totalUploaded += chunk.length;
+                        
+                        const progress = Math.round((totalUploaded / totalRecords) * 100);
+                        document.getElementById('targetProgressFill').style.width = progress + '%';
+                    }
+                    
+                    log(`✅ Target Laba Rugi uploaded: ${targetLabarugiData.length} records`, 'success');
+                }
+                
+                log(`🎉 All target data uploaded! Total: ${totalUploaded} records`, 'success');
+                loadStats();
+                
+            } catch (error) {
+                log(`❌ Upload error: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('uploadTargetBtn').disabled = false;
+            }
+        }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🏦 Admin Panel ready!', 'success');
+            log('📌 Klik "Connect to Firebase" untuk mulai', 'info');
+            
+            setTimeout(() => {
+                connectFirebase();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
