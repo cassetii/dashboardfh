@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Dashboard Management System Bank Sulselbar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #001e51 0%, #0a3a7a 50%, #8ac01e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #001e51 0%, #0a3a7a 100%);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(138, 192, 30, 0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .logo-container {
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .logo-container img {
+            height: 60px;
+            width: auto;
+            display: block;
+        }
+
+        .login-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.85rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-body {
+            padding: 2rem;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .alert.show { display: flex; }
+
+        .alert-error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-label i {
+            color: #8ac01e;
+            margin-right: 0.5rem;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 1rem;
+            z-index: 1;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #8ac01e;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(138, 192, 30, 0.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+            z-index: 2;
+        }
+
+        .password-toggle:hover { color: #8ac01e; }
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #8ac01e;
+        }
+
+        .forgot-password {
+            font-size: 0.85rem;
+            color: #8ac01e;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            color: #6fa015;
+            text-decoration: underline;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 0.95rem;
+            background: linear-gradient(135deg, #8ac01e 0%, #6fa015 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(138, 192, 30, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(138, 192, 30, 0.4);
+        }
+
+        .login-button:active { transform: translateY(0); }
+
+        .login-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-footer {
+            background: #f8f9fa;
+            padding: 1.25rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .login-footer p { margin-bottom: 0.25rem; }
+        .login-footer .green-text { color: #8ac01e; font-weight: 600; }
+
+        /* Demo Accounts Dropdown */
+        .demo-accounts {
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px dashed #e5e7eb;
+        }
+
+        .demo-accounts summary {
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .demo-accounts summary:hover { color: #0a3a7a; }
+
+        .demo-list {
+            margin-top: 12px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .demo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .demo-item:hover {
+            background: #f0fdf4;
+            border-color: #8ac01e;
+        }
+
+        .demo-item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .demo-item-role {
+            font-size: 16px;
+        }
+
+        .demo-item-info {
+            line-height: 1.3;
+        }
+
+        .demo-item-user {
+            font-weight: 600;
+            color: #1f2937;
+            font-family: monospace;
+        }
+
+        .demo-item-label {
+            color: #6b7280;
+            font-size: 0.7rem;
+        }
+
+        .demo-item-arrow {
+            color: #8ac01e;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .demo-item:hover .demo-item-arrow { opacity: 1; }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Decorations */
+        .decoration {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 0;
+        }
+
+        .decoration-1 {
+            width: 400px;
+            height: 400px;
+            top: -100px;
+            right: -100px;
+        }
+
+        .decoration-2 {
+            width: 300px;
+            height: 300px;
+            bottom: -50px;
+            left: -50px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Decorative elements -->
+    <div class="decoration decoration-1"></div>
+    <div class="decoration decoration-2"></div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo-container">
+                    <img src="logobanksulselbar.png" alt="Bank Sulselbar Logo" onerror="this.src='logo-bank-sulselbar.png'">
+                </div>
+                <h1 class="login-title">Dashboard Management System</h1>
+                <p class="login-subtitle">PT Bank Pembangunan Daerah Sulawesi Selatan dan Sulawesi Barat</p>
+            </div>
+
+            <div class="login-body">
+                <div class="alert alert-error" id="alertError">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorMessage">Username atau password salah!</span>
+                </div>
+
+                <div class="alert alert-success" id="alertSuccess">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="successMessage">Login berhasil! Mengalihkan...</span>
+                </div>
+
+                <form id="loginForm" onsubmit="return false;">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user"></i>
+                            Username
+                        </label>
+                        <div class="input-group">
+                            <i class="input-icon fas fa-user-circle"></i>
+                            <input 
+                                type="text" 
+                                class="form-input" 
+                                id="username" 
+                                placeholder="Masukkan username"
+                                autocomplete="username"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-lock"></i>
+                            Password
+                        </label>
+                        <div class="input-group">
+                            <i class="input-icon fas fa-lock"></i>
+                            <input 
+                                type="password" 
+                                class="form-input" 
+                                id="password" 
+                                placeholder="Masukkan password"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <button type="button" class="password-toggle" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <label class="remember-me">
+                            <input type="checkbox" id="rememberMe">
+                            <span>Ingat saya</span>
+                        </label>
+                        <a href="#" class="forgot-password" onclick="alert('Hubungi Administrator untuk reset password'); return false;">Lupa password?</a>
+                    </div>
+
+                    <button type="submit" class="login-button" id="loginButton">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span id="loginButtonText">Login</span>
+                    </button>
+                </form>
+
+                <!-- Demo Accounts -->
+                <details class="demo-accounts">
+                    <summary><i class="fas fa-info-circle"></i> Akun Demo</summary>
+                    <div class="demo-list">
+                        <div class="demo-item" onclick="fillDemo('ADMIN_PUSAT', 'admin123')">
+                            <div class="demo-item-left">
+                                <span class="demo-item-role">ðŸ‘‘</span>
+                                <div class="demo-item-info">
+                                    <div class="demo-item-user">ADMIN_PUSAT</div>
+                                    <div class="demo-item-label">Administrator - Full Access</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right demo-item-arrow"></i>
+                        </div>
+                        <div class="demo-item" onclick="fillDemo('PIN_MAROS', 'pincab123')">
+                            <div class="demo-item-left">
+                                <span class="demo-item-role">ðŸ‘”</span>
+                                <div class="demo-item-info">
+                                    <div class="demo-item-user">PIN_MAROS</div>
+                                    <div class="demo-item-label">Pincab Maros - Review & Approve</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right demo-item-arrow"></i>
+                        </div>
+                        <div class="demo-item" onclick="fillDemo('OPR_010_01', 'operator123')">
+                            <div class="demo-item-left">
+                                <span class="demo-item-role">ðŸ’¼</span>
+                                <div class="demo-item-info">
+                                    <div class="demo-item-user">OPR_010_01</div>
+                                    <div class="demo-item-label">Operator Maros - Input Data</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right demo-item-arrow"></i>
+                        </div>
+                        <div class="demo-item" onclick="fillDemo('VIEW_PUSAT', 'viewer123')">
+                            <div class="demo-item-left">
+                                <span class="demo-item-role">ðŸ‘ï¸</span>
+                                <div class="demo-item-info">
+                                    <div class="demo-item-user">VIEW_PUSAT</div>
+                                    <div class="demo-item-label">Viewer - Lihat Dashboard</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right demo-item-arrow"></i>
+                        </div>
+                        <div class="demo-item" onclick="fillDemo('simo', 'simo1234')">
+                            <div class="demo-item-left">
+                                <span class="demo-item-role">â­</span>
+                                <div class="demo-item-info">
+                                    <div class="demo-item-user">simo</div>
+                                    <div class="demo-item-label">Legacy Admin - Full Access</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right demo-item-arrow"></i>
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <div class="login-footer">
+                <p>&copy; 2025 PT Bank Sulselbar</p>
+                <p>Dashboard Management System by <span class="green-text">SIMO</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Manager Script -->
+    <script src="user-manager.js"></script>
+
+    <script>
+        // Configuration
+        const DASHBOARD_URL = 'dashboard-enhanced.html';
+
+        // Elements
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('loginButton');
+        const loginButtonText = document.getElementById('loginButtonText');
+        const togglePassword = document.getElementById('togglePassword');
+        const rememberMe = document.getElementById('rememberMe');
+        const alertError = document.getElementById('alertError');
+        const alertSuccess = document.getElementById('alertSuccess');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // Check if already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check new session system
+            if (typeof isLoggedIn === 'function' && isLoggedIn()) {
+                window.location.href = DASHBOARD_URL;
+                return;
+            }
+            
+            // Check legacy session
+            const legacyLogin = sessionStorage.getItem('isLoggedIn');
+            const rememberLogin = localStorage.getItem('rememberLogin');
+            
+            if (legacyLogin === 'true' || rememberLogin === 'true') {
+                window.location.href = DASHBOARD_URL;
+                return;
+            }
+
+            // Check remember me
+            const savedUsername = localStorage.getItem('savedUsername');
+            if (savedUsername) {
+                usernameInput.value = savedUsername;
+                rememberMe.checked = true;
+            }
+        });
+
+        // Toggle password visibility
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            
+            const icon = togglePassword.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+
+        // Fill demo credentials
+        function fillDemo(user, pass) {
+            usernameInput.value = user;
+            passwordInput.value = pass;
+            usernameInput.focus();
+        }
+
+        // Form submission
+        loginForm.addEventListener('submit', handleLogin);
+        loginButton.addEventListener('click', handleLogin);
+
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            // Hide alerts
+            alertError.classList.remove('show');
+            alertSuccess.classList.remove('show');
+
+            // Validate
+            if (!username || !password) {
+                showError('Username dan password harus diisi!');
+                return;
+            }
+
+            // Disable button and show loading
+            loginButton.disabled = true;
+            loginButtonText.innerHTML = '<span class="loading-spinner"></span>';
+
+            // Simulate API call delay
+            setTimeout(() => {
+                let loginSuccess = false;
+                let userSession = null;
+
+                // Try new user system first
+                if (typeof login === 'function') {
+                    const result = login(username, password);
+                    if (result.success) {
+                        loginSuccess = true;
+                        userSession = result.session;
+                    }
+                }
+
+                // Fallback to legacy login (simo/simo1234)
+                if (!loginSuccess && username.toLowerCase() === 'simo' && password === 'simo1234') {
+                    loginSuccess = true;
+                    userSession = {
+                        username: 'SIMO',
+                        name: 'SIMO Administrator',
+                        role: 'ADMIN',
+                        roleInfo: { label: 'Administrator', icon: 'â­', color: '#8ac01e' },
+                        officeCode: '000',
+                        officeName: 'Kantor Pusat',
+                        permissions: ['manage_users', 'manage_offices', 'set_targets', 'view_all', 'input_realization', 'approve_data', 'export_reports', 'view_dashboard', 'view_ratios', 'manage_pipeline', 'delete_data']
+                    };
+                    
+                    // Save legacy session
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('username', username);
+                    sessionStorage.setItem('userSession', JSON.stringify(userSession));
+                }
+
+                if (loginSuccess) {
+                    // Success
+                    const roleLabel = userSession.roleInfo?.label || userSession.role;
+                    successMessage.innerHTML = `<i class="fas fa-check-circle"></i> Selamat datang, ${userSession.name}!`;
+                    alertSuccess.classList.add('show');
+
+                    // Save session to sessionStorage for dashboard
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('username', userSession.username);
+                    sessionStorage.setItem('userSession', JSON.stringify(userSession));
+
+                    // Save remember me
+                    if (rememberMe.checked) {
+                        localStorage.setItem('rememberLogin', 'true');
+                        localStorage.setItem('savedUsername', username);
+                    } else {
+                        localStorage.removeItem('rememberLogin');
+                        localStorage.removeItem('savedUsername');
+                    }
+
+                    // Redirect after delay
+                    setTimeout(() => {
+                        window.location.href = DASHBOARD_URL;
+                    }, 1000);
+
+                } else {
+                    // Failed
+                    loginButton.disabled = false;
+                    loginButtonText.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    showError('Username atau password salah!');
+
+                    // Shake animation
+                    loginForm.style.animation = 'none';
+                    setTimeout(() => {
+                        loginForm.style.animation = 'shake 0.5s ease';
+                    }, 10);
+                }
+            }, 800);
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            alertError.classList.add('show');
+        }
+
+        // Enter key handling
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') passwordInput.focus();
+        });
+
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin(e);
+        });
+    </script>
+</body>
+</html>
