@@ -104,7 +104,10 @@
     // SANDI MAPPING
     // ==========================================
     
-    const SANDI = {
+    // ==========================================
+    // SANDI CODES - KONVENSIONAL
+    // ==========================================
+    const SANDI_KONVEN = {
         totalAset: '01.00.00.00.00.00',
         kredit: '01.09.01.00.00.00',
         pembiayaan: '01.10.00.00.00.00',
@@ -119,6 +122,64 @@
         pendapatanBunga: '04.11.00.00.00.00',
         bebanBunga: '05.11.00.00.00.00'
     };
+    
+    // ==========================================
+    // SANDI CODES - SYARIAH (Multiple sandi per komponen)
+    // ==========================================
+    const SANDI_SYARIAH = {
+        totalAset: '01.00.00.00.00.00',
+        kreditPrefix: '01.09.03',  // Sum all 01.09.03.xx.xx.xx
+        pembiayaan: '01.10.00.00.00.00',
+        ckpnPrefix: '01.12',
+        atiGross: '01.14.01.00.00.00',
+        atiAkum: '01.14.02.00.00.00',
+        // Giro Syariah: Wadiah + Mudharabah + Lainnya
+        giroList: ['02.01.02.01.00.00', '02.01.02.02.00.00', '02.01.02.03.00.00'],
+        // Tabungan Syariah: Wadiah + Mudharabah + Lainnya
+        tabunganList: ['02.02.02.01.00.00', '02.02.02.02.00.00', '02.02.02.03.00.00'],
+        // Deposito Syariah: Mudharabah + Lainnya
+        depositoList: ['02.03.02.01.00.00', '02.03.02.02.00.00'],
+        modal: '03.00.00.00.00.00',
+        labaBersih: '03.05.02.01.00.00',
+        pendapatanBunga: '04.11.00.00.00.00',
+        bebanBunga: '05.11.00.00.00.00'
+    };
+    
+    // Default SANDI (for backward compatibility)
+    const SANDI = SANDI_KONVEN;
+    
+    // ==========================================
+    // BRANCH TYPE DETECTION
+    // ==========================================
+    
+    // Cabang Syariah: 500 (UUS), 510, 520, 530, 540
+    const CABANG_SYARIAH = ['500', '510', '520', '530', '540', 'SYR'];
+    
+    // Cabang Konvensional: 001 (Pusat), 010-131, 400, CAPEM (073,088,094,102,103,123,138,139)
+    const CABANG_KONVEN = [
+        '001', '010', '011', '020', '021', '030', '031', '040', '041', '042',
+        '050', '060', '070', '071', '072', '074', '075', '077', '080', '090',
+        '091', '092', '093', '100', '101', '110', '111', '120', '121', '130',
+        '131', '400', '073', '088', '094', '102', '103', '123', '138', '139', 'KON'
+    ];
+    
+    /**
+     * Detect if branch code is Syariah or Konvensional
+     * @param {string} kode - Branch code or type (510, 001, KON, SYR, ALL, konvensional, syariah)
+     * @returns {string} 'syariah' | 'konvensional' | 'konsolidasi'
+     */
+    function getCabangType(kode) {
+        if (!kode || kode === 'ALL' || kode === 'konsolidasi') return 'konsolidasi';
+        // Handle tipe filter
+        if (kode === 'syariah' || kode === 'SYR') return 'syariah';
+        if (kode === 'konvensional' || kode === 'KON') return 'konvensional';
+        // Handle cabang spesifik
+        if (CABANG_SYARIAH.includes(kode)) return 'syariah';
+        if (CABANG_KONVEN.includes(kode)) return 'konvensional';
+        // Default: check if starts with 5 (syariah) or not
+        if (kode.startsWith('5')) return 'syariah';
+        return 'konvensional';
+    }
 
     // ==========================================
     // STATE
@@ -292,6 +353,23 @@
         return data.filter(d => d.sandi && d.sandi.startsWith(prefix))
             .reduce((sum, d) => sum + (d.total || 0), 0);
     }
+    
+    /**
+     * Sum values from multiple sandi codes (for Syariah DPK)
+     * @param {Array} data - Filtered neraca data
+     * @param {Array} sandiList - List of sandi codes to sum
+     * @returns {number} Total value
+     */
+    function sumBySandiList(data, sandiList) {
+        let total = 0;
+        for (const sandi of sandiList) {
+            const item = data.find(d => d.sandi === sandi);
+            if (item) {
+                total += (item.total || 0);
+            }
+        }
+        return total;
+    }
 
     // ==========================================
     // GET RATIOS FROM EXCEL (if available)
@@ -340,35 +418,72 @@
         const labarugi = filterData(labarugiData);
 
         console.log(`📊 Calculating: ${neraca.length} neraca, ${labarugi.length} labarugi`);
+        
+        // ==========================================
+        // DETECT BRANCH TYPE FOR CORRECT SANDI
+        // ==========================================
+        const targetKode = currentFilters.cabang || currentFilters.tipe || 'ALL';
+        const cabangType = getCabangType(targetKode);
+        const isSyariah = cabangType === 'syariah';
+        
+        console.log(`🏦 Branch Type: ${cabangType} (kode: ${targetKode}, isSyariah: ${isSyariah})`);
 
+        // ==========================================
         // AKTIVA
-        const totalAset = sumBySandi(neraca, SANDI.totalAset);
-        const kredit = sumBySandi(neraca, SANDI.kredit);
-        const pembiayaan = sumBySandi(neraca, SANDI.pembiayaan);
-        const ckpn = sumBySandiPrefix(neraca, SANDI.ckpnPrefix);
-        const atiGross = sumBySandi(neraca, SANDI.atiGross);
-        const atiAkum = sumBySandi(neraca, SANDI.atiAkum);
+        // ==========================================
+        const totalAset = sumBySandi(neraca, SANDI_KONVEN.totalAset);
+        
+        // Kredit/Pembiayaan - different SANDI for Syariah
+        let kredit, pembiayaan;
+        if (isSyariah) {
+            // Syariah: Sum all 01.09.03.xx.xx.xx (Pembiayaan)
+            kredit = sumBySandiPrefix(neraca, SANDI_SYARIAH.kreditPrefix);
+            pembiayaan = kredit; // For syariah, kredit = pembiayaan
+        } else {
+            kredit = sumBySandi(neraca, SANDI_KONVEN.kredit);
+            pembiayaan = sumBySandi(neraca, SANDI_KONVEN.pembiayaan);
+        }
+        
+        const ckpn = sumBySandiPrefix(neraca, SANDI_KONVEN.ckpnPrefix);
+        const atiGross = sumBySandi(neraca, SANDI_KONVEN.atiGross);
+        const atiAkum = sumBySandi(neraca, SANDI_KONVEN.atiAkum);
         const ati = atiGross + atiAkum;
         
-        // DPK
-        const giro = sumBySandi(neraca, SANDI.giro);
-        const tabungan = sumBySandi(neraca, SANDI.tabungan);
-        const deposito = sumBySandi(neraca, SANDI.deposito);
+        // ==========================================
+        // DPK - CRITICAL: Different SANDI for Syariah!
+        // ==========================================
+        let giro, tabungan, deposito;
+        
+        if (isSyariah) {
+            // Syariah: Sum multiple sandi codes
+            giro = sumBySandiList(neraca, SANDI_SYARIAH.giroList);
+            tabungan = sumBySandiList(neraca, SANDI_SYARIAH.tabunganList);
+            deposito = sumBySandiList(neraca, SANDI_SYARIAH.depositoList);
+            console.log(`💰 DPK Syariah - Giro: ${formatCurrency(giro)}, Tab: ${formatCurrency(tabungan)}, Dep: ${formatCurrency(deposito)}`);
+        } else {
+            // Konvensional: Single sandi code
+            giro = sumBySandi(neraca, SANDI_KONVEN.giro);
+            tabungan = sumBySandi(neraca, SANDI_KONVEN.tabungan);
+            deposito = sumBySandi(neraca, SANDI_KONVEN.deposito);
+        }
+        
         const dpk = giro + tabungan + deposito;
         
-        const modal = sumBySandi(neraca, SANDI.modal);
+        const modal = sumBySandi(neraca, SANDI_KONVEN.modal);
         
+        // ==========================================
         // LABA RUGI
-        const pendapatanBunga = sumBySandi(labarugi, SANDI.pendapatanBunga);
-        const bebanBunga = sumBySandi(labarugi, SANDI.bebanBunga);
+        // ==========================================
+        const pendapatanBunga = sumBySandi(labarugi, SANDI_KONVEN.pendapatanBunga);
+        const bebanBunga = sumBySandi(labarugi, SANDI_KONVEN.bebanBunga);
         
         // Total Pendapatan & Beban Operasional for BOPO
         const pendapatanOperasional = sumBySandi(labarugi, '01.00.00.00.00.00');
         const bebanOperasional = sumBySandi(labarugi, '02.00.00.00.00.00');
         
-        let labaBersih = sumBySandi(labarugi, SANDI.labaBersih);
+        let labaBersih = sumBySandi(labarugi, SANDI_KONVEN.labaBersih);
         if (labaBersih === 0) {
-            labaBersih = sumBySandi(neraca, SANDI.labaBersih);
+            labaBersih = sumBySandi(neraca, SANDI_KONVEN.labaBersih);
         }
 
         // Try Excel ratios first
