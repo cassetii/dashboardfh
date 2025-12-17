@@ -682,6 +682,25 @@ function updateKonvenSyariahFromDashboard() {
         return items.reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
     }
     
+    // Helper: Sum multiple sandi codes from neraca
+    function sumNeracaBySandi(kode, sandiList) {
+        let total = 0;
+        for (const sandi of sandiList) {
+            total += getNeracaValue(kode, sandi);
+        }
+        return total;
+    }
+    
+    // Helper: Sum neraca by sandi prefix
+    function sumNeracaByPrefix(kode, prefix) {
+        const items = neraca.filter(d => 
+            d.kode_cabang === kode && 
+            d.periode === periode && 
+            d.sandi && d.sandi.startsWith(prefix)
+        );
+        return items.reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
+    }
+    
     // Converters
     const toT = (val) => parseFloat((val / 1e12).toFixed(2));
     const toM = (val) => parseFloat((val / 1e9).toFixed(2));
@@ -690,28 +709,74 @@ function updateKonvenSyariahFromDashboard() {
     // GET VALUES FROM FIREBASE DATA
     // ========================================
     
-    // Total Aset (sandi: 01.00.00.00.00.00)
+    // Total Aset (sandi: 01.00.00.00.00.00) - CORRECT ✓
     const asetALL = getNeracaValue('ALL', '01.00.00.00.00.00');
     const asetKON = getNeracaValue('KON', '01.00.00.00.00.00');
     const asetSYR = getNeracaValue('SYR', '01.00.00.00.00.00');
     
-    // Kredit (sandi: 01.08.00.00.00.00)
-    const kreditALL = getNeracaValue('ALL', '01.08.00.00.00.00');
-    const kreditKON = getNeracaValue('KON', '01.08.00.00.00.00');
-    const kreditSYR = getNeracaValue('SYR', '01.08.00.00.00.00');
+    // ========================================
+    // KREDIT/PEMBIAYAAN - FIXED SANDI
+    // ========================================
+    // Konven: 01.09.01.00.00.00
+    // Syariah: Sum of 01.09.03.xx.xx.00 (multiple sub-codes)
+    const kreditKON = getNeracaValue('KON', '01.09.01.00.00.00');
+    // Try individual sandi first, fallback to prefix sum
+    let kreditSYR = sumNeracaByPrefix('SYR', '01.09.03');
+    // Fallback: check if aggregate sandi exists
+    if (kreditSYR === 0) {
+        kreditSYR = getNeracaValue('SYR', '01.09.03.00.00.00');
+    }
+    const kreditALL = kreditKON + kreditSYR;
     
-    // DPK - Giro + Tabungan + Deposito
-    const giroALL = getNeracaValue('ALL', '02.01.01.00.00.00');
+    // ========================================
+    // DPK - GIRO - FIXED SANDI
+    // ========================================
+    // Konven: 02.01.01.00.00.00
+    // Syariah: Sum of 02.01.02.01, 02.01.02.02, 02.01.02.03
     const giroKON = getNeracaValue('KON', '02.01.01.00.00.00');
-    const giroSYR = getNeracaValue('SYR', '02.01.01.00.00.00');
+    let giroSYR = sumNeracaBySandi('SYR', [
+        '02.01.02.01.00.00',
+        '02.01.02.02.00.00',
+        '02.01.02.03.00.00'
+    ]);
+    // Fallback: check if aggregate sandi exists
+    if (giroSYR === 0) {
+        giroSYR = getNeracaValue('SYR', '02.01.02.00.00.00');
+    }
+    const giroALL = giroKON + giroSYR;
     
-    const tabunganALL = getNeracaValue('ALL', '02.01.02.00.00.00');
-    const tabunganKON = getNeracaValue('KON', '02.01.02.00.00.00');
-    const tabunganSYR = getNeracaValue('SYR', '02.01.02.00.00.00');
+    // ========================================
+    // DPK - TABUNGAN - FIXED SANDI
+    // ========================================
+    // Konven: 02.02.01.00.00.00
+    // Syariah: Sum of 02.02.02.01, 02.02.02.02, 02.02.02.03
+    const tabunganKON = getNeracaValue('KON', '02.02.01.00.00.00');
+    let tabunganSYR = sumNeracaBySandi('SYR', [
+        '02.02.02.01.00.00',
+        '02.02.02.02.00.00',
+        '02.02.02.03.00.00'
+    ]);
+    // Fallback: check if aggregate sandi exists
+    if (tabunganSYR === 0) {
+        tabunganSYR = getNeracaValue('SYR', '02.02.02.00.00.00');
+    }
+    const tabunganALL = tabunganKON + tabunganSYR;
     
-    const depositoALL = getNeracaValue('ALL', '02.01.03.00.00.00');
-    const depositoKON = getNeracaValue('KON', '02.01.03.00.00.00');
-    const depositoSYR = getNeracaValue('SYR', '02.01.03.00.00.00');
+    // ========================================
+    // DPK - DEPOSITO - FIXED SANDI
+    // ========================================
+    // Konven: 02.03.01.00.00.00
+    // Syariah: Sum of 02.03.02.01, 02.03.02.02
+    const depositoKON = getNeracaValue('KON', '02.03.01.00.00.00');
+    let depositoSYR = sumNeracaBySandi('SYR', [
+        '02.03.02.01.00.00',
+        '02.03.02.02.00.00'
+    ]);
+    // Fallback: check if aggregate sandi exists
+    if (depositoSYR === 0) {
+        depositoSYR = getNeracaValue('SYR', '02.03.02.00.00.00');
+    }
+    const depositoALL = depositoKON + depositoSYR;
     
     const dpkALL = giroALL + tabunganALL + depositoALL;
     const dpkKON = giroKON + tabunganKON + depositoKON;
@@ -737,6 +802,18 @@ function updateKonvenSyariahFromDashboard() {
     const bebanOpSYR = sumLabarugiByPrefix('SYR', '05.12');
     const bebanNonOpKON = sumLabarugiByPrefix('KON', '05.20');
     const bebanNonOpSYR = sumLabarugiByPrefix('SYR', '05.20');
+    
+    // ========================================
+    // DEBUG LOGGING - Remove in production
+    // ========================================
+    console.log('📊 [Konven-Syariah] Data Extraction Results:');
+    console.log('   ASET - Konven:', (asetKON/1e12).toFixed(2), 'T | Syariah:', (asetSYR/1e12).toFixed(2), 'T');
+    console.log('   KREDIT - Konven:', (kreditKON/1e12).toFixed(2), 'T | Syariah:', (kreditSYR/1e12).toFixed(2), 'T');
+    console.log('   GIRO - Konven:', (giroKON/1e12).toFixed(2), 'T | Syariah:', (giroSYR/1e9).toFixed(2), 'M');
+    console.log('   TABUNGAN - Konven:', (tabunganKON/1e12).toFixed(2), 'T | Syariah:', (tabunganSYR/1e9).toFixed(2), 'M');
+    console.log('   DEPOSITO - Konven:', (depositoKON/1e12).toFixed(2), 'T | Syariah:', (depositoSYR/1e9).toFixed(2), 'M');
+    console.log('   DPK TOTAL - Konven:', (dpkKON/1e12).toFixed(2), 'T | Syariah:', (dpkSYR/1e12).toFixed(2), 'T');
+    console.log('   LABA - Konven:', (labaKON/1e9).toFixed(2), 'M | Syariah:', (labaSYR/1e9).toFixed(2), 'M');
     
     // ========================================
     // UPDATE KONVEN_SYARIAH_DATA
