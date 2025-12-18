@@ -816,13 +816,22 @@ const NeracaCardDetail = (function() {
             };
         }
         
-        // Render
-        renderTable(tableData);
-        renderChart(chartData);
-        renderFooter(tableData);
-        
-        // Update total
+        // Update total FIRST (before render yang bisa error)
         document.getElementById('ncdTotalValue').textContent = formatRupiah(totalValue);
+        
+        // Render table
+        renderTable(tableData);
+        
+        // Render chart with error handling
+        try {
+            renderChart(chartData);
+        } catch (e) {
+            console.warn('Chart render error:', e);
+            document.getElementById('ncdChartLegend').innerHTML = '<p style="color:#64748b;text-align:center;">Chart tidak tersedia</p>';
+        }
+        
+        // Render footer
+        renderFooter(tableData);
     }
     
     // ========================================
@@ -831,6 +840,8 @@ const NeracaCardDetail = (function() {
     
     function renderTable(data) {
         const tbody = document.getElementById('ncdTableBody');
+        if (!tbody) return;
+        
         let html = '';
         
         for (const group of data.groups) {
@@ -873,7 +884,30 @@ const NeracaCardDetail = (function() {
     // ========================================
     
     function renderChart(data) {
-        const ctx = document.getElementById('ncdChart').getContext('2d');
+        const canvas = document.getElementById('ncdChart');
+        if (!canvas) {
+            console.warn('Chart canvas not found');
+            return;
+        }
+        
+        // Check if Chart.js is available
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js not loaded');
+            document.getElementById('ncdChartLegend').innerHTML = `
+                <div style="text-align:center;padding:20px;">
+                    <p style="color:#64748b;">Loading chart...</p>
+                </div>
+            `;
+            // Try again after a short delay
+            setTimeout(() => {
+                if (typeof Chart !== 'undefined') {
+                    renderChart(data);
+                }
+            }, 500);
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
         
         if (chartInstance) {
             chartInstance.destroy();
