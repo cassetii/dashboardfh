@@ -45,13 +45,13 @@
             body.branch-mode .indicator-card[data-ratio="roa"],
             body.branch-mode .indicator-card[data-ratio="roe"],
             body.branch-mode .indicator-card[data-ratio="nim"],
-            body.branch-mode .indicator-card[data-ratio="npl"],
             body.branch-mode .indicator-card[data-ratio="lcr"],
             body.branch-mode .indicator-card[data-ratio="nsfr"] { display: none !important; }
             
             body.branch-mode .indicator-card[data-ratio="bopo"],
             body.branch-mode .indicator-card[data-ratio="ldr"],
-            body.branch-mode .indicator-card[data-ratio="casa"] { display: block !important; }
+            body.branch-mode .indicator-card[data-ratio="casa"],
+            body.branch-mode .indicator-card[data-ratio="npl"] { display: block !important; }
             
             #branchDropdownContainer {
                 display: none; 
@@ -383,19 +383,43 @@
             (currentFilters.tipe === 'konsolidasi' ? 'ALL' : 
              currentFilters.tipe === 'konvensional' ? 'KON' : 'SYR');
         
-        const ratioItems = neracaData.filter(d => 
+        // Cek apakah cabang Syariah (510-540)
+        const isSyariahBranch = CABANG_SYARIAH.includes(targetKode) && targetKode !== 'SYR';
+        
+        // Coba ambil ratio untuk kode target
+        let ratioItems = neracaData.filter(d => 
             d.is_ratio === true && 
             d.periode === currentFilters.periode &&
             d.kode_cabang === targetKode
         );
         
+        // Fallback: Untuk cabang Syariah (510-540), ambil dari SYR jika tidak ada
+        if (ratioItems.length === 0 && isSyariahBranch) {
+            console.log(`📊 No ratio for ${targetKode}, fallback to SYR`);
+            ratioItems = neracaData.filter(d => 
+                d.is_ratio === true && 
+                d.periode === currentFilters.periode &&
+                d.kode_cabang === 'SYR'
+            );
+        }
+        
+        // Fallback: Untuk cabang Konvensional, ambil dari KON jika tidak ada
+        if (ratioItems.length === 0 && !isSyariahBranch && targetKode !== 'ALL' && targetKode !== 'KON' && targetKode !== 'SYR') {
+            console.log(`📊 No ratio for ${targetKode}, fallback to KON`);
+            ratioItems = neracaData.filter(d => 
+                d.is_ratio === true && 
+                d.periode === currentFilters.periode &&
+                d.kode_cabang === 'KON'
+            );
+        }
+        
         if (ratioItems.length === 0) return null;
         
-        console.log(`📊 Found ${ratioItems.length} ratio items from Excel`);
+        console.log(`📊 Found ${ratioItems.length} ratio items from Excel for ${targetKode}`);
         
         const result = {};
         ratioItems.forEach(item => {
-            const name = (item.ratio_name || '').toUpperCase();
+            const name = (item.ratio_name || '').toUpperCase().trim();
             const value = (item.value || 0) * 100;
             
             if (name === 'LDR') result.ldr = value;
@@ -404,7 +428,7 @@
             else if (name === 'ROA') result.roa = value;
             else if (name === 'ROE') result.roe = value;
             else if (name === 'NIM') result.nim = value;
-            else if (name === 'NPL') result.npl = value;
+            else if (name === 'NPL' || name === 'NON PERFORMING LOAN' || name.includes('NPL')) result.npl = value;
             else if (name === 'KPMM' || name === 'CAR') result.car = value;
         });
         
