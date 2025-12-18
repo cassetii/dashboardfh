@@ -689,16 +689,22 @@ const NeracaCardDetail = (function() {
         
         let badgeHtml = '';
         
-        // Determine active filter
-        if (filters.cabang && filters.cabang !== 'ALL' && filters.cabang !== 'KON' && filters.cabang !== 'SYR') {
+        // Determine active filter based on dashboard buttons
+        // Dashboard has: Konsolidasi, Konvensional, Syariah, Cabang
+        if (filters.cabang && filters.cabang !== 'ALL' && filters.cabang !== 'SYR' && filters.cabang !== 'KON') {
             // Specific branch selected
             const branchName = getBranchName(filters.cabang);
+            const isSyariahBranch = ['500', '510', '520', '530', '540'].includes(filters.cabang);
             badgeHtml = `<span class="ncd-badge cabang"><i class="fas fa-building"></i> ${branchName}</span>`;
+            if (isSyariahBranch) {
+                badgeHtml += `<span class="ncd-badge syariah"><i class="fas fa-mosque"></i> Syariah</span>`;
+            }
         } else if (filters.tipe === 'syariah' || filters.cabang === 'SYR') {
             badgeHtml = `<span class="ncd-badge syariah"><i class="fas fa-mosque"></i> Syariah</span>`;
         } else if (filters.tipe === 'konvensional' || filters.cabang === 'KON') {
             badgeHtml = `<span class="ncd-badge konvensional"><i class="fas fa-university"></i> Konvensional</span>`;
         } else {
+            // Default: Konsolidasi (ALL)
             badgeHtml = `<span class="ncd-badge konsolidasi"><i class="fas fa-layer-group"></i> Konsolidasi</span>`;
         }
         
@@ -753,8 +759,19 @@ const NeracaCardDetail = (function() {
     async function loadData(cardType, filters) {
         const config = CARD_CONFIG[cardType];
         const periode = filters.periode || '2025-01';
-        const kode = filters.cabang || (filters.tipe === 'syariah' ? 'SYR' : 
-                                        filters.tipe === 'konvensional' ? 'KON' : 'ALL');
+        
+        // Determine kode_cabang based on filter
+        // Dashboard buttons: Konsolidasi (ALL), Konvensional (KON), Syariah (SYR), Cabang (specific)
+        let kode = 'ALL'; // default Konsolidasi
+        if (filters.cabang && filters.cabang !== 'ALL' && filters.cabang !== 'KON' && filters.cabang !== 'SYR') {
+            kode = filters.cabang; // Specific branch
+        } else if (filters.tipe === 'konvensional' || filters.cabang === 'KON') {
+            kode = 'KON';
+        } else if (filters.tipe === 'syariah' || filters.cabang === 'SYR') {
+            kode = 'SYR';
+        }
+        
+        console.log('Loading data for:', { cardType, periode, kode, filters });
         
         // Get data from Firebase (use existing loaded data)
         const data = window.DashboardFirebase?.getData?.() || {};
