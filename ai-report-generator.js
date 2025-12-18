@@ -89,9 +89,13 @@ const AIReportGenerator = (function() {
         
         const modal = getValue('03.00.00.00.00.00');
         
-        // Laba Rugi (if available)
-        const labaBersih = getValue('03.05.02.01.00.00', 'labarugi') || 
-                          getValue('99.00.00.00.00.00', 'labarugi') || 0;
+        // Laba Bersih = Laba Sebelum Pajak - Pajak
+        // Laba Bersih = 03.05.02.01.00.00 - 03.05.02.02.00.00
+        const labaSebelumPajak = getValue('03.05.02.01.00.00', 'labarugi') || 
+                                  getValue('03.05.02.01.00.00', 'neraca') || 0;
+        const pajakLaba = getValue('03.05.02.02.00.00', 'labarugi') || 
+                          getValue('03.05.02.02.00.00', 'neraca') || 0;
+        const labaBersih = labaSebelumPajak - pajakLaba;
         
         // Calculate ratios
         const ldr = dpk > 0 ? ((kredit + pembiayaan) / dpk * 100) : 0;
