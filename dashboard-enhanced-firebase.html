@@ -1181,7 +1181,7 @@
 
                 <div class="neraca-grid-layer1">
                     <!-- Total Asset -->
-                    <div class="neraca-card-v2 orange" onclick="openNeracaLayer2Modal('aset')">
+                    <div class="neraca-card-v2 orange" onclick="NeracaCardDetail.open('aset')">
                         <div class="neraca-card-icon orange">
                             <i class="fas fa-wallet"></i>
                         </div>
@@ -1197,7 +1197,7 @@
                     </div>
 
                     <!-- Total Kredit -->
-                    <div class="neraca-card-v2 navy" onclick="openNeracaLayer2Modal('kredit')">
+                    <div class="neraca-card-v2 navy" onclick="NeracaCardDetail.open('kredit')">
                         <div class="neraca-card-icon navy">
                             <i class="fas fa-credit-card"></i>
                         </div>
@@ -1213,7 +1213,7 @@
                     </div>
 
                     <!-- Kredit Pembiayaan -->
-                    <div class="neraca-card-v2 pink" onclick="openNeracaLayer2Modal('pembiayaan')">
+                    <div class="neraca-card-v2 pink" onclick="NeracaCardDetail.open('kredit')">
                         <div class="neraca-card-icon pink">
                             <i class="fas fa-hand-holding-usd"></i>
                         </div>
@@ -1229,7 +1229,7 @@
                     </div>
 
                     <!-- ATI -->
-                    <div class="neraca-card-v2 teal" onclick="openNeracaLayer2Modal('ati')">
+                    <div class="neraca-card-v2 teal" onclick="NeracaCardDetail.open('ati')">
                         <div class="neraca-card-icon teal">
                             <i class="fas fa-building"></i>
                         </div>
@@ -1245,7 +1245,7 @@
                     </div>
 
                     <!-- CKPN -->
-                    <div class="neraca-card-v2 amber" onclick="openNeracaLayer2Modal('ckpn')">
+                    <div class="neraca-card-v2 amber" onclick="NeracaCardDetail.open('ckpn')">
                         <div class="neraca-card-icon amber">
                             <i class="fas fa-shield-alt"></i>
                         </div>
@@ -1269,7 +1269,7 @@
 
                 <div class="neraca-grid-layer1 five-cols">
                     <!-- DPK -->
-                    <div class="neraca-card-v2 blue" onclick="openNeracaLayer2Modal('dpk')">
+                    <div class="neraca-card-v2 blue" onclick="NeracaCardDetail.open('dpk')">
                         <div class="neraca-card-icon blue">
                             <i class="fas fa-university"></i>
                         </div>
@@ -2941,6 +2941,7 @@
     <!-- Neraca Layer 2 Scripts -->
     <script src="neraca-detail-data.js"></script>
     <script src="neraca-layer2-handler.js"></script>
+    <script src="neraca-card-detail-handler.js"></script>
     
     <!-- Neraca Charts (Layer 2 & 3 Enhanced) -->
     <script src="neraca-charts.js"></script>
