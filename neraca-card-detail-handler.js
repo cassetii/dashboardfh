@@ -59,6 +59,23 @@ const NeracaCardDetail = (function() {
                 ]
             }
         },
+        'pembiayaan': {
+            title: 'TOTAL PEMBIAYAAN SYARIAH',
+            icon: 'fa-mosque',
+            color: '#059669',
+            splitType: 'jenis-pembiayaan',
+            komponen: {
+                piutang: [
+                    { sandi: '01.09.03.01.01.00', nama: 'Piutang Murabahah' },
+                    { sandi: '01.09.03.01.02.00', nama: 'Piutang Istishna' },
+                    { sandi: '01.09.03.01.05.00', nama: 'Piutang Mudharabah' },
+                ],
+                pembiayaan: [
+                    { sandi: '01.09.03.02.01.00', nama: 'Pembiayaan Qardh' },
+                    { sandi: '01.09.03.02.02.00', nama: 'Pembiayaan Ijarah' },
+                ]
+            }
+        },
         'dpk': {
             title: 'DANA PIHAK KETIGA',
             icon: 'fa-piggy-bank',
@@ -137,7 +154,12 @@ const NeracaCardDetail = (function() {
                         </div>
                         <div class="ncd-title-group">
                             <h2 id="ncdTitle">DETAIL</h2>
-                            <p id="ncdSubtitle">Periode: Januari 2025</p>
+                            <div class="ncd-subtitle-row">
+                                <p id="ncdSubtitle">Periode: Januari 2025</p>
+                                <div class="ncd-filter-badges" id="ncdFilterBadges">
+                                    <!-- Dynamic filter badges -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="ncd-header-right">
@@ -291,10 +313,53 @@ const NeracaCardDetail = (function() {
             font-weight: 700;
         }
         
+        .ncd-subtitle-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 4px;
+        }
+        
         .ncd-title-group p {
-            margin: 4px 0 0;
+            margin: 0;
             font-size: 13px;
             opacity: 0.8;
+        }
+        
+        .ncd-filter-badges {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .ncd-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .ncd-badge.konsolidasi {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .ncd-badge.konvensional {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .ncd-badge.syariah {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .ncd-badge.cabang {
+            background: #f59e0b;
+            color: white;
         }
         
         .ncd-header-right {
@@ -603,12 +668,68 @@ const NeracaCardDetail = (function() {
                           'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         document.getElementById('ncdSubtitle').textContent = `Periode: ${bulanNames[parseInt(bulan)]} ${tahun}`;
         
+        // Update filter badges
+        updateFilterBadges(filters);
+        
         // Show modal
         document.getElementById('neracaCardDetailModal').classList.add('active');
         document.body.style.overflow = 'hidden';
         
         // Load data
         await loadData(cardType, filters);
+    }
+    
+    // ========================================
+    // UPDATE FILTER BADGES
+    // ========================================
+    
+    function updateFilterBadges(filters) {
+        const badgesContainer = document.getElementById('ncdFilterBadges');
+        if (!badgesContainer) return;
+        
+        let badgeHtml = '';
+        
+        // Determine active filter
+        if (filters.cabang && filters.cabang !== 'ALL' && filters.cabang !== 'KON' && filters.cabang !== 'SYR') {
+            // Specific branch selected
+            const branchName = getBranchName(filters.cabang);
+            badgeHtml = `<span class="ncd-badge cabang"><i class="fas fa-building"></i> ${branchName}</span>`;
+        } else if (filters.tipe === 'syariah' || filters.cabang === 'SYR') {
+            badgeHtml = `<span class="ncd-badge syariah"><i class="fas fa-mosque"></i> Syariah</span>`;
+        } else if (filters.tipe === 'konvensional' || filters.cabang === 'KON') {
+            badgeHtml = `<span class="ncd-badge konvensional"><i class="fas fa-university"></i> Konvensional</span>`;
+        } else {
+            badgeHtml = `<span class="ncd-badge konsolidasi"><i class="fas fa-layer-group"></i> Konsolidasi</span>`;
+        }
+        
+        badgesContainer.innerHTML = badgeHtml;
+    }
+    
+    function getBranchName(kode) {
+        const branchNames = {
+            '001': 'Kantor Pusat',
+            '010': 'Makassar Somba Opu',
+            '011': 'Makassar Veteran',
+            '020': 'Maros',
+            '030': 'Pangkep',
+            '040': 'Barru',
+            '050': 'Pare-Pare',
+            '060': 'Pinrang',
+            '070': 'Sidrap',
+            '080': 'Soppeng',
+            '090': 'Wajo',
+            '100': 'Bone',
+            '110': 'Sinjai',
+            '120': 'Bulukumba',
+            '130': 'Selayar',
+            '400': 'Jakarta',
+            '500': 'UUS (Pusat Syariah)',
+            '510': 'KCS Makassar',
+            '520': 'KCS Maros',
+            '530': 'KCS Bone',
+            '540': 'KCS Pare-Pare',
+        };
+        return branchNames[kode] || `Cabang ${kode}`;
     }
     
     // ========================================
@@ -813,6 +934,129 @@ const NeracaCardDetail = (function() {
                 labels: ['Konvensional', 'Syariah'],
                 data: [konvenTotal, syariahTotal],
                 colors: ['#1e3a5f', '#22c55e']
+            };
+            
+        } else if (cardType === 'pembiayaan') {
+            // Pembiayaan Syariah: Piutang vs Pembiayaan
+            let piutangTotal = 0, pembiayaanTotal = 0;
+            const piutangItems = [], pembiayaanItems = [];
+            
+            for (const item of config.komponen.piutang) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    piutangItems.push({ nama: item.nama, nilai });
+                    piutangTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.pembiayaan) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    pembiayaanItems.push({ nama: item.nama, nilai });
+                    pembiayaanTotal += nilai;
+                }
+            }
+            
+            totalValue = piutangTotal + pembiayaanTotal;
+            
+            tableData = {
+                groups: [
+                    { nama: 'PIUTANG', color: 'blue', items: piutangItems, subtotal: piutangTotal },
+                    { nama: 'PEMBIAYAAN', color: 'green', items: pembiayaanItems, subtotal: pembiayaanTotal },
+                ],
+                total: totalValue
+            };
+            
+            chartData = {
+                type: 'doughnut',
+                labels: ['Piutang', 'Pembiayaan'],
+                data: [piutangTotal, pembiayaanTotal],
+                colors: ['#3b82f6', '#22c55e']
+            };
+            
+        } else if (cardType === 'ati') {
+            // ATI: Gross vs Akumulasi Penyusutan
+            let grossTotal = 0, akumTotal = 0;
+            const grossItems = [], akumItems = [];
+            
+            for (const item of config.komponen.gross) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    grossItems.push({ nama: item.nama, nilai });
+                    grossTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.akumulasi) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    akumItems.push({ nama: item.nama, nilai });
+                    akumTotal += nilai;
+                }
+            }
+            
+            totalValue = grossTotal + akumTotal; // akumTotal is negative
+            
+            tableData = {
+                groups: [
+                    { nama: 'NILAI PEROLEHAN (GROSS)', color: 'blue', items: grossItems, subtotal: grossTotal },
+                    { nama: 'AKUMULASI PENYUSUTAN', color: 'red', items: akumItems, subtotal: akumTotal },
+                ],
+                total: totalValue
+            };
+            
+            chartData = {
+                type: 'doughnut',
+                labels: ['Nilai Perolehan', 'Akum. Penyusutan'],
+                data: [Math.abs(grossTotal), Math.abs(akumTotal)],
+                colors: ['#3b82f6', '#ef4444']
+            };
+            
+        } else if (cardType === 'ckpn') {
+            // CKPN: Tahap 1, 2, 3
+            let tahap1Total = 0, tahap2Total = 0, tahap3Total = 0;
+            const tahap1Items = [], tahap2Items = [], tahap3Items = [];
+            
+            for (const item of config.komponen.tahap1) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    tahap1Items.push({ nama: item.nama, nilai });
+                    tahap1Total += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.tahap2) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    tahap2Items.push({ nama: item.nama, nilai });
+                    tahap2Total += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.tahap3) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    tahap3Items.push({ nama: item.nama, nilai });
+                    tahap3Total += nilai;
+                }
+            }
+            
+            totalValue = tahap1Total + tahap2Total + tahap3Total;
+            
+            tableData = {
+                groups: [
+                    { nama: 'CKPN TAHAP 1 (Performing)', color: 'green', items: tahap1Items, subtotal: tahap1Total },
+                    { nama: 'CKPN TAHAP 2 (Under-Performing)', color: 'yellow', items: tahap2Items, subtotal: tahap2Total },
+                    { nama: 'CKPN TAHAP 3 (Non-Performing)', color: 'red', items: tahap3Items, subtotal: tahap3Total },
+                ],
+                total: totalValue
+            };
+            
+            chartData = {
+                type: 'doughnut',
+                labels: ['Tahap 1', 'Tahap 2', 'Tahap 3'],
+                data: [Math.abs(tahap1Total), Math.abs(tahap2Total), Math.abs(tahap3Total)],
+                colors: ['#22c55e', '#f59e0b', '#ef4444']
             };
         }
         
