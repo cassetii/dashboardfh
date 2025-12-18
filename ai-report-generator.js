@@ -246,81 +246,167 @@ const AIReportGenerator = (function() {
     }
     
     function buildPrompt(data) {
-        return `Anda adalah analis keuangan senior PT Bank Pembangunan Daerah Sulawesi Selatan dan Sulawesi Barat (Bank Sulselbar). 
+        return `Anda adalah analis keuangan senior PT Bank Pembangunan Daerah Sulawesi Selatan dan Sulawesi Barat (Bank Sulselbar) dengan pengalaman lebih dari 15 tahun.
 
-Berdasarkan data kinerja keuangan berikut, buatkan EXECUTIVE SUMMARY yang profesional untuk dilaporkan kepada Direksi dalam format HTML.
+Berdasarkan data kinerja keuangan berikut, buatkan EXECUTIVE SUMMARY yang KOMPREHENSIF dan PROFESIONAL untuk dilaporkan kepada Direksi dan Dewan Komisaris.
 
-DATA KINERJA PERIODE ${data.periode.full.toUpperCase()} - ${data.tipe.toUpperCase()}:
+═══════════════════════════════════════════════════════════════
+DATA KINERJA PERIODE ${data.periode.full.toUpperCase()} - ${data.tipe.toUpperCase()}
+═══════════════════════════════════════════════════════════════
 
-NERACA:
-- Total Aset: Rp ${data.neraca.totalAset.formatted}
-- Total Kredit: Rp ${data.neraca.kredit.formatted}
-- Pembiayaan Syariah: Rp ${data.neraca.pembiayaan.formatted}
-- Surat Berharga: Rp ${data.neraca.suratBerharga.formatted}
-- Penempatan pada Bank Lain: Rp ${data.neraca.penempatanBank.formatted}
-- Kas: Rp ${data.neraca.kas.formatted}
-- CKPN: Rp ${data.neraca.ckpn.formatted}
-- ATI (Net): Rp ${data.neraca.ati.formatted}
+📊 POSISI KEUANGAN (NERACA):
+┌─────────────────────────────────────────────────────────────┐
+│ ASET                                                        │
+├─────────────────────────────────────────────────────────────┤
+│ Total Aset              : Rp ${data.neraca.totalAset.formatted.padStart(15)}                │
+│ Kredit yang Diberikan   : Rp ${data.neraca.kredit.formatted.padStart(15)}                │
+│ Pembiayaan Syariah      : Rp ${data.neraca.pembiayaan.formatted.padStart(15)}                │
+│ Surat Berharga          : Rp ${data.neraca.suratBerharga.formatted.padStart(15)}                │
+│ Penempatan Bank Lain    : Rp ${data.neraca.penempatanBank.formatted.padStart(15)}                │
+│ Kas                     : Rp ${data.neraca.kas.formatted.padStart(15)}                │
+│ CKPN (Cadangan)         : Rp ${data.neraca.ckpn.formatted.padStart(15)}                │
+│ ATI Bersih              : Rp ${data.neraca.ati.formatted.padStart(15)}                │
+└─────────────────────────────────────────────────────────────┘
 
-DANA PIHAK KETIGA (DPK):
-- Total DPK: Rp ${data.dpk.total.formatted}
-- Giro: Rp ${data.dpk.giro.formatted} (${data.dpk.giro.share}%)
-- Tabungan: Rp ${data.dpk.tabungan.formatted} (${data.dpk.tabungan.share}%)
-- Deposito: Rp ${data.dpk.deposito.formatted} (${data.dpk.deposito.share}%)
+💰 DANA PIHAK KETIGA (DPK):
+┌─────────────────────────────────────────────────────────────┐
+│ Total DPK               : Rp ${data.dpk.total.formatted.padStart(15)}                │
+├─────────────────────────────────────────────────────────────┤
+│ • Giro                  : Rp ${data.dpk.giro.formatted.padStart(15)} (${data.dpk.giro.share}%)      │
+│ • Tabungan              : Rp ${data.dpk.tabungan.formatted.padStart(15)} (${data.dpk.tabungan.share}%)      │
+│ • Deposito              : Rp ${data.dpk.deposito.formatted.padStart(15)} (${data.dpk.deposito.share}%)      │
+└─────────────────────────────────────────────────────────────┘
 
-MODAL: Rp ${data.modal.formatted}
-LABA BERSIH: Rp ${data.labaRugi.labaBersih.formatted}
+🏦 PERMODALAN & PROFITABILITAS:
+┌─────────────────────────────────────────────────────────────┐
+│ Modal                   : Rp ${data.modal.formatted.padStart(15)}                │
+│ Laba Bersih             : Rp ${data.labaRugi.labaBersih.formatted.padStart(15)}                │
+└─────────────────────────────────────────────────────────────┘
 
-RASIO KEUANGAN:
-- LDR (Loan to Deposit Ratio): ${data.ratio.ldr.nilai}% - Status: ${data.ratio.ldr.status} (Batas: ${data.ratio.ldr.batasMin}%-${data.ratio.ldr.batasMax}%)
-- CASA Ratio: ${data.ratio.casa.nilai}% - Status: ${data.ratio.casa.status} (Target: >${data.ratio.casa.target}%)
+📈 RASIO KEUANGAN:
+┌─────────────────────────────────────────────────────────────┐
+│ LDR (Loan to Deposit)   : ${data.ratio.ldr.nilai}% [${data.ratio.ldr.status}]              │
+│   → Batas Regulasi      : ${data.ratio.ldr.batasMin}% - ${data.ratio.ldr.batasMax}%                        │
+│ CASA Ratio              : ${data.ratio.casa.nilai}% [${data.ratio.casa.status}]   │
+│   → Target Internal     : >${data.ratio.casa.target}%                              │
+└─────────────────────────────────────────────────────────────┘
 
-KOMPOSISI ASET:
-- Kredit & Pembiayaan: ${data.komposisiAset.kredit}%
-- Surat Berharga: ${data.komposisiAset.suratBerharga}%
-- Penempatan Bank Lain: ${data.komposisiAset.penempatanBank}%
-- Lainnya: ${data.komposisiAset.lainnya}%
+📊 KOMPOSISI PORTOFOLIO ASET:
+┌─────────────────────────────────────────────────────────────┐
+│ Kredit & Pembiayaan     : ${data.komposisiAset.kredit}%                           │
+│ Surat Berharga          : ${data.komposisiAset.suratBerharga}%                           │
+│ Penempatan Bank Lain    : ${data.komposisiAset.penempatanBank}%                           │
+│ Aset Lainnya            : ${data.komposisiAset.lainnya}%                           │
+└─────────────────────────────────────────────────────────────┘
 
-INSTRUKSI FORMAT OUTPUT:
-Buatkan laporan dalam format HTML dengan struktur berikut (HANYA berikan konten HTML tanpa tag html, head, body):
+═══════════════════════════════════════════════════════════════
+INSTRUKSI PEMBUATAN LAPORAN EKSEKUTIF
+═══════════════════════════════════════════════════════════════
 
-<div class="report-section">
+Buatkan laporan EXECUTIVE SUMMARY dalam format HTML dengan struktur berikut.
+Gunakan bahasa Indonesia yang FORMAL, PROFESIONAL, dan ANALITIS.
+Fokus pada INSIGHT yang ACTIONABLE untuk pengambilan keputusan Direksi.
+
+HANYA berikan konten HTML (tanpa tag html, head, body):
+
+<div class="report-section summary">
     <h3>📋 RINGKASAN EKSEKUTIF</h3>
-    <p>[2-3 paragraf ringkasan kinerja keseluruhan]</p>
+    <p><strong>Gambaran Umum:</strong> [Berikan overview kinerja bank secara keseluruhan dalam 2-3 kalimat yang padat]</p>
+    <p><strong>Posisi Keuangan:</strong> [Analisis posisi aset, liabilitas, dan ekuitas. Bandingkan dengan industri perbankan regional]</p>
+    <p><strong>Kinerja Operasional:</strong> [Analisis efisiensi operasional, produktivitas aset, dan kualitas portofolio]</p>
 </div>
 
-<div class="report-section">
-    <h3>✅ HIGHLIGHT KINERJA</h3>
+<div class="report-section metrics">
+    <h3>📊 INDIKATOR KINERJA UTAMA (KPI)</h3>
+    <table style="width:100%; border-collapse: collapse; margin: 10px 0;">
+        <tr style="background: #1e3a5f; color: white;">
+            <th style="padding: 10px; text-align: left;">Indikator</th>
+            <th style="padding: 10px; text-align: right;">Nilai</th>
+            <th style="padding: 10px; text-align: center;">Status</th>
+            <th style="padding: 10px; text-align: left;">Keterangan</th>
+        </tr>
+        <tr style="background: #f8f9fa;">
+            <td style="padding: 8px;">Total Aset</td>
+            <td style="padding: 8px; text-align: right;">Rp ${data.neraca.totalAset.formatted}</td>
+            <td style="padding: 8px; text-align: center;">[Evaluasi]</td>
+            <td style="padding: 8px;">[Analisis singkat]</td>
+        </tr>
+        [Tambahkan baris untuk: Kredit, DPK, LDR, CASA, Laba Bersih dengan format serupa]
+    </table>
+</div>
+
+<div class="report-section highlights">
+    <h3>✅ HIGHLIGHT KINERJA POSITIF</h3>
     <ul>
-        <li>[Point positif 1]</li>
-        <li>[Point positif 2]</li>
-        <li>[dst...]</li>
+        <li><strong>[Aspek 1]:</strong> [Penjelasan detail dengan angka pendukung]</li>
+        <li><strong>[Aspek 2]:</strong> [Penjelasan detail dengan angka pendukung]</li>
+        <li><strong>[Aspek 3]:</strong> [Penjelasan detail dengan angka pendukung]</li>
+        <li><strong>[Aspek 4]:</strong> [Penjelasan detail dengan angka pendukung]</li>
     </ul>
 </div>
 
-<div class="report-section">
-    <h3>⚠️ AREA PERHATIAN</h3>
+<div class="report-section concerns">
+    <h3>⚠️ AREA YANG MEMERLUKAN PERHATIAN</h3>
     <ul>
-        <li>[Warning/concern 1]</li>
-        <li>[Warning/concern 2]</li>
+        <li><strong>[Concern 1]:</strong> [Penjelasan masalah dan dampak potensial]</li>
+        <li><strong>[Concern 2]:</strong> [Penjelasan masalah dan dampak potensial]</li>
+        <li><strong>[Concern 3]:</strong> [Penjelasan masalah dan dampak potensial]</li>
     </ul>
 </div>
 
-<div class="report-section">
+<div class="report-section analysis">
+    <h3>🔍 ANALISIS MENDALAM</h3>
+    <h4>Struktur Dana Pihak Ketiga</h4>
+    <p>[Analisis komposisi DPK: Giro ${data.dpk.giro.share}%, Tabungan ${data.dpk.tabungan.share}%, Deposito ${data.dpk.deposito.share}%. Bahas implikasi biaya dana dan strategi optimalisasi CASA]</p>
+    
+    <h4>Kualitas Portofolio Kredit</h4>
+    <p>[Analisis kualitas kredit, CKPN, dan coverage ratio. Berikan insight tentang risiko kredit]</p>
+    
+    <h4>Likuiditas dan Solvabilitas</h4>
+    <p>[Analisis LDR ${data.ratio.ldr.nilai}% terhadap batas regulasi. Bahas posisi likuiditas bank]</p>
+</div>
+
+<div class="report-section recommendations">
     <h3>💡 REKOMENDASI STRATEGIS</h3>
     <ol>
-        <li>[Rekomendasi 1]</li>
-        <li>[Rekomendasi 2]</li>
-        <li>[Rekomendasi 3]</li>
+        <li>
+            <strong>[Judul Rekomendasi 1]</strong>
+            <p>[Penjelasan detail rekomendasi, langkah implementasi, dan expected outcome]</p>
+        </li>
+        <li>
+            <strong>[Judul Rekomendasi 2]</strong>
+            <p>[Penjelasan detail rekomendasi, langkah implementasi, dan expected outcome]</p>
+        </li>
+        <li>
+            <strong>[Judul Rekomendasi 3]</strong>
+            <p>[Penjelasan detail rekomendasi, langkah implementasi, dan expected outcome]</p>
+        </li>
+        <li>
+            <strong>[Judul Rekomendasi 4]</strong>
+            <p>[Penjelasan detail rekomendasi, langkah implementasi, dan expected outcome]</p>
+        </li>
     </ol>
 </div>
 
-<div class="report-section">
-    <h3>📈 OUTLOOK</h3>
-    <p>[Proyeksi/outlook untuk periode berikutnya]</p>
+<div class="report-section outlook">
+    <h3>📈 OUTLOOK & PROYEKSI</h3>
+    <p><strong>Proyeksi Jangka Pendek (1-3 bulan):</strong> [Proyeksi kinerja berdasarkan tren saat ini]</p>
+    <p><strong>Proyeksi Jangka Menengah (3-6 bulan):</strong> [Estimasi pencapaian target dengan asumsi yang realistis]</p>
+    <p><strong>Faktor Risiko:</strong> [Identifikasi risiko eksternal dan internal yang perlu diantisipasi]</p>
+    <p><strong>Peluang:</strong> [Identifikasi peluang pertumbuhan dan ekspansi]</p>
 </div>
 
-Gunakan bahasa Indonesia formal dan profesional. Fokus pada insights yang actionable untuk Direksi.`;
+<div class="report-section conclusion">
+    <h3>📝 KESIMPULAN</h3>
+    <p>[Berikan kesimpulan komprehensif dalam 2-3 paragraf yang merangkum kondisi bank, tantangan utama, dan arah strategis ke depan]</p>
+</div>
+
+PENTING:
+- Gunakan data AKTUAL yang diberikan, jangan membuat angka baru
+- Berikan analisis yang OBJEKTIF dan BERBASIS DATA
+- Sertakan PERBANDINGAN dengan benchmark industri perbankan jika relevan
+- Fokus pada INSIGHT yang dapat ditindaklanjuti oleh manajemen
+- Gunakan bahasa yang PROFESIONAL namun mudah dipahami`;
     }
     
     async function callClaudeAPI(prompt) {
