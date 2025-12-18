@@ -70,8 +70,14 @@
     <!-- Risk Appetite & Tolerance Styles -->
     <link rel="stylesheet" href="risk-appetite-styles.css">
     
+    <!-- AI Report Generator Styles -->
+    <link rel="stylesheet" href="ai-report-styles.css">
+    
     <!-- SheetJS for Excel handling -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- html2pdf for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <!-- ========================================
          ARIMA INTEGRATION - Bank Sulselbar
@@ -2104,15 +2110,75 @@
             <section class="content-section" id="analyticsSection">
                 <div class="section-header">
                     <h2 class="section-title">
-                        <i class="fas fa-chart-pie"></i>
-                        Advanced Analytics
+                        <i class="fas fa-robot"></i>
+                        AI Executive Report Generator
                     </h2>
+                    <p class="section-subtitle">Generate laporan eksekutif otomatis untuk Direksi menggunakan AI</p>
                 </div>
 
-                <div class="info-card">
-                    <i class="fas fa-chart-pie fa-3x"></i>
-                    <h3>Advanced Analytics</h3>
-                    <p>Fitur advanced analytics dengan machine learning prediction dan forecasting akan tersedia segera.</p>
+                <!-- Action Bar -->
+                <div class="ai-action-bar">
+                    <button class="btn-generate" id="generateReportBtn" onclick="AIReportGenerator.generate()">
+                        <i class="fas fa-robot"></i> Generate AI Report
+                    </button>
+                    <div class="export-buttons" id="exportButtons" style="display: none;">
+                        <button class="btn-export" onclick="AIReportGenerator.exportPDF()">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                        <button class="btn-export" onclick="window.print()">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="ai-report-loader" id="reportLoader" style="display: none;">
+                    <div class="loader-content">
+                        <div class="ai-loader-animation">
+                            <i class="fas fa-robot"></i>
+                            <div class="pulse-ring"></div>
+                        </div>
+                        <h3>AI sedang menganalisis data...</h3>
+                        <p>Membuat Executive Report untuk Direksi</p>
+                        <div class="loader-steps">
+                            <span class="step active"><i class="fas fa-database"></i> Collecting Data</span>
+                            <span class="step"><i class="fas fa-brain"></i> Analyzing</span>
+                            <span class="step"><i class="fas fa-file-alt"></i> Generating Report</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Content -->
+                <div class="ai-report-container" id="aiReportContent">
+                    <div class="ai-report-placeholder">
+                        <div class="placeholder-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h3>AI Executive Report Generator</h3>
+                        <p>Klik tombol "Generate AI Report" untuk membuat laporan eksekutif otomatis berdasarkan data dashboard saat ini.</p>
+                        <div class="placeholder-features">
+                            <div class="feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Ringkasan Eksekutif</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Highlight Kinerja</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Area Perhatian</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Rekomendasi Strategis</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Outlook & Proyeksi</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -3232,6 +3298,9 @@
     
     <!-- Financial Ratio Layer 3 Handler -->
     <script src="ratio-layer3-handler.js"></script>
+    
+    <!-- AI Report Generator -->
+    <script src="ai-report-generator.js"></script>
     
     <!-- Risk Appetite & Tolerance Handler -->
     <script src="risk-appetite-handler.js"></script>
