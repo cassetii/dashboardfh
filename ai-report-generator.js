@@ -6,9 +6,10 @@
 const AIReportGenerator = (function() {
     'use strict';
     
-    // ⚠️ SECURITY NOTE: In production, move API key to backend
-    const CLAUDE_API_KEY = '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';
-    const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+    // =============================================
+    // CLOUDFLARE WORKER URL
+    // =============================================
+    const API_ENDPOINT = 'https://analyticsdashboard.syntaxvlad.workers.dev';
     
     let isGenerating = false;
     let lastReport = null;
@@ -323,32 +324,22 @@ Gunakan bahasa Indonesia formal dan profesional. Fokus pada insights yang action
     }
     
     async function callClaudeAPI(prompt) {
-        const response = await fetch(CLAUDE_API_URL, {
+        // Call Netlify Function (proxy to Claude API)
+        const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': CLAUDE_API_KEY,
-                'anthropic-version': '2023-06-01'
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
-                max_tokens: 4000,
-                messages: [
-                    { 
-                        role: 'user', 
-                        content: prompt 
-                    }
-                ]
-            })
+            body: JSON.stringify({ prompt })
         });
         
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+        const result = await response.json();
+        
+        if (!response.ok || result.error) {
+            throw new Error(result.error || `API Error: ${response.status}`);
         }
         
-        const result = await response.json();
-        return result.content[0].text;
+        return result.content;
     }
     
     // ========================================
