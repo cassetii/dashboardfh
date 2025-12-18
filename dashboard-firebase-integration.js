@@ -118,7 +118,8 @@
         tabungan: '02.02.01.00.00.00',
         deposito: '02.03.01.00.00.00',
         modal: '03.00.00.00.00.00',
-        labaBersih: '03.05.02.01.00.00',
+        labaSebelumPajak: '03.05.02.01.00.00',
+        pajakLaba: '03.05.02.02.00.00',
         pendapatanBunga: '04.11.00.00.00.00',
         bebanBunga: '05.11.00.00.00.00'
     };
@@ -140,7 +141,8 @@
         // Deposito Syariah: Mudharabah + Lainnya
         depositoList: ['02.03.02.01.00.00', '02.03.02.02.00.00'],
         modal: '03.00.00.00.00.00',
-        labaBersih: '03.05.02.01.00.00',
+        labaSebelumPajak: '03.05.02.01.00.00',
+        pajakLaba: '03.05.02.02.00.00',
         pendapatanBunga: '04.11.00.00.00.00',
         bebanBunga: '05.11.00.00.00.00'
     };
@@ -481,10 +483,22 @@
         const pendapatanOperasional = sumBySandi(labarugi, '01.00.00.00.00.00');
         const bebanOperasional = sumBySandi(labarugi, '02.00.00.00.00.00');
         
-        let labaBersih = sumBySandi(labarugi, SANDI_KONVEN.labaBersih);
-        if (labaBersih === 0) {
-            labaBersih = sumBySandi(neraca, SANDI_KONVEN.labaBersih);
+        // Laba Bersih = Laba Sebelum Pajak - Pajak
+        let labaSebelumPajak = sumBySandi(labarugi, SANDI_KONVEN.labaSebelumPajak);
+        let pajakLaba = sumBySandi(labarugi, SANDI_KONVEN.pajakLaba);
+        
+        // Fallback to neraca if labarugi is empty
+        if (labaSebelumPajak === 0) {
+            labaSebelumPajak = sumBySandi(neraca, SANDI_KONVEN.labaSebelumPajak);
+            pajakLaba = sumBySandi(neraca, SANDI_KONVEN.pajakLaba);
         }
+        
+        // Calculate Laba Bersih = 03.05.02.01.00.00 - 03.05.02.02.00.00
+        let labaBersih = labaSebelumPajak - pajakLaba;
+        
+        console.log(`💰 Laba Sebelum Pajak: ${formatCurrency(labaSebelumPajak)}`);
+        console.log(`💰 Pajak Laba: ${formatCurrency(pajakLaba)}`);
+        console.log(`💰 Laba Bersih: ${formatCurrency(labaBersih)}`);
 
         // Try Excel ratios first
         const excelRatios = getRatiosFromExcel();
