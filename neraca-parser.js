@@ -67,11 +67,11 @@ const NERACA_CONFIG = {
     
     // Mapping kolom cabang syariah
     cabangSyariah: {
-        '510': { nama: 'CABANG SYARIAH MAKASSAR', rupiah: 91, valas: 92 },  // Col CO, CP
-        '520': { nama: 'CABANG SYARIAH SENGKANG', rupiah: 93, valas: 94 },  // Col CQ, CR
-        '530': { nama: 'CABANG SYARIAH MAROS', rupiah: 95, valas: 96 },     // Col CS, CT
-        '540': { nama: 'CABANG SYARIAH MAMUJU', rupiah: 97, valas: 98 },    // Col CU, CV
-        '500': { nama: 'UUS', rupiah: 99, valas: 100 }                      // Col CW, CX
+        '510': { nama: 'CABANG SYARIAH MAKASSAR', rupiah: 93, valas: 94 },  // Col CQ, CR
+        '520': { nama: 'CABANG SYARIAH SENGKANG', rupiah: 95, valas: 96 },  // Col CS, CT
+        '530': { nama: 'CABANG SYARIAH MAROS', rupiah: 97, valas: 98 },     // Col CU, CV
+        '540': { nama: 'CABANG SYARIAH MAMUJU', rupiah: 99, valas: 100 },   // Col CW, CX
+        '500': { nama: 'UUS', rupiah: 101, valas: 102 }                     // Col CY, CZ
     },
     
     // Kolom untuk total konvensional (Col I, J, K → index 7, 8, 9)
@@ -93,7 +93,29 @@ const NERACA_CONFIG = {
         rupiah: 16,
         valas: 17,
         total: 18
-    }
+    },
+    
+    // ==========================================
+    // RATIO ROWS CONFIGURATION
+    // ==========================================
+    // Row index (0-based) dan mapping nama ratio
+    ratioRows: {
+        142: 'LDR',      // Row 143: LOAN TO DEPOSIT RATIO
+        143: 'BOPO',     // Row 144: BOPO
+        144: 'ROA',      // Row 145: RETURN ON ASSET
+        145: 'NIM',      // Row 146: NET INTEREST MARGIN
+        146: 'ROE',      // Row 147: RETURN ON EQUITY
+        147: 'CAR',      // Row 148: KPMM/CAR
+        148: 'NPL',      // Row 149: NON PERFORMING LOAN
+        149: 'CASA',     // Row 150: CASA
+        150: 'NSFR',     // Row 151: NSFR
+        151: 'LCR'       // Row 152: LCR
+    },
+    
+    // Kolom untuk ratio per cabang (Total column for each branch)
+    // Cabang Konvensional: use 'total' column (index + 2 from rupiah)
+    // Cabang Syariah: same pattern
+    ratioColumnOffset: 2  // total = rupiah + 2
 };
 
 // ==========================================
@@ -308,16 +330,153 @@ class NeracaParser {
         console.log(`⏭️ Skipped: ${skippedRows} rows without sandi`);
         console.log(`📊 Total records: ${this.parsedData.length}`);
         
+        // ==========================================
+        // PARSE RATIO ROWS (Row 143-152)
+        // ==========================================
+        const ratioRecords = this.parseRatioRows(rows, periodeInfo, allCabang);
+        console.log(`📈 Ratio records: ${ratioRecords.length}`);
+        
+        // Add ratio records to parsed data
+        this.parsedData = [...this.parsedData, ...ratioRecords];
+        
         return {
             success: true,
             periode: periodeInfo,
             totalRecords: this.parsedData.length,
             totalRows: processedRows,
             skippedRows: skippedRows,
+            ratioRecords: ratioRecords.length,
             data: this.parsedData,
             summary: this.summaryData,
             errors: this.errors
         };
+    }
+    
+    /**
+     * Parse ratio rows (Row 143-152)
+     */
+    parseRatioRows(rows, periodeInfo, allCabang) {
+        console.log('📈 Parsing ratio rows...');
+        const ratioData = [];
+        
+        const ratioRows = this.config.ratioRows;
+        if (!ratioRows) {
+            console.log('⚠️ No ratio rows configured');
+            return ratioData;
+        }
+        
+        for (const [rowIndex, ratioName] of Object.entries(ratioRows)) {
+            const rowIdx = parseInt(rowIndex);
+            const row = rows[rowIdx];
+            
+            if (!row) {
+                console.log(`⚠️ Row ${rowIdx} not found`);
+                continue;
+            }
+            
+            // Extract ratio description from row
+            const description = this.extractPosDescription(row);
+            console.log(`📊 Row ${rowIdx}: ${ratioName} - ${description}`);
+            
+            // Process each cabang
+            for (const [kodeCabang, cabangInfo] of Object.entries(allCabang)) {
+                // Ratio value is in the same column as rupiah (or total column)
+                // Try rupiah column first, then total (rupiah + 2)
+                let ratioValue = this.parseNumber(row[cabangInfo.rupiah]);
+                
+                // If rupiah is 0, try the total column
+                if (ratioValue === 0 && row[cabangInfo.rupiah + 2]) {
+                    ratioValue = this.parseNumber(row[cabangInfo.rupiah + 2]);
+                }
+                
+                const tipe = this.config.cabangSyariah[kodeCabang] ? 'syariah' : 'konvensional';
+                const docId = `${periodeInfo.periode}_${kodeCabang}_RATIO_${ratioName}`;
+                
+                const ratioObj = {
+                    id: docId,
+                    periode: periodeInfo.periode,
+                    bulan: periodeInfo.bulan,
+                    tahun: periodeInfo.tahun,
+                    periodeName: periodeInfo.periodeName,
+                    kode_cabang: kodeCabang,
+                    nama_cabang: cabangInfo.nama,
+                    tipe: tipe,
+                    ratio_name: ratioName,
+                    value: ratioValue,
+                    description: description,
+                    is_ratio: true,
+                    row_index: rowIdx,
+                    created_at: new Date().toISOString()
+                };
+                
+                ratioData.push(ratioObj);
+            }
+            
+            // Also process summary ratios (KON, SYR, ALL)
+            this.parseRatioSummary(row, rowIdx, ratioName, periodeInfo, ratioData);
+        }
+        
+        console.log(`✅ Total ratio records: ${ratioData.length}`);
+        return ratioData;
+    }
+    
+    /**
+     * Parse ratio summary (KON, SYR, ALL)
+     */
+    parseRatioSummary(row, rowIdx, ratioName, periodeInfo, ratioData) {
+        // Konvensional Total
+        const konValue = this.parseNumber(row[this.config.totalKonvensional.total]);
+        ratioData.push({
+            id: `${periodeInfo.periode}_KON_RATIO_${ratioName}`,
+            periode: periodeInfo.periode,
+            bulan: periodeInfo.bulan,
+            tahun: periodeInfo.tahun,
+            periodeName: periodeInfo.periodeName,
+            kode_cabang: 'KON',
+            nama_cabang: 'Konvensional',
+            tipe: 'konvensional',
+            ratio_name: ratioName,
+            value: konValue,
+            is_ratio: true,
+            row_index: rowIdx,
+            created_at: new Date().toISOString()
+        });
+        
+        // Syariah Total
+        const syrValue = this.parseNumber(row[this.config.totalSyariah.total]);
+        ratioData.push({
+            id: `${periodeInfo.periode}_SYR_RATIO_${ratioName}`,
+            periode: periodeInfo.periode,
+            bulan: periodeInfo.bulan,
+            tahun: periodeInfo.tahun,
+            periodeName: periodeInfo.periodeName,
+            kode_cabang: 'SYR',
+            nama_cabang: 'Syariah',
+            tipe: 'syariah',
+            ratio_name: ratioName,
+            value: syrValue,
+            is_ratio: true,
+            row_index: rowIdx,
+            created_at: new Date().toISOString()
+        });
+        
+        // Konsolidasi Total
+        const allValue = this.parseNumber(row[this.config.totalKonsolidasi.total]);
+        ratioData.push({
+            id: `${periodeInfo.periode}_ALL_RATIO_${ratioName}`,
+            periode: periodeInfo.periode,
+            bulan: periodeInfo.bulan,
+            tahun: periodeInfo.tahun,
+            periodeName: periodeInfo.periodeName,
+            kode_cabang: 'ALL',
+            nama_cabang: 'Konsolidasi',
+            tipe: 'konsolidasi',
+            ratio_name: ratioName,
+            value: allValue,
+            is_ratio: true,
+            row_index: rowIdx,
+            created_at: new Date().toISOString()
+        });
     }
     
     /**
