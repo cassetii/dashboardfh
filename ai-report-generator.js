@@ -417,7 +417,9 @@ const AIReportGenerator = (function() {
                     yoyChange: ldrYoY ? formatGrowth(ldr - ldrYoY) : 'N/A',
                     target: `${ratioTargets.ldr.min}%-${ratioTargets.ldr.max}%`,
                     status: ldr >= ratioTargets.ldr.min && ldr <= ratioTargets.ldr.max ? '✅ SEHAT' : (ldr > ratioTargets.ldr.max ? '⚠️ TINGGI' : '⚠️ RENDAH'),
-                    keterangan: ldr >= ratioTargets.ldr.min && ldr <= ratioTargets.ldr.max ? 'Dalam batas sehat' : 'Perlu perhatian'
+                    keterangan: ldr >= ratioTargets.ldr.min && ldr <= ratioTargets.ldr.max ? 'Dalam batas sehat' : 'Perlu perhatian',
+                    prevYearValue: ldrYoY ? ldrYoY.toFixed(2) : 'N/A',
+                    spread: ldrYoY ? (ldr - ldrYoY).toFixed(2) : 'N/A'
                 },
                 casa: {
                     nama: 'CASA Ratio',
@@ -427,7 +429,9 @@ const AIReportGenerator = (function() {
                     yoyChange: casaYoY ? formatGrowth(casa - casaYoY) : 'N/A',
                     target: `≥${ratioTargets.casa.target}%`,
                     status: casa >= ratioTargets.casa.target ? '✅ BAIK' : '⚠️ PERLU DITINGKATKAN',
-                    keterangan: casa >= ratioTargets.casa.target ? 'Mencapai target' : 'Di bawah target'
+                    keterangan: casa >= ratioTargets.casa.target ? 'Mencapai target' : 'Di bawah target',
+                    prevYearValue: casaYoY ? casaYoY.toFixed(2) : 'N/A',
+                    spread: casaYoY ? (casa - casaYoY).toFixed(2) : 'N/A'
                 },
                 bopo: {
                     nama: 'BOPO',
@@ -437,7 +441,9 @@ const AIReportGenerator = (function() {
                     yoyChange: bopoYoY ? formatGrowth(bopo - bopoYoY) : 'N/A',
                     target: `≤${ratioTargets.bopo.target}%`,
                     status: bopo <= ratioTargets.bopo.target ? '✅ EFISIEN' : (bopo <= 90 ? '⚠️ CUKUP' : '❌ TIDAK EFISIEN'),
-                    keterangan: bopo <= ratioTargets.bopo.target ? 'Operasional efisien' : 'Perlu efisiensi biaya'
+                    keterangan: bopo <= ratioTargets.bopo.target ? 'Operasional efisien' : 'Perlu efisiensi biaya',
+                    prevYearValue: bopoYoY ? bopoYoY.toFixed(2) : 'N/A',
+                    spread: bopoYoY ? (bopo - bopoYoY).toFixed(2) : 'N/A'
                 },
                 npl: {
                     nama: 'NPL (Non Performing Loan)',
@@ -447,7 +453,9 @@ const AIReportGenerator = (function() {
                     yoyChange: nplYoY ? formatGrowth(npl - nplYoY) : 'N/A',
                     target: `≤${ratioTargets.npl.target}%`,
                     status: npl <= ratioTargets.npl.target ? '✅ SEHAT' : '❌ BERISIKO',
-                    keterangan: npl <= ratioTargets.npl.target ? 'Kualitas kredit baik' : 'Risiko kredit tinggi'
+                    keterangan: npl <= ratioTargets.npl.target ? 'Kualitas kredit baik' : 'Risiko kredit tinggi',
+                    prevYearValue: nplYoY ? nplYoY.toFixed(2) : 'N/A',
+                    spread: nplYoY ? (npl - nplYoY).toFixed(2) : 'N/A'
                 },
                 roa: {
                     nama: 'ROA (Return on Asset)',
@@ -457,7 +465,9 @@ const AIReportGenerator = (function() {
                     yoyChange: roaYoY ? formatGrowth(roa - roaYoY) : 'N/A',
                     target: `≥${ratioTargets.roa.target}%`,
                     status: roa >= ratioTargets.roa.target ? '✅ SANGAT BAIK' : (roa >= 1.25 ? '⚠️ BAIK' : '❌ KURANG'),
-                    keterangan: roa >= ratioTargets.roa.target ? 'Profitabilitas tinggi' : 'Perlu peningkatan laba'
+                    keterangan: roa >= ratioTargets.roa.target ? 'Profitabilitas tinggi' : 'Perlu peningkatan laba',
+                    prevYearValue: roaYoY ? roaYoY.toFixed(2) : 'N/A',
+                    spread: roaYoY ? (roa - roaYoY).toFixed(2) : 'N/A'
                 },
                 roe: {
                     nama: 'ROE (Return on Equity)',
@@ -467,7 +477,9 @@ const AIReportGenerator = (function() {
                     yoyChange: roeYoY ? formatGrowth(roe - roeYoY) : 'N/A',
                     target: `≥${ratioTargets.roe.target}%`,
                     status: roe >= ratioTargets.roe.target ? '✅ BAIK' : '⚠️ PERLU DITINGKATKAN',
-                    keterangan: roe >= ratioTargets.roe.target ? 'Return modal optimal' : 'Optimalisasi modal'
+                    keterangan: roe >= ratioTargets.roe.target ? 'Return modal optimal' : 'Optimalisasi modal',
+                    prevYearValue: roeYoY ? roeYoY.toFixed(2) : 'N/A',
+                    spread: roeYoY ? (roe - roeYoY).toFixed(2) : 'N/A'
                 },
                 nim: {
                     nama: 'NIM (Net Interest Margin)',
@@ -477,7 +489,9 @@ const AIReportGenerator = (function() {
                     yoyChange: nimYoY ? formatGrowth(nim - nimYoY) : 'N/A',
                     target: `≥${ratioTargets.nim.target}%`,
                     status: nim >= ratioTargets.nim.target ? '✅ BAIK' : '⚠️ PERLU DITINGKATKAN',
-                    keterangan: nim >= ratioTargets.nim.target ? 'Margin bunga optimal' : 'Perlu optimalisasi'
+                    keterangan: nim >= ratioTargets.nim.target ? 'Margin bunga optimal' : 'Perlu optimalisasi',
+                    prevYearValue: nimYoY ? nimYoY.toFixed(2) : 'N/A',
+                    spread: nimYoY ? (nim - nimYoY).toFixed(2) : 'N/A'
                 },
                 car: {
                     nama: 'CAR/KPMM',
@@ -487,7 +501,9 @@ const AIReportGenerator = (function() {
                     yoyChange: carYoY ? formatGrowth(car - carYoY) : 'N/A',
                     target: `≥${ratioTargets.car.target}%`,
                     status: car >= ratioTargets.car.target ? '✅ MEMENUHI' : '❌ TIDAK MEMENUHI',
-                    keterangan: car >= ratioTargets.car.target ? 'Modal mencukupi' : 'Perlu penambahan modal'
+                    keterangan: car >= ratioTargets.car.target ? 'Modal mencukupi' : 'Perlu penambahan modal',
+                    prevYearValue: carYoY ? carYoY.toFixed(2) : 'N/A',
+                    spread: carYoY ? (car - carYoY).toFixed(2) : 'N/A'
                 }
             },
             
@@ -788,6 +804,100 @@ HANYA berikan konten HTML (tanpa tag html, head, body):
     </table>
 </div>
 
+<div class="report-section ratio-explanation">
+    <h3>📋 PENJELASAN REALISASI RASIO KEUANGAN</h3>
+    <p style="font-style: italic; color: #666; margin-bottom: 20px;">Penjelasan detail untuk setiap rasio keuangan periode ${data.periode.full}</p>
+    
+    <div style="background: #f8f9fa; border-left: 4px solid #1e3a5f; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #1e3a5f; margin-top: 0;"><span style="background: #1e3a5f; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">1</span> Realisasi Rasio KPMM (CAR) sebesar ${data.kpiRatio.car.nilai}%</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
+            "Realisasi Rasio KPMM (CAR) sebesar ${data.kpiRatio.car.nilai}% dari proyeksi sebesar ${data.kpiRatio.car.target}, atau [di bawah/melampaui] target sebesar ${data.kpiRatio.car.spread}% dan mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.car.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.car.prevYearValue}%. Kondisi ini disebabkan [jelaskan penyebab: pertumbuhan Kredit & Pembiayaan ${data.kpiAktiva.kredit.yoyGrowth} lebih tinggi dari pertumbuhan Modal ${data.kpiPasiva.modal.yoyGrowth} sehingga mendorong kenaikan ATMR lebih cepat dari pertumbuhan modal yang menyebabkan [penurunan/peningkatan] rasio CAR secara yoy]. [Tambahkan konteks batas minimum OJK 12% dan implikasi terhadap kapasitas ekspansi kredit]."
+            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+        </p>
+    </div>
+    
+    <div style="background: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #28a745; margin-top: 0;"><span style="background: #28a745; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">2</span> Realisasi Rasio Return On Equity (ROE) sebesar ${data.kpiRatio.roe.nilai}%</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
+            "Realisasi Rasio Return On Equity (ROE) sebesar ${data.kpiRatio.roe.nilai}% dari proyeksi sebesar ${data.kpiRatio.roe.target}, atau deviasi sebesar ${data.kpiRatio.roe.spread}% dan tumbuh sebesar ${data.kpiRatio.roe.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.roe.prevYearValue}%. [Jelaskan penyebab: perbandingan pertumbuhan Laba Bersih ${data.kpiPasiva.labaBersih.yoyGrowth} vs pertumbuhan Modal ${data.kpiPasiva.modal.yoyGrowth}]. [Jika ada perbedaan metodologi perhitungan APOLO OJK vs internal, jelaskan]. Meski demikian, peningkatan kinerja ROE dibandingkan tahun sebelumnya disebabkan oleh [jelaskan faktor positif]. [Jelaskan implikasi terhadap return pemegang saham]."
+            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+        </p>
+    </div>
+    
+    <div style="background: #f8f9fa; border-left: 4px solid #17a2b8; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #17a2b8; margin-top: 0;"><span style="background: #17a2b8; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">3</span> Realisasi Rasio Return On Asset (ROA) sebesar ${data.kpiRatio.roa.nilai}%</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
+            "Realisasi Rasio Return On Asset (ROA) sebesar ${data.kpiRatio.roa.nilai}% dari proyeksi sebesar ${data.kpiRatio.roa.target}, atau [di bawah/melampaui] target sebesar ${data.kpiRatio.roa.spread}% dan tumbuh sebesar ${data.kpiRatio.roa.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.roa.prevYearValue}%. Kondisi ini disebabkan realisasi Asset Bank sebesar ${data.kpiAktiva.totalAset.achievement} dari target lebih tinggi dari realisasi Laba Bersih sebesar ${data.kpiPasiva.labaBersih.achievement} yang mengindikasikan pertumbuhan aset relatif lebih tinggi dibandingkan pertumbuhan laba bersih. Meski demikian, pertumbuhan ROA secara yoy dipengaruhi oleh pertumbuhan Laba Bersih Bank sebesar ${data.kpiPasiva.labaBersih.yoyGrowth} lebih tinggi dari pertumbuhan Asset Bank sebesar ${data.kpiAktiva.totalAset.yoyGrowth} maka terjadi peningkatan efektivitas aset dalam menghasilkan laba, yang tercermin dari meningkatnya rasio ROA."
+            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+        </p>
+    </div>
+    
+    <div style="background: #f8f9fa; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #856404; margin-top: 0;"><span style="background: #ffc107; color: #856404; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">4</span> Realisasi Rasio Net Interest Margin (NIM) sebesar ${data.kpiRatio.nim.nilai}%</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
+            "Realisasi Rasio Net Interest Margin (NIM) sebesar ${data.kpiRatio.nim.nilai}% dari proyeksi sebesar ${data.kpiRatio.nim.target}, atau deviasi sebesar ${data.kpiRatio.nim.spread}% dan mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.nim.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.nim.prevYearValue}%. Kondisi ini disebabkan proporsi dana murah (CASA) ${data.kpiRatio.casa.nilai}% mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.casa.yoyChange}, sementara komponen dana mahal (deposito) ${data.kpiPasiva.deposito.share}% [meningkat/menurun] sehingga mengakibatkan struktur pendanaan menjadi [kurang/lebih] efisien. Kondisi ini menyebabkan [kenaikan/penurunan] biaya dana (cost of fund) karena bunga yang dibayarkan atas deposito jauh lebih tinggi dibandingkan giro dan tabungan, sehingga menekan margin bunga bersih. [Jelaskan implikasi terhadap profitabilitas jangka panjang dan strategi optimalisasi]."
+            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+        </p>
+    </div>
+    
+    <div style="background: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #6c757d; margin-top: 0;"><span style="background: #6c757d; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">5</span> Realisasi Rasio BOPO sebesar ${data.kpiRatio.bopo.nilai}%</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
+            "Realisasi Rasio Biaya Operasional berbanding Pendapatan Operasional (BOPO) sebesar ${data.kpiRatio.bopo.nilai}% dari proyeksi sebesar ${data.kpiRatio.bopo.target}, atau [melampaui/di bawah] target sebesar ${data.kpiRatio.bopo.spread}%, namun mengalami [penurunan/peningkatan] dibandingkan ${data.periode.prevYear} sebesar ${data.kpiRatio.bopo.yoyChange} yang tercatat sebesar ${data.kpiRatio.bopo.prevYearValue}%. Kondisi ini disebabkan oleh realisasi Biaya Operasional Bank [lebih tinggi/lebih rendah] dari target dan [tumbuh/turun] secara yoy. Ketidakseimbangan pertumbuhan ini menyebabkan rasio BOPO [tidak mencapai/melampaui] target efisiensi yang diharapkan. Meski demikian, perbaikan rasio BOPO secara yoy turut didorong oleh efisiensi pada beberapa komponen Biaya Operasional Bank salah satunya beban CKPN Rp ${data.kpiAktiva.ckpn.formatted} yang [mengalami penurunan/peningkatan]. [Jelaskan implikasi terhadap efisiensi operasional bank dan rekomendasi]."
+            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+        </p>
+    </div>
+    
+    <div style="background: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #dc3545; margin-top: 0;"><span style="background: #dc3545; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">6</span> Realisasi Rasio NPL (Non Performing Loan) sebesar ${data.kpiRatio.npl.nilai}%</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
+            "Realisasi Rasio NPL (Non Performing Loan) sebesar ${data.kpiRatio.npl.nilai}% dari batas maksimal sebesar ${data.kpiRatio.npl.target}, atau [di bawah/melampaui] batas sebesar ${data.kpiRatio.npl.spread}% dan mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.npl.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.npl.prevYearValue}%. [Jelaskan penyebab kondisi NPL: kualitas kredit, sektor ekonomi yang bermasalah, upaya restrukturisasi, kolektibilitas]. Cadangan Kerugian Penurunan Nilai (CKPN) tercatat sebesar Rp ${data.kpiAktiva.ckpn.formatted} yang memberikan coverage ratio [jelaskan apakah memadai]. [Jelaskan strategi mitigasi risiko kredit dan upaya penurunan NPL yang dilakukan bank]."
+            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+        </p>
+    </div>
+    
+    <div style="background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #007bff; margin-top: 0;"><span style="background: #007bff; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">7</span> Realisasi Rasio LDR (Loan to Deposit Ratio) sebesar ${data.kpiRatio.ldr.nilai}%</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
+            "Realisasi Rasio LDR (Loan to Deposit Ratio) sebesar ${data.kpiRatio.ldr.nilai}% dari koridor regulasi sebesar ${data.kpiRatio.ldr.target}, atau [dalam/di luar] batas optimal dan mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.ldr.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.ldr.prevYearValue}%. Kondisi ini disebabkan pertumbuhan Kredit Rp ${data.kpiAktiva.kredit.formatted} dengan growth ${data.kpiAktiva.kredit.yoyGrowth} [lebih tinggi/lebih rendah] dibandingkan pertumbuhan DPK Rp ${data.kpiPasiva.dpk.formatted} dengan growth ${data.kpiPasiva.dpk.yoyGrowth}. [Jelaskan implikasi terhadap fungsi intermediasi bank dan likuiditas]. [Jelaskan strategi untuk mengoptimalkan penyaluran kredit dan penghimpunan dana]. Posisi LDR yang [tinggi/rendah] juga mempengaruhi ketersediaan sumber dana untuk aset produktif lainnya."
+            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+        </p>
+    </div>
+    
+    <div style="background: #f8f9fa; border-left: 4px solid #20c997; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #20c997; margin-top: 0;"><span style="background: #20c997; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">8</span> Realisasi Rasio CASA sebesar ${data.kpiRatio.casa.nilai}%</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
+            "Realisasi Rasio CASA (Current Account Saving Account) sebesar ${data.kpiRatio.casa.nilai}% dari target sebesar ${data.kpiRatio.casa.target}, atau [di bawah/melampaui] target sebesar ${data.kpiRatio.casa.spread}% dan mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.casa.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.casa.prevYearValue}%. Komposisi DPK saat ini terdiri dari Giro ${data.kpiPasiva.giro.share}% (Rp ${data.kpiPasiva.giro.formatted}), Tabungan ${data.kpiPasiva.tabungan.share}% (Rp ${data.kpiPasiva.tabungan.formatted}), dan Deposito ${data.kpiPasiva.deposito.share}% (Rp ${data.kpiPasiva.deposito.formatted}). [Jelaskan penyebab perubahan CASA: pengendapan giro pemda, pergeseran preferensi nasabah ke deposito, kondisi ekonomi]. Kondisi CASA yang [rendah/tinggi] berdampak pada [kenaikan/penurunan] cost of fund dan menekan/mendorong NIM. [Jelaskan strategi untuk meningkatkan CASA dan implikasinya terhadap profitabilitas]."
+            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+        </p>
+    </div>
+</div>
+
+<div class="report-section highlights">
+    </div>
+    
+    <div style="background: #f8f9fa; border-left: 4px solid #20c997; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #20c997; margin-top: 0;"><span style="background: #20c997; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">8</span> Realisasi Rasio CASA sebesar ${data.kpiRatio.casa.nilai}%</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            [INSTRUKSI: Jelaskan realisasi CASA ${data.kpiRatio.casa.nilai}% dengan format berikut:
+            - Bandingkan dengan target ${data.kpiRatio.casa.target}
+            - Jelaskan deviasi/spread dari target
+            - Bandingkan dengan tahun sebelumnya (YoY: ${data.kpiRatio.casa.yoyChange})
+            - Jelaskan komposisi: Giro ${data.kpiPasiva.giro.share}%, Tabungan ${data.kpiPasiva.tabungan.share}%, Deposito ${data.kpiPasiva.deposito.share}%
+            - Jelaskan PENYEBAB perubahan (misal penurunan giro pemda, peningkatan deposito, dll)
+            - Jelaskan IMPLIKASI terhadap cost of fund dan NIM]
+        </p>
+    </div>
+</div>
+
 <div class="report-section highlights">
     <h3>✅ HIGHLIGHT KINERJA POSITIF</h3>
     <ul>
@@ -851,7 +961,15 @@ PENTING:
 - Fokus pada PENCAPAIAN TARGET dan DEVIASI
 - Perhatikan tren YoY (Year-on-Year) dalam analisis
 - Berikan INSIGHT yang dapat ditindaklanjuti oleh manajemen
-- Gunakan bahasa yang PROFESIONAL namun mudah dipahami`;
+- Gunakan bahasa yang PROFESIONAL namun mudah dipahami
+
+KHUSUS UNTUK SECTION "PENJELASAN REALISASI RASIO KEUANGAN":
+- WAJIB mengisi semua 8 penjelasan rasio dengan narasi LENGKAP dan DETAIL
+- Setiap penjelasan rasio harus MINIMAL 5-7 kalimat yang saling berkaitan
+- Format penjelasan mengikuti pola: "Realisasi Rasio [NAMA] sebesar [NILAI]% dari proyeksi sebesar [TARGET]%, atau [di bawah/melampaui] target sebesar [DEVIASI]% dan [tumbuh/turun] sebesar [YOY]% dibandingkan tahun sebelumnya. Kondisi ini disebabkan oleh [PENYEBAB DETAIL]. [PENJELASAN LEBIH LANJUT TENTANG FAKTOR-FAKTOR YANG MEMPENGARUHI]. [IMPLIKASI DAN DAMPAK TERHADAP KINERJA BANK]."
+- Gunakan data spesifik seperti nilai rupiah, persentase, dan perbandingan
+- Jelaskan HUBUNGAN KAUSALITAS antar rasio (misal: penurunan CASA → kenaikan cost of fund → tekanan pada NIM)
+- Berikan konteks regulasi OJK/Bank Indonesia jika relevan`;
     }
     
     async function callClaudeAPI(prompt) {
