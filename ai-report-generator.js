@@ -777,6 +777,39 @@ HANYA berikan konten HTML (tanpa tag html, head, body):
     </table>
 </div>
 
+<div class="report-section neraca-explanation">
+    <h3>📋 PENJELASAN REALISASI INDIKATOR NERACA</h3>
+    <p style="font-style: italic; color: #666; margin-bottom: 20px;">Analisis detail untuk setiap indikator neraca periode ${data.periode.full}</p>
+    
+    <div style="background: #e8f4ea; border-left: 4px solid #28a745; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #155724; margin-top: 0;">📊 ASET</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            Realisasi Total Aset Bank sebesar <strong>Rp ${data.kpiAktiva.totalAset.formatted}</strong> atau mencapai <strong>${data.kpiAktiva.totalAset.achievement}</strong> dari target Rp ${data.kpiAktiva.totalAset.targetFormatted} dengan deviasi sebesar <strong>${data.kpiAktiva.totalAset.deviation}</strong>. Secara year-on-year, aset tumbuh sebesar <strong>${data.kpiAktiva.totalAset.yoyGrowth}</strong>. Pertumbuhan aset didorong oleh ekspansi pada komponen-komponen produktif, terutama penyaluran kredit yang merupakan kontributor utama pertumbuhan aset bank. Komposisi aset didominasi oleh Kredit yang Diberikan sebesar Rp ${data.kpiAktiva.kredit.formatted}, Surat Berharga Rp ${data.kpiAktiva.suratBerharga.formatted}, dan Penempatan pada Bank Lain Rp ${data.kpiAktiva.penempatanBank.formatted}. Bank terus mengoptimalkan penempatan aset pada instrumen produktif untuk meningkatkan pendapatan bunga sekaligus menjaga likuiditas yang memadai.
+        </p>
+    </div>
+    
+    <div style="background: #e3f2fd; border-left: 4px solid #0d6efd; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #084298; margin-top: 0;">💰 KREDIT & PEMBIAYAAN</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            Total penyaluran <strong>Kredit</strong> tercatat sebesar <strong>Rp ${data.kpiAktiva.kredit.formatted}</strong> dengan pencapaian <strong>${data.kpiAktiva.kredit.achievement}</strong> dari target dan pertumbuhan YoY sebesar <strong>${data.kpiAktiva.kredit.yoyGrowth}</strong>, dengan deviasi dari target sebesar <strong>${data.kpiAktiva.kredit.deviation}</strong>. Sementara <strong>Pembiayaan Syariah</strong> tercatat sebesar <strong>Rp ${data.kpiAktiva.pembiayaan.formatted}</strong> dengan pertumbuhan YoY sebesar <strong>${data.kpiAktiva.pembiayaan.yoyGrowth}</strong>. Pertumbuhan kredit didorong oleh meningkatnya permintaan di sektor konsumtif dan produktif, serta dukungan program pemerintah daerah. Namun demikian, terdapat tantangan dalam penyaluran kredit terutama terkait daya serap pasar dan kualitas calon debitur. Kualitas kredit tetap terjaga dengan NPL sebesar ${data.kpiRatio.npl.nilai}% yang masih berada di bawah batas maksimum OJK 5%. Cadangan Kerugian Penurunan Nilai (CKPN) tercatat sebesar Rp ${data.kpiAktiva.ckpn.formatted} untuk mengantisipasi potensi risiko kredit.
+        </p>
+    </div>
+    
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #856404; margin-top: 0;">🏦 DANA PIHAK KETIGA (DPK)</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            Penghimpunan <strong>Dana Pihak Ketiga (DPK)</strong> tercatat sebesar <strong>Rp ${data.kpiPasiva.dpk.formatted}</strong> atau mencapai <strong>${data.kpiPasiva.dpk.achievement}</strong> dari target dengan deviasi sebesar <strong>${data.kpiPasiva.dpk.deviation}</strong>. Secara year-on-year, DPK tumbuh sebesar <strong>${data.kpiPasiva.dpk.yoyGrowth}</strong>. Komposisi DPK terdiri dari <strong>Giro</strong> sebesar Rp ${data.kpiPasiva.giro.formatted} (<strong>${data.kpiPasiva.giro.share}%</strong>), <strong>Tabungan</strong> sebesar Rp ${data.kpiPasiva.tabungan.formatted} (<strong>${data.kpiPasiva.tabungan.share}%</strong>), dan <strong>Deposito</strong> sebesar Rp ${data.kpiPasiva.deposito.formatted} (<strong>${data.kpiPasiva.deposito.share}%</strong>). CASA Ratio tercatat sebesar <strong>${data.kpiRatio.casa.nilai}%</strong> yang menunjukkan proporsi dana murah terhadap total DPK. Struktur DPK ini mempengaruhi cost of fund bank, dimana proporsi deposito yang tinggi akan meningkatkan biaya dana. Bank perlu terus meningkatkan penghimpunan dana murah melalui optimalisasi giro pemerintah daerah dan pengembangan produk tabungan yang kompetitif.
+        </p>
+    </div>
+    
+    <div style="background: #d4edda; border-left: 4px solid #198754; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
+        <h4 style="color: #0f5132; margin-top: 0;">💵 MODAL & LABA BERSIH</h4>
+        <p style="text-align: justify; line-height: 1.8;">
+            <strong>Modal (Ekuitas)</strong> Bank tercatat sebesar <strong>Rp ${data.kpiPasiva.modal.formatted}</strong> dengan pertumbuhan YoY sebesar <strong>${data.kpiPasiva.modal.yoyGrowth}</strong>. Pertumbuhan modal didorong oleh akumulasi laba ditahan serta kebijakan manajemen untuk memperkuat struktur permodalan. <strong>Laba Bersih</strong> periode ${data.periode.full} tercatat sebesar <strong>Rp ${data.kpiPasiva.labaBersih.formatted}</strong> atau mencapai <strong>${data.kpiPasiva.labaBersih.achievement}</strong> dari target dengan deviasi sebesar <strong>${data.kpiPasiva.labaBersih.deviation}</strong>. Secara year-on-year, laba bersih tumbuh sebesar <strong>${data.kpiPasiva.labaBersih.yoyGrowth}</strong>. Pertumbuhan laba didorong oleh peningkatan pendapatan bunga dari ekspansi kredit dan efisiensi biaya operasional dengan BOPO sebesar ${data.kpiRatio.bopo.nilai}%. Rasio kecukupan modal (CAR) sebesar ${data.kpiRatio.car.nilai}% jauh di atas batas minimum OJK 12%, menunjukkan bank memiliki kapasitas yang memadai untuk ekspansi bisnis.
+        </p>
+    </div>
+</div>
+
 <div class="report-section ratio-table">
     <h3>📈 INDIKATOR KINERJA UTAMA (KPI) - RASIO KEUANGAN</h3>
     <table style="width:100%; border-collapse: collapse; margin: 10px 0; font-size: 12px;">
@@ -811,125 +844,79 @@ HANYA berikan konten HTML (tanpa tag html, head, body):
     <div style="background: #f8f9fa; border-left: 4px solid #1e3a5f; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #1e3a5f; margin-top: 0;"><span style="background: #1e3a5f; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">1</span> Realisasi Rasio KPMM (CAR) sebesar ${data.kpiRatio.car.nilai}%</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
-            "Realisasi Rasio KPMM (CAR) sebesar ${data.kpiRatio.car.nilai}% dari proyeksi sebesar ${data.kpiRatio.car.target}, atau [di bawah/melampaui] target sebesar ${data.kpiRatio.car.spread}% dan mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.car.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.car.prevYearValue}%. Kondisi ini disebabkan [jelaskan penyebab: pertumbuhan Kredit & Pembiayaan ${data.kpiAktiva.kredit.yoyGrowth} lebih tinggi dari pertumbuhan Modal ${data.kpiPasiva.modal.yoyGrowth} sehingga mendorong kenaikan ATMR lebih cepat dari pertumbuhan modal yang menyebabkan [penurunan/peningkatan] rasio CAR secara yoy]. [Tambahkan konteks batas minimum OJK 12% dan implikasi terhadap kapasitas ekspansi kredit]."
-            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+            Realisasi Rasio KPMM (CAR) sebesar <strong>${data.kpiRatio.car.nilai}%</strong> dari proyeksi sebesar <strong>${data.kpiRatio.car.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.car.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.car.prevYearValue}%</strong>. Kondisi ini disebabkan pertumbuhan Kredit & Pembiayaan sebesar ${data.kpiAktiva.kredit.yoyGrowth} yang mendorong kenaikan ATMR (Aktiva Tertimbang Menurut Risiko). Sementara pertumbuhan Modal sebesar ${data.kpiPasiva.modal.yoyGrowth} belum sepenuhnya mengimbangi pertumbuhan ATMR tersebut. Meski demikian, rasio CAR sebesar ${data.kpiRatio.car.nilai}% masih jauh di atas batas minimum OJK sebesar 12%, menunjukkan bank memiliki buffer permodalan yang memadai. Posisi CAR yang kuat ini memberikan ruang bagi bank untuk melakukan ekspansi kredit secara prudent sambil tetap menjaga kecukupan modal sesuai regulasi.
         </p>
     </div>
     
     <div style="background: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #28a745; margin-top: 0;"><span style="background: #28a745; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">2</span> Realisasi Rasio Return On Equity (ROE) sebesar ${data.kpiRatio.roe.nilai}%</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
-            "Realisasi Rasio Return On Equity (ROE) sebesar ${data.kpiRatio.roe.nilai}% dari proyeksi sebesar ${data.kpiRatio.roe.target}, atau deviasi sebesar ${data.kpiRatio.roe.spread}% dan tumbuh sebesar ${data.kpiRatio.roe.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.roe.prevYearValue}%. [Jelaskan penyebab: perbandingan pertumbuhan Laba Bersih ${data.kpiPasiva.labaBersih.yoyGrowth} vs pertumbuhan Modal ${data.kpiPasiva.modal.yoyGrowth}]. [Jika ada perbedaan metodologi perhitungan APOLO OJK vs internal, jelaskan]. Meski demikian, peningkatan kinerja ROE dibandingkan tahun sebelumnya disebabkan oleh [jelaskan faktor positif]. [Jelaskan implikasi terhadap return pemegang saham]."
-            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+            Realisasi Rasio Return On Equity (ROE) sebesar <strong>${data.kpiRatio.roe.nilai}%</strong> dari proyeksi sebesar <strong>${data.kpiRatio.roe.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.roe.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.roe.prevYearValue}%</strong>. Perubahan ROE dipengaruhi oleh perbandingan pertumbuhan Laba Bersih sebesar ${data.kpiPasiva.labaBersih.yoyGrowth} dengan pertumbuhan Modal sebesar ${data.kpiPasiva.modal.yoyGrowth}. Peningkatan kinerja ROE dibandingkan tahun sebelumnya menunjukkan efektivitas penggunaan modal pemegang saham dalam menghasilkan keuntungan. ROE yang positif mencerminkan kemampuan bank dalam memberikan return yang memadai kepada pemegang saham, meskipun masih terdapat ruang untuk optimalisasi lebih lanjut.
         </p>
     </div>
     
     <div style="background: #f8f9fa; border-left: 4px solid #17a2b8; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #17a2b8; margin-top: 0;"><span style="background: #17a2b8; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">3</span> Realisasi Rasio Return On Asset (ROA) sebesar ${data.kpiRatio.roa.nilai}%</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
-            "Realisasi Rasio Return On Asset (ROA) sebesar ${data.kpiRatio.roa.nilai}% dari proyeksi sebesar ${data.kpiRatio.roa.target}, atau [di bawah/melampaui] target sebesar ${data.kpiRatio.roa.spread}% dan tumbuh sebesar ${data.kpiRatio.roa.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.roa.prevYearValue}%. Kondisi ini disebabkan realisasi Asset Bank sebesar ${data.kpiAktiva.totalAset.achievement} dari target lebih tinggi dari realisasi Laba Bersih sebesar ${data.kpiPasiva.labaBersih.achievement} yang mengindikasikan pertumbuhan aset relatif lebih tinggi dibandingkan pertumbuhan laba bersih. Meski demikian, pertumbuhan ROA secara yoy dipengaruhi oleh pertumbuhan Laba Bersih Bank sebesar ${data.kpiPasiva.labaBersih.yoyGrowth} lebih tinggi dari pertumbuhan Asset Bank sebesar ${data.kpiAktiva.totalAset.yoyGrowth} maka terjadi peningkatan efektivitas aset dalam menghasilkan laba, yang tercermin dari meningkatnya rasio ROA."
-            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+            Realisasi Rasio Return On Asset (ROA) sebesar <strong>${data.kpiRatio.roa.nilai}%</strong> dari proyeksi sebesar <strong>${data.kpiRatio.roa.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.roa.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.roa.prevYearValue}%</strong>. Kondisi ini mencerminkan perbandingan antara pencapaian Aset sebesar ${data.kpiAktiva.totalAset.achievement} dari target dengan pencapaian Laba Bersih sebesar ${data.kpiPasiva.labaBersih.achievement}. Pertumbuhan Laba Bersih Bank sebesar ${data.kpiPasiva.labaBersih.yoyGrowth} dibandingkan pertumbuhan Aset Bank sebesar ${data.kpiAktiva.totalAset.yoyGrowth} menunjukkan tingkat efektivitas penggunaan aset dalam menghasilkan laba. ROA di atas 1,5% mengindikasikan bank berada dalam kategori sangat baik dalam hal profitabilitas aset.
         </p>
     </div>
     
     <div style="background: #f8f9fa; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #856404; margin-top: 0;"><span style="background: #ffc107; color: #856404; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">4</span> Realisasi Rasio Net Interest Margin (NIM) sebesar ${data.kpiRatio.nim.nilai}%</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
-            "Realisasi Rasio Net Interest Margin (NIM) sebesar ${data.kpiRatio.nim.nilai}% dari proyeksi sebesar ${data.kpiRatio.nim.target}, atau deviasi sebesar ${data.kpiRatio.nim.spread}% dan mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.nim.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.nim.prevYearValue}%. Kondisi ini disebabkan proporsi dana murah (CASA) ${data.kpiRatio.casa.nilai}% mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.casa.yoyChange}, sementara komponen dana mahal (deposito) ${data.kpiPasiva.deposito.share}% [meningkat/menurun] sehingga mengakibatkan struktur pendanaan menjadi [kurang/lebih] efisien. Kondisi ini menyebabkan [kenaikan/penurunan] biaya dana (cost of fund) karena bunga yang dibayarkan atas deposito jauh lebih tinggi dibandingkan giro dan tabungan, sehingga menekan margin bunga bersih. [Jelaskan implikasi terhadap profitabilitas jangka panjang dan strategi optimalisasi]."
-            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+            Realisasi Rasio Net Interest Margin (NIM) sebesar <strong>${data.kpiRatio.nim.nilai}%</strong> dari proyeksi sebesar <strong>${data.kpiRatio.nim.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.nim.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.nim.prevYearValue}%</strong>. Kondisi ini dipengaruhi oleh proporsi dana murah (CASA) sebesar ${data.kpiRatio.casa.nilai}% dan komposisi DPK dimana Deposito mencapai ${data.kpiPasiva.deposito.share}% dari total DPK. Proporsi deposito yang tinggi meningkatkan cost of fund karena bunga deposito lebih tinggi dibandingkan giro dan tabungan, sehingga memberikan tekanan pada margin bunga bersih. Bank perlu mengoptimalkan penghimpunan dana murah melalui peningkatan giro pemerintah daerah dan produk tabungan untuk memperbaiki struktur pendanaan dan mendukung NIM yang lebih optimal.
         </p>
     </div>
     
     <div style="background: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #6c757d; margin-top: 0;"><span style="background: #6c757d; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">5</span> Realisasi Rasio BOPO sebesar ${data.kpiRatio.bopo.nilai}%</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
-            "Realisasi Rasio Biaya Operasional berbanding Pendapatan Operasional (BOPO) sebesar ${data.kpiRatio.bopo.nilai}% dari proyeksi sebesar ${data.kpiRatio.bopo.target}, atau [melampaui/di bawah] target sebesar ${data.kpiRatio.bopo.spread}%, namun mengalami [penurunan/peningkatan] dibandingkan ${data.periode.prevYear} sebesar ${data.kpiRatio.bopo.yoyChange} yang tercatat sebesar ${data.kpiRatio.bopo.prevYearValue}%. Kondisi ini disebabkan oleh realisasi Biaya Operasional Bank [lebih tinggi/lebih rendah] dari target dan [tumbuh/turun] secara yoy. Ketidakseimbangan pertumbuhan ini menyebabkan rasio BOPO [tidak mencapai/melampaui] target efisiensi yang diharapkan. Meski demikian, perbaikan rasio BOPO secara yoy turut didorong oleh efisiensi pada beberapa komponen Biaya Operasional Bank salah satunya beban CKPN Rp ${data.kpiAktiva.ckpn.formatted} yang [mengalami penurunan/peningkatan]. [Jelaskan implikasi terhadap efisiensi operasional bank dan rekomendasi]."
-            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+            Realisasi Rasio Biaya Operasional berbanding Pendapatan Operasional (BOPO) sebesar <strong>${data.kpiRatio.bopo.nilai}%</strong> dari proyeksi sebesar <strong>${data.kpiRatio.bopo.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.bopo.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.bopo.prevYearValue}%</strong>. BOPO di bawah 85% menunjukkan bank beroperasi dengan tingkat efisiensi yang baik. Perbaikan rasio BOPO didorong oleh upaya efisiensi pada beberapa komponen Biaya Operasional Bank, termasuk optimalisasi beban CKPN sebesar Rp ${data.kpiAktiva.ckpn.formatted}. Bank terus melakukan pengendalian biaya operasional melalui digitalisasi layanan dan efisiensi proses bisnis untuk mempertahankan tingkat efisiensi yang optimal.
         </p>
     </div>
     
     <div style="background: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #dc3545; margin-top: 0;"><span style="background: #dc3545; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">6</span> Realisasi Rasio NPL (Non Performing Loan) sebesar ${data.kpiRatio.npl.nilai}%</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
-            "Realisasi Rasio NPL (Non Performing Loan) sebesar ${data.kpiRatio.npl.nilai}% dari batas maksimal sebesar ${data.kpiRatio.npl.target}, atau [di bawah/melampaui] batas sebesar ${data.kpiRatio.npl.spread}% dan mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.npl.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.npl.prevYearValue}%. [Jelaskan penyebab kondisi NPL: kualitas kredit, sektor ekonomi yang bermasalah, upaya restrukturisasi, kolektibilitas]. Cadangan Kerugian Penurunan Nilai (CKPN) tercatat sebesar Rp ${data.kpiAktiva.ckpn.formatted} yang memberikan coverage ratio [jelaskan apakah memadai]. [Jelaskan strategi mitigasi risiko kredit dan upaya penurunan NPL yang dilakukan bank]."
-            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+            Realisasi Rasio NPL (Non Performing Loan) sebesar <strong>${data.kpiRatio.npl.nilai}%</strong> dari batas maksimal sebesar <strong>${data.kpiRatio.npl.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.npl.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.npl.prevYearValue}%</strong>. NPL yang berada di bawah batas 5% menunjukkan kualitas kredit bank masih dalam kategori sehat. Bank telah membentuk Cadangan Kerugian Penurunan Nilai (CKPN) sebesar Rp ${data.kpiAktiva.ckpn.formatted} untuk mengantisipasi potensi kerugian kredit. Pengelolaan NPL dilakukan melalui upaya intensifikasi penagihan, restrukturisasi kredit bermasalah, dan penguatan proses analisis kredit untuk menjaga kualitas portofolio.
         </p>
     </div>
     
     <div style="background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #007bff; margin-top: 0;"><span style="background: #007bff; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">7</span> Realisasi Rasio LDR (Loan to Deposit Ratio) sebesar ${data.kpiRatio.ldr.nilai}%</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
-            "Realisasi Rasio LDR (Loan to Deposit Ratio) sebesar ${data.kpiRatio.ldr.nilai}% dari koridor regulasi sebesar ${data.kpiRatio.ldr.target}, atau [dalam/di luar] batas optimal dan mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.ldr.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.ldr.prevYearValue}%. Kondisi ini disebabkan pertumbuhan Kredit Rp ${data.kpiAktiva.kredit.formatted} dengan growth ${data.kpiAktiva.kredit.yoyGrowth} [lebih tinggi/lebih rendah] dibandingkan pertumbuhan DPK Rp ${data.kpiPasiva.dpk.formatted} dengan growth ${data.kpiPasiva.dpk.yoyGrowth}. [Jelaskan implikasi terhadap fungsi intermediasi bank dan likuiditas]. [Jelaskan strategi untuk mengoptimalkan penyaluran kredit dan penghimpunan dana]. Posisi LDR yang [tinggi/rendah] juga mempengaruhi ketersediaan sumber dana untuk aset produktif lainnya."
-            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
+            Realisasi Rasio LDR (Loan to Deposit Ratio) sebesar <strong>${data.kpiRatio.ldr.nilai}%</strong> dari koridor regulasi sebesar <strong>${data.kpiRatio.ldr.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.ldr.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.ldr.prevYearValue}%</strong>. Kondisi ini mencerminkan perbandingan pertumbuhan Kredit Rp ${data.kpiAktiva.kredit.formatted} (growth ${data.kpiAktiva.kredit.yoyGrowth}) dengan DPK Rp ${data.kpiPasiva.dpk.formatted} (growth ${data.kpiPasiva.dpk.yoyGrowth}). LDR yang berada dalam koridor 80%-92% menunjukkan keseimbangan antara fungsi intermediasi dan likuiditas bank. Bank terus mengoptimalkan penyaluran kredit yang produktif dengan tetap menjaga likuiditas yang memadai.
         </p>
     </div>
     
     <div style="background: #f8f9fa; border-left: 4px solid #20c997; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #20c997; margin-top: 0;"><span style="background: #20c997; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">8</span> Realisasi Rasio CASA sebesar ${data.kpiRatio.casa.nilai}%</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            [INSTRUKSI: Tulis narasi LENGKAP dengan format:
-            "Realisasi Rasio CASA (Current Account Saving Account) sebesar ${data.kpiRatio.casa.nilai}% dari target sebesar ${data.kpiRatio.casa.target}, atau [di bawah/melampaui] target sebesar ${data.kpiRatio.casa.spread}% dan mengalami [penurunan/peningkatan] sebesar ${data.kpiRatio.casa.yoyChange} dibandingkan ${data.periode.prevYear} yang tercatat sebesar ${data.kpiRatio.casa.prevYearValue}%. Komposisi DPK saat ini terdiri dari Giro ${data.kpiPasiva.giro.share}% (Rp ${data.kpiPasiva.giro.formatted}), Tabungan ${data.kpiPasiva.tabungan.share}% (Rp ${data.kpiPasiva.tabungan.formatted}), dan Deposito ${data.kpiPasiva.deposito.share}% (Rp ${data.kpiPasiva.deposito.formatted}). [Jelaskan penyebab perubahan CASA: pengendapan giro pemda, pergeseran preferensi nasabah ke deposito, kondisi ekonomi]. Kondisi CASA yang [rendah/tinggi] berdampak pada [kenaikan/penurunan] cost of fund dan menekan/mendorong NIM. [Jelaskan strategi untuk meningkatkan CASA dan implikasinya terhadap profitabilitas]."
-            WAJIB tulis minimal 5-7 kalimat yang saling berkaitan dalam satu paragraf panjang.]
-        </p>
-    </div>
-</div>
-
-<div class="report-section highlights">
-    </div>
-    
-    <div style="background: #f8f9fa; border-left: 4px solid #20c997; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
-        <h4 style="color: #20c997; margin-top: 0;"><span style="background: #20c997; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">8</span> Realisasi Rasio CASA sebesar ${data.kpiRatio.casa.nilai}%</h4>
-        <p style="text-align: justify; line-height: 1.8;">
-            [INSTRUKSI: Jelaskan realisasi CASA ${data.kpiRatio.casa.nilai}% dengan format berikut:
-            - Bandingkan dengan target ${data.kpiRatio.casa.target}
-            - Jelaskan deviasi/spread dari target
-            - Bandingkan dengan tahun sebelumnya (YoY: ${data.kpiRatio.casa.yoyChange})
-            - Jelaskan komposisi: Giro ${data.kpiPasiva.giro.share}%, Tabungan ${data.kpiPasiva.tabungan.share}%, Deposito ${data.kpiPasiva.deposito.share}%
-            - Jelaskan PENYEBAB perubahan (misal penurunan giro pemda, peningkatan deposito, dll)
-            - Jelaskan IMPLIKASI terhadap cost of fund dan NIM]
+            Realisasi Rasio CASA (Current Account Saving Account) sebesar <strong>${data.kpiRatio.casa.nilai}%</strong> dari target sebesar <strong>${data.kpiRatio.casa.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.casa.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.casa.prevYearValue}%</strong>. Komposisi DPK saat ini terdiri dari Giro <strong>${data.kpiPasiva.giro.share}%</strong> (Rp ${data.kpiPasiva.giro.formatted}), Tabungan <strong>${data.kpiPasiva.tabungan.share}%</strong> (Rp ${data.kpiPasiva.tabungan.formatted}), dan Deposito <strong>${data.kpiPasiva.deposito.share}%</strong> (Rp ${data.kpiPasiva.deposito.formatted}). CASA yang tinggi sangat penting untuk menekan cost of fund dan meningkatkan NIM. Bank perlu terus meningkatkan penghimpunan dana murah melalui optimalisasi rekening giro pemerintah daerah, pengembangan fitur digital banking untuk tabungan, dan program-program promosi yang menarik untuk meningkatkan jumlah nasabah dan saldo dana murah.
         </p>
     </div>
 </div>
 
 <div class="report-section highlights">
     <h3>✅ HIGHLIGHT KINERJA POSITIF</h3>
+    <p style="font-style: italic; color: #666; margin-bottom: 15px;">Ringkasan pencapaian positif periode ${data.periode.full}</p>
     <ul>
-        <li><strong>[Aspek 1]:</strong> [Penjelasan detail dengan angka pendukung dari tabel di atas]</li>
-        <li><strong>[Aspek 2]:</strong> [Penjelasan detail dengan angka pendukung]</li>
-        <li><strong>[Aspek 3]:</strong> [Penjelasan detail dengan angka pendukung]</li>
-        <li><strong>[Aspek 4]:</strong> [Penjelasan detail dengan angka pendukung]</li>
+        <li><strong>[Aspek Positif 1 - ASET/KREDIT]:</strong> [Jelaskan pencapaian terkait aset atau kredit dengan angka spesifik dan perbandingan YoY]</li>
+        <li><strong>[Aspek Positif 2 - DPK/FUNDING]:</strong> [Jelaskan pencapaian terkait penghimpunan dana dengan angka spesifik]</li>
+        <li><strong>[Aspek Positif 3 - PROFITABILITAS]:</strong> [Jelaskan pencapaian terkait laba/ROA/ROE dengan angka spesifik]</li>
+        <li><strong>[Aspek Positif 4 - EFISIENSI/KUALITAS]:</strong> [Jelaskan pencapaian terkait BOPO/NPL/CAR dengan angka spesifik]</li>
     </ul>
 </div>
 
 <div class="report-section concerns">
     <h3>⚠️ AREA YANG MEMERLUKAN PERHATIAN</h3>
+    <p style="font-style: italic; color: #666; margin-bottom: 15px;">Identifikasi tantangan dan area perbaikan</p>
     <ul>
-        <li><strong>[Concern 1]:</strong> [Penjelasan masalah, dampak potensial, dan rekomendasi]</li>
-        <li><strong>[Concern 2]:</strong> [Penjelasan masalah, dampak potensial, dan rekomendasi]</li>
-        <li><strong>[Concern 3]:</strong> [Penjelasan masalah, dampak potensial, dan rekomendasi]</li>
+        <li><strong>[Tantangan 1]:</strong> [Jelaskan masalah, penyebab, dampak potensial, dan rekomendasi perbaikan]</li>
+        <li><strong>[Tantangan 2]:</strong> [Jelaskan masalah, penyebab, dampak potensial, dan rekomendasi perbaikan]</li>
+        <li><strong>[Tantangan 3]:</strong> [Jelaskan masalah, penyebab, dampak potensial, dan rekomendasi perbaikan]</li>
     </ul>
-</div>
-
-<div class="report-section analysis">
-    <h3>🔍 ANALISIS MENDALAM</h3>
-    <h4>Struktur Dana Pihak Ketiga</h4>
-    <p>[Analisis komposisi DPK: Giro ${data.kpiPasiva.giro.share}%, Tabungan ${data.kpiPasiva.tabungan.share}%, Deposito ${data.kpiPasiva.deposito.share}%. CASA Ratio ${data.kpiRatio.casa.nilai}%. Bahas implikasi biaya dana dan strategi optimalisasi]</p>
-    
-    <h4>Kualitas Portofolio Kredit</h4>
-    <p>[Analisis NPL ${data.kpiRatio.npl.nilai}%, CKPN Rp ${data.kpiAktiva.ckpn.formatted}, coverage ratio. Bahas risiko kredit dan strategi mitigasi]</p>
-    
-    <h4>Efisiensi Operasional</h4>
-    <p>[Analisis BOPO ${data.kpiRatio.bopo.nilai}%, NIM ${data.kpiRatio.nim.nilai}%. Bahas efisiensi biaya dan produktivitas]</p>
-    
-    <h4>Permodalan</h4>
-    <p>[Analisis CAR ${data.kpiRatio.car.nilai}% vs batas minimum 12%. Bahas kecukupan modal dan kapasitas ekspansi]</p>
 </div>
 
 <div class="report-section recommendations">
@@ -963,13 +950,25 @@ PENTING:
 - Berikan INSIGHT yang dapat ditindaklanjuti oleh manajemen
 - Gunakan bahasa yang PROFESIONAL namun mudah dipahami
 
+KHUSUS UNTUK SECTION "PENJELASAN REALISASI INDIKATOR NERACA":
+- WAJIB mengisi semua 4 penjelasan indikator neraca (ASET, KREDIT & PEMBIAYAAN, DPK, MODAL & LABA) dengan narasi LENGKAP
+- Setiap penjelasan MINIMAL 6-8 kalimat yang saling berkaitan dalam bentuk paragraf naratif
+- Format: "Realisasi [INDIKATOR] sebesar Rp [NILAI] atau mencapai [PENCAPAIAN]% dari target Rp [TARGET] dengan deviasi sebesar [DEVIASI]. Secara year-on-year, tumbuh sebesar [YOY GROWTH]. [JELASKAN KOMPONEN-KOMPONEN PEMBENTUK]. [JELASKAN FAKTOR PENDORONG DAN PENGHAMBAT]. [JELASKAN IMPLIKASI DAN STRATEGI]."
+- Jelaskan keterkaitan antar indikator (misal: pertumbuhan DPK mendukung ekspansi kredit)
+
 KHUSUS UNTUK SECTION "PENJELASAN REALISASI RASIO KEUANGAN":
-- WAJIB mengisi semua 8 penjelasan rasio dengan narasi LENGKAP dan DETAIL
+- WAJIB mengisi semua 8 penjelasan rasio (CAR, ROE, ROA, NIM, BOPO, NPL, LDR, CASA) dengan narasi LENGKAP dan DETAIL
 - Setiap penjelasan rasio harus MINIMAL 5-7 kalimat yang saling berkaitan
 - Format penjelasan mengikuti pola: "Realisasi Rasio [NAMA] sebesar [NILAI]% dari proyeksi sebesar [TARGET]%, atau [di bawah/melampaui] target sebesar [DEVIASI]% dan [tumbuh/turun] sebesar [YOY]% dibandingkan tahun sebelumnya. Kondisi ini disebabkan oleh [PENYEBAB DETAIL]. [PENJELASAN LEBIH LANJUT TENTANG FAKTOR-FAKTOR YANG MEMPENGARUHI]. [IMPLIKASI DAN DAMPAK TERHADAP KINERJA BANK]."
 - Gunakan data spesifik seperti nilai rupiah, persentase, dan perbandingan
 - Jelaskan HUBUNGAN KAUSALITAS antar rasio (misal: penurunan CASA → kenaikan cost of fund → tekanan pada NIM)
-- Berikan konteks regulasi OJK/Bank Indonesia jika relevan`;
+- Berikan konteks regulasi OJK/Bank Indonesia jika relevan
+
+SANGAT PENTING:
+- Laporan ini untuk DIREKSI dan DEWAN KOMISARIS, harus PROFESIONAL dan INFORMATIF
+- JANGAN hanya menampilkan tabel tanpa penjelasan naratif
+- Setiap section harus memiliki NARASI yang menjelaskan angka-angka dalam tabel
+- Gunakan format paragraf yang mudah dibaca, bukan bullet points berlebihan`;
     }
     
     async function callClaudeAPI(prompt) {
