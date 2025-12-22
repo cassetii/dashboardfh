@@ -928,6 +928,25 @@ function getDetailBiayaFromFirebase() {
         return items.reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
     }
     
+    // Sum ONLY LEAF nodes (exclude summary sandi ending with .00.00.00)
+    function sumLeafOnly(kode, sandiPrefix) {
+        const items = labarugi.filter(d => 
+            d.kode_cabang === kode && 
+            d.periode === periode && 
+            d.sandi && d.sandi.startsWith(sandiPrefix) &&
+            !d.sandi.endsWith('.00.00.00')
+        );
+        return items.reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
+    }
+    
+    // Smart helper: get summary OR sum leaf if no summary
+    function getValueOrSumLeaf(kode, sandiPrefix) {
+        const summarySandi = sandiPrefix + '.00.00.00';
+        const summaryValue = getValueBySandi(kode, summarySandi);
+        if (summaryValue > 0) return summaryValue;
+        return sumLeafOnly(kode, sandiPrefix);
+    }
+    
     function toMiliar(val) {
         return val / 1e9;
     }
@@ -939,87 +958,165 @@ function getDetailBiayaFromFirebase() {
     
     const bebanBunga = {
         label: 'Beban Bunga / Bagi Hasil',
-        total: toMiliar(sumByPrefix(targetKode, '05.11')),
-        konven: toMiliar(sumByPrefix('KON', '05.11')),
-        syariah: toMiliar(sumByPrefix('SYR', '05.11')),
+        total: toMiliar(getValueBySandi(targetKode, '05.11.00.00.00.00') || sumLeafOnly(targetKode, '05.11')),
+        konven: toMiliar(getValueBySandi('KON', '05.11.00.00.00.00') || sumLeafOnly('KON', '05.11')),
+        syariah: toMiliar(getValueBySandi('SYR', '05.11.00.00.00.00') || sumLeafOnly('SYR', '05.11')),
         items: [
             { 
-                name: 'Bunga Deposito', 
-                value: toMiliar(sumByPrefix(targetKode, '05.11.03.03')),
-                konven: toMiliar(sumByPrefix('KON', '05.11.03.03')),
-                syariah: toMiliar(sumByPrefix('SYR', '05.11.03.03'))
+                name: 'Liabilitas pada Bank Indonesia', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.11.01')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.11.01')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.11.01'))
             },
             { 
-                name: 'Bunga Tabungan', 
-                value: toMiliar(sumByPrefix(targetKode, '05.11.03.02')),
-                konven: toMiliar(sumByPrefix('KON', '05.11.03.02')),
-                syariah: toMiliar(sumByPrefix('SYR', '05.11.03.02'))
+                name: 'Liabilitas pada bank lain', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.11.02')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.11.02')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.11.02'))
             },
             { 
-                name: 'Bunga Giro', 
-                value: toMiliar(sumByPrefix(targetKode, '05.11.03.01')),
-                konven: toMiliar(sumByPrefix('KON', '05.11.03.01')),
-                syariah: toMiliar(sumByPrefix('SYR', '05.11.03.01'))
+                name: 'Dana pihak ketiga bukan bank', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.11.03')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.11.03')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.11.03'))
             },
             { 
-                name: 'Bunga Pinjaman Diterima', 
-                value: toMiliar(sumByPrefix(targetKode, '05.11.05')),
-                konven: toMiliar(sumByPrefix('KON', '05.11.05')),
-                syariah: toMiliar(sumByPrefix('SYR', '05.11.05'))
+                name: 'Surat Berharga yang diterbitkan', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.11.04')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.11.04')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.11.04'))
+            },
+            { 
+                name: 'Pinjaman/Pembiayaan yang diterima', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.11.05')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.11.05')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.11.05'))
+            },
+            { 
+                name: 'Lainnya', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.11.99')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.11.99')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.11.99'))
             }
         ]
     };
     
     const bebanOperasional = {
-        label: 'Beban Operasional',
-        total: toMiliar(sumByPrefix(targetKode, '05.12')),
-        konven: toMiliar(sumByPrefix('KON', '05.12')),
-        syariah: toMiliar(sumByPrefix('SYR', '05.12')),
+        label: 'Beban Operasional Lainnya',
+        total: toMiliar(getValueBySandi(targetKode, '05.12.00.00.00.00') || sumLeafOnly(targetKode, '05.12')),
+        konven: toMiliar(getValueBySandi('KON', '05.12.00.00.00.00') || sumLeafOnly('KON', '05.12')),
+        syariah: toMiliar(getValueBySandi('SYR', '05.12.00.00.00.00') || sumLeafOnly('SYR', '05.12')),
         items: [
             { 
-                name: 'Beban Tenaga Kerja', 
-                value: toMiliar(sumByPrefix(targetKode, '05.12.13')),
-                konven: toMiliar(sumByPrefix('KON', '05.12.13')),
-                syariah: toMiliar(sumByPrefix('SYR', '05.12.13'))
+                name: 'Penurunan nilai wajar aset keuangan', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.12.03')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.12.03')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.12.03'))
             },
             { 
-                name: 'Beban CKPN/Penyisihan', 
-                value: toMiliar(sumByPrefix(targetKode, '05.12.07')),
-                konven: toMiliar(sumByPrefix('KON', '05.12.07')),
-                syariah: toMiliar(sumByPrefix('SYR', '05.12.07'))
+                name: 'Peningkatan nilai wajar liabilitas keuangan', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.12.04')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.12.04')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.12.04'))
             },
             { 
-                name: 'Beban Penyusutan', 
-                value: toMiliar(sumByPrefix(targetKode, '05.12.11')),
-                konven: toMiliar(sumByPrefix('KON', '05.12.11')),
-                syariah: toMiliar(sumByPrefix('SYR', '05.12.11'))
+                name: 'Kerugian penjualan aset keuangan', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.12.05')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.12.05')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.12.05'))
             },
             { 
-                name: 'Beban Umum & Administrasi', 
-                value: toMiliar(sumByPrefix(targetKode, '05.12.99')),
-                konven: toMiliar(sumByPrefix('KON', '05.12.99')),
-                syariah: toMiliar(sumByPrefix('SYR', '05.12.99'))
+                name: 'Kerugian transaksi spot & derivatif', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.12.06')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.12.06')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.12.06'))
+            },
+            { 
+                name: 'Kerugian penyertaan (equity method)', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.12.09')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.12.09')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.12.09'))
+            },
+            { 
+                name: 'Kerugian penjabaran valuta asing', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.12.15')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.12.15')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.12.15'))
+            },
+            { 
+                name: 'Dividen', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.05')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.05')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.05'))
+            },
+            { 
+                name: 'Kerugian penurunan nilai aset keuangan (impairment)', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.12.07')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.12.07')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.12.07'))
+            },
+            { 
+                name: 'Kerugian terkait risiko operasional', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.12.08')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.12.08')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.12.08'))
+            },
+            { 
+                name: 'Beban tenaga kerja', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.12.13')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.12.13')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.12.13'))
+            },
+            { 
+                name: 'Beban promosi', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.12.14')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.12.14')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.12.14'))
+            },
+            { 
+                name: 'Beban lainnya', 
+                value: toMiliar(
+                    getValueOrSumLeaf(targetKode, '05.12.10') + 
+                    getValueOrSumLeaf(targetKode, '05.12.11') + 
+                    getValueOrSumLeaf(targetKode, '05.12.12') + 
+                    getValueOrSumLeaf(targetKode, '05.12.99') + 
+                    getValueOrSumLeaf(targetKode, '05.12.01')
+                ),
+                konven: toMiliar(
+                    getValueOrSumLeaf('KON', '05.12.10') + 
+                    getValueOrSumLeaf('KON', '05.12.11') + 
+                    getValueOrSumLeaf('KON', '05.12.12') + 
+                    getValueOrSumLeaf('KON', '05.12.99') + 
+                    getValueOrSumLeaf('KON', '05.12.01')
+                ),
+                syariah: toMiliar(
+                    getValueOrSumLeaf('SYR', '05.12.10') + 
+                    getValueOrSumLeaf('SYR', '05.12.11') + 
+                    getValueOrSumLeaf('SYR', '05.12.12') + 
+                    getValueOrSumLeaf('SYR', '05.12.99') + 
+                    getValueOrSumLeaf('SYR', '05.12.01')
+                )
             }
         ]
     };
     
     const bebanNonOp = {
         label: 'Beban Non-Operasional',
-        total: toMiliar(sumByPrefix(targetKode, '05.20')),
-        konven: toMiliar(sumByPrefix('KON', '05.20')),
-        syariah: toMiliar(sumByPrefix('SYR', '05.20')),
+        total: toMiliar(getValueBySandi(targetKode, '05.20.00.00.00.00') || sumLeafOnly(targetKode, '05.20')),
+        konven: toMiliar(getValueBySandi('KON', '05.20.00.00.00.00') || sumLeafOnly('KON', '05.20')),
+        syariah: toMiliar(getValueBySandi('SYR', '05.20.00.00.00.00') || sumLeafOnly('SYR', '05.20')),
         items: [
             { 
-                name: 'Kerugian Penjualan Aset', 
+                name: 'Kerugian penjualan aset tetap dan inventaris', 
                 value: toMiliar(getValueBySandi(targetKode, '05.20.01.00.00.00')),
                 konven: toMiliar(getValueBySandi('KON', '05.20.01.00.00.00')),
                 syariah: toMiliar(getValueBySandi('SYR', '05.20.01.00.00.00'))
             },
             { 
-                name: 'Beban Non-Op Lainnya', 
-                value: toMiliar(sumByPrefix(targetKode, '05.20.99')),
-                konven: toMiliar(sumByPrefix('KON', '05.20.99')),
-                syariah: toMiliar(sumByPrefix('SYR', '05.20.99'))
+                name: 'Beban non operasional lainnya', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '05.20.99')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '05.20.99')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '05.20.99'))
             }
         ]
     };
