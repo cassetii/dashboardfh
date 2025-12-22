@@ -770,13 +770,13 @@ function getDetailPendapatanFromFirebase() {
         syariah: toMiliar(getValueBySandi('SYR', '04.20.00.00.00.00') || sumLeafOnly('SYR', '04.20')),
         items: [
             { 
-                name: 'Keuntungan Penjualan Aset', 
+                name: 'Keuntungan penjualan aset tetap dan inventaris', 
                 value: toMiliar(getValueBySandi(targetKode, '04.20.01.00.00.00')),
                 konven: toMiliar(getValueBySandi('KON', '04.20.01.00.00.00')),
                 syariah: toMiliar(getValueBySandi('SYR', '04.20.01.00.00.00'))
             },
             { 
-                name: 'Pendapatan Non-Op Lainnya', 
+                name: 'Pendapatan non operasional lainnya', 
                 value: toMiliar(getValueOrSumLeaf(targetKode, '04.20.99')),
                 konven: toMiliar(getValueOrSumLeaf('KON', '04.20.99')),
                 syariah: toMiliar(getValueOrSumLeaf('SYR', '04.20.99'))
