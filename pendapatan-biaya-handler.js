@@ -74,7 +74,7 @@ function updatePBFromFirebase() {
         return item ? Math.abs(item.total || 0) : 0;
     }
     
-    // Helper to sum by sandi prefix
+    // Helper to sum by sandi prefix (WARNING: may cause double counting!)
     function sumByPrefix(kode, sandiPrefix) {
         if (!kode) return 0;
         const items = labarugi.filter(d => 
@@ -83,6 +83,31 @@ function updatePBFromFirebase() {
             d.sandi && d.sandi.startsWith(sandiPrefix)
         );
         return items.reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
+    }
+    
+    // Helper to sum ONLY LEAF nodes (exclude summary sandi ending with .00.00.00)
+    // This prevents double counting parent + child
+    function sumLeafOnly(kode, sandiPrefix) {
+        if (!kode) return 0;
+        const items = labarugi.filter(d => 
+            d.kode_cabang === kode && 
+            d.periode === periode && 
+            d.sandi && d.sandi.startsWith(sandiPrefix) &&
+            !d.sandi.endsWith('.00.00.00') // Exclude summary sandi
+        );
+        return items.reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
+    }
+    
+    // Smart helper: get summary value OR sum leaf nodes if no summary exists
+    function getValueOrSumLeaf(kode, sandiPrefix) {
+        if (!kode) return 0;
+        // Try to get summary sandi first (e.g., 04.11.01.00.00.00)
+        const summarySandi = sandiPrefix + '.00.00.00';
+        const summaryValue = getValueBySandi(kode, summarySandi);
+        if (summaryValue > 0) return summaryValue;
+        
+        // If no summary, sum leaf nodes only
+        return sumLeafOnly(kode, sandiPrefix);
     }
     
     // ========================================
@@ -96,17 +121,17 @@ function updatePBFromFirebase() {
     // 04.11 = Pendapatan Bunga/Imbal Hasil
     // 04.12 = Pendapatan Operasional Lainnya
     // 04.20 = Pendapatan Non Operasional
-    const pendapatanBungaAll = getValueBySandi(targetKode, '04.11.00.00.00.00') || sumByPrefix(targetKode, '04.11');
-    const pendapatanBungaKon = targetKodeKon ? (getValueBySandi(targetKodeKon, '04.11.00.00.00.00') || sumByPrefix(targetKodeKon, '04.11')) : 0;
-    const pendapatanBungaSyr = targetKodeSyr ? (getValueBySandi(targetKodeSyr, '04.11.00.00.00.00') || sumByPrefix(targetKodeSyr, '04.11')) : 0;
+    const pendapatanBungaAll = getValueBySandi(targetKode, '04.11.00.00.00.00') || sumLeafOnly(targetKode, '04.11');
+    const pendapatanBungaKon = targetKodeKon ? (getValueBySandi(targetKodeKon, '04.11.00.00.00.00') || sumLeafOnly(targetKodeKon, '04.11')) : 0;
+    const pendapatanBungaSyr = targetKodeSyr ? (getValueBySandi(targetKodeSyr, '04.11.00.00.00.00') || sumLeafOnly(targetKodeSyr, '04.11')) : 0;
     
-    const pendapatanOpLainAll = sumByPrefix(targetKode, '04.12');
-    const pendapatanOpLainKon = targetKodeKon ? sumByPrefix(targetKodeKon, '04.12') : 0;
-    const pendapatanOpLainSyr = targetKodeSyr ? sumByPrefix(targetKodeSyr, '04.12') : 0;
+    const pendapatanOpLainAll = getValueBySandi(targetKode, '04.12.00.00.00.00') || sumLeafOnly(targetKode, '04.12');
+    const pendapatanOpLainKon = targetKodeKon ? (getValueBySandi(targetKodeKon, '04.12.00.00.00.00') || sumLeafOnly(targetKodeKon, '04.12')) : 0;
+    const pendapatanOpLainSyr = targetKodeSyr ? (getValueBySandi(targetKodeSyr, '04.12.00.00.00.00') || sumLeafOnly(targetKodeSyr, '04.12')) : 0;
     
-    const pendapatanNonOpAll = sumByPrefix(targetKode, '04.20');
-    const pendapatanNonOpKon = targetKodeKon ? sumByPrefix(targetKodeKon, '04.20') : 0;
-    const pendapatanNonOpSyr = targetKodeSyr ? sumByPrefix(targetKodeSyr, '04.20') : 0;
+    const pendapatanNonOpAll = getValueBySandi(targetKode, '04.20.00.00.00.00') || sumLeafOnly(targetKode, '04.20');
+    const pendapatanNonOpKon = targetKodeKon ? (getValueBySandi(targetKodeKon, '04.20.00.00.00.00') || sumLeafOnly(targetKodeKon, '04.20')) : 0;
+    const pendapatanNonOpSyr = targetKodeSyr ? (getValueBySandi(targetKodeSyr, '04.20.00.00.00.00') || sumLeafOnly(targetKodeSyr, '04.20')) : 0;
     
     // Gunakan nilai dari pos ringkasan jika ada
     const pendapatanOpBunga = getValueBySandi(targetKode, '03.05.02.01.11.10'); // Pendapatan Operasional Bunga
@@ -124,17 +149,17 @@ function updatePBFromFirebase() {
     // 05.11 = Beban Bunga/Imbal Hasil
     // 05.12 = Beban Operasional Lainnya
     // 05.20 = Beban Non Operasional
-    const bebanBungaAll = getValueBySandi(targetKode, '05.11.00.00.00.00') || sumByPrefix(targetKode, '05.11');
-    const bebanBungaKon = targetKodeKon ? (getValueBySandi(targetKodeKon, '05.11.00.00.00.00') || sumByPrefix(targetKodeKon, '05.11')) : 0;
-    const bebanBungaSyr = targetKodeSyr ? (getValueBySandi(targetKodeSyr, '05.11.00.00.00.00') || sumByPrefix(targetKodeSyr, '05.11')) : 0;
+    const bebanBungaAll = getValueBySandi(targetKode, '05.11.00.00.00.00') || sumLeafOnly(targetKode, '05.11');
+    const bebanBungaKon = targetKodeKon ? (getValueBySandi(targetKodeKon, '05.11.00.00.00.00') || sumLeafOnly(targetKodeKon, '05.11')) : 0;
+    const bebanBungaSyr = targetKodeSyr ? (getValueBySandi(targetKodeSyr, '05.11.00.00.00.00') || sumLeafOnly(targetKodeSyr, '05.11')) : 0;
     
-    const bebanOpLainAll = sumByPrefix(targetKode, '05.12');
-    const bebanOpLainKon = targetKodeKon ? sumByPrefix(targetKodeKon, '05.12') : 0;
-    const bebanOpLainSyr = targetKodeSyr ? sumByPrefix(targetKodeSyr, '05.12') : 0;
+    const bebanOpLainAll = getValueBySandi(targetKode, '05.12.00.00.00.00') || sumLeafOnly(targetKode, '05.12');
+    const bebanOpLainKon = targetKodeKon ? (getValueBySandi(targetKodeKon, '05.12.00.00.00.00') || sumLeafOnly(targetKodeKon, '05.12')) : 0;
+    const bebanOpLainSyr = targetKodeSyr ? (getValueBySandi(targetKodeSyr, '05.12.00.00.00.00') || sumLeafOnly(targetKodeSyr, '05.12')) : 0;
     
-    const bebanNonOpAll = sumByPrefix(targetKode, '05.20');
-    const bebanNonOpKon = targetKodeKon ? sumByPrefix(targetKodeKon, '05.20') : 0;
-    const bebanNonOpSyr = targetKodeSyr ? sumByPrefix(targetKodeSyr, '05.20') : 0;
+    const bebanNonOpAll = getValueBySandi(targetKode, '05.20.00.00.00.00') || sumLeafOnly(targetKode, '05.20');
+    const bebanNonOpKon = targetKodeKon ? (getValueBySandi(targetKodeKon, '05.20.00.00.00.00') || sumLeafOnly(targetKodeKon, '05.20')) : 0;
+    const bebanNonOpSyr = targetKodeSyr ? (getValueBySandi(targetKodeSyr, '05.20.00.00.00.00') || sumLeafOnly(targetKodeSyr, '05.20')) : 0;
     
     // Gunakan nilai dari pos ringkasan jika ada
     const bebanOpBunga = getValueBySandi(targetKode, '03.05.02.02.11.10');  // Beban Operasional Bunga
@@ -601,6 +626,25 @@ function getDetailPendapatanFromFirebase() {
         return items.reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
     }
     
+    // Sum ONLY LEAF nodes (exclude summary sandi ending with .00.00.00)
+    function sumLeafOnly(kode, sandiPrefix) {
+        const items = labarugi.filter(d => 
+            d.kode_cabang === kode && 
+            d.periode === periode && 
+            d.sandi && d.sandi.startsWith(sandiPrefix) &&
+            !d.sandi.endsWith('.00.00.00')
+        );
+        return items.reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
+    }
+    
+    // Smart helper: get summary OR sum leaf if no summary
+    function getValueOrSumLeaf(kode, sandiPrefix) {
+        const summarySandi = sandiPrefix + '.00.00.00';
+        const summaryValue = getValueBySandi(kode, summarySandi);
+        if (summaryValue > 0) return summaryValue;
+        return sumLeafOnly(kode, sandiPrefix);
+    }
+    
     function toMiliar(val) {
         return val / 1e9;
     }
@@ -612,81 +656,82 @@ function getDetailPendapatanFromFirebase() {
     
     const pendapatanBunga = {
         label: 'Pendapatan Bunga / Imbal Hasil',
-        total: toMiliar(sumByPrefix(targetKode, '04.11')),
-        konven: toMiliar(sumByPrefix('KON', '04.11')),
-        syariah: toMiliar(sumByPrefix('SYR', '04.11')),
+        // TOTAL: ambil dari sandi ringkasan utama (avoid double counting)
+        total: toMiliar(getValueBySandi(targetKode, '04.11.00.00.00.00')),
+        konven: toMiliar(getValueBySandi('KON', '04.11.00.00.00.00')),
+        syariah: toMiliar(getValueBySandi('SYR', '04.11.00.00.00.00')),
         items: [
             { 
                 name: 'Penempatan pada Bank Indonesia', 
-                value: toMiliar(sumByPrefix(targetKode, '04.11.01')),
-                konven: toMiliar(sumByPrefix('KON', '04.11.01')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.11.01'))
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.11.01')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.11.01')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.11.01'))
             },
             { 
                 name: 'Penempatan pada bank lain', 
-                value: toMiliar(sumByPrefix(targetKode, '04.11.02')),
-                konven: toMiliar(sumByPrefix('KON', '04.11.02')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.11.02'))
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.11.02')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.11.02')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.11.02'))
             },
             { 
                 name: 'Surat Berharga yang dimiliki', 
-                value: toMiliar(sumByPrefix(targetKode, '04.11.03')),
-                konven: toMiliar(sumByPrefix('KON', '04.11.03')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.11.03'))
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.11.03')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.11.03')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.11.03'))
             },
             { 
                 name: 'Kredit/piutang/pembiayaan', 
-                value: toMiliar(sumByPrefix(targetKode, '04.11.04')),
-                konven: toMiliar(sumByPrefix('KON', '04.11.04')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.11.04'))
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.11.04')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.11.04')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.11.04'))
             },
             { 
                 name: 'Lainnya', 
-                value: toMiliar(sumByPrefix(targetKode, '04.11.99')),
-                konven: toMiliar(sumByPrefix('KON', '04.11.99')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.11.99'))
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.11.99')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.11.99')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.11.99'))
             }
         ]
     };
     
     const pendapatanOpLain = {
         label: 'Pendapatan Operasional Lainnya',
-        total: toMiliar(sumByPrefix(targetKode, '04.12')),
-        konven: toMiliar(sumByPrefix('KON', '04.12')),
-        syariah: toMiliar(sumByPrefix('SYR', '04.12')),
+        total: toMiliar(getValueBySandi(targetKode, '04.12.00.00.00.00') || sumLeafOnly(targetKode, '04.12')),
+        konven: toMiliar(getValueBySandi('KON', '04.12.00.00.00.00') || sumLeafOnly('KON', '04.12')),
+        syariah: toMiliar(getValueBySandi('SYR', '04.12.00.00.00.00') || sumLeafOnly('SYR', '04.12')),
         items: [
             { 
                 name: 'Provisi & Komisi', 
-                value: toMiliar(sumByPrefix(targetKode, '04.12.07')),
-                konven: toMiliar(sumByPrefix('KON', '04.12.07')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.12.07'))
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.07')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.07')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.07'))
             },
             { 
                 name: 'Keuntungan Transaksi Valas', 
-                value: toMiliar(sumByPrefix(targetKode, '04.12.04')),
-                konven: toMiliar(sumByPrefix('KON', '04.12.04')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.12.04'))
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.04')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.04')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.04'))
             },
             { 
                 name: 'Pemulihan Aset/Kerugian', 
-                value: toMiliar(sumByPrefix(targetKode, '04.12.10')),
-                konven: toMiliar(sumByPrefix('KON', '04.12.10')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.12.10'))
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.10')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.10')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.10'))
             },
             { 
                 name: 'Pendapatan Lainnya', 
-                value: toMiliar(sumByPrefix(targetKode, '04.12.99')),
-                konven: toMiliar(sumByPrefix('KON', '04.12.99')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.12.99'))
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.99')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.99')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.99'))
             }
         ]
     };
     
     const pendapatanNonOp = {
         label: 'Pendapatan Non-Operasional',
-        total: toMiliar(sumByPrefix(targetKode, '04.20')),
-        konven: toMiliar(sumByPrefix('KON', '04.20')),
-        syariah: toMiliar(sumByPrefix('SYR', '04.20')),
+        total: toMiliar(getValueBySandi(targetKode, '04.20.00.00.00.00') || sumLeafOnly(targetKode, '04.20')),
+        konven: toMiliar(getValueBySandi('KON', '04.20.00.00.00.00') || sumLeafOnly('KON', '04.20')),
+        syariah: toMiliar(getValueBySandi('SYR', '04.20.00.00.00.00') || sumLeafOnly('SYR', '04.20')),
         items: [
             { 
                 name: 'Keuntungan Penjualan Aset', 
@@ -696,9 +741,9 @@ function getDetailPendapatanFromFirebase() {
             },
             { 
                 name: 'Pendapatan Non-Op Lainnya', 
-                value: toMiliar(sumByPrefix(targetKode, '04.20.99')),
-                konven: toMiliar(sumByPrefix('KON', '04.20.99')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.20.99'))
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.20.99')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.20.99')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.20.99'))
             }
         ]
     };
