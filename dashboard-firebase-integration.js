@@ -462,12 +462,14 @@
         // Kredit/Pembiayaan - different SANDI for Syariah
         let kredit, pembiayaan;
         if (isSyariah) {
-            // Syariah: Sum all 01.09.03.xx.xx.xx (Pembiayaan)
+            // Syariah only: Sum all 01.09.03.xx.xx.xx (Pembiayaan Syariah)
             kredit = sumBySandiPrefix(neraca, SANDI_SYARIAH.kreditPrefix);
             pembiayaan = kredit; // For syariah, kredit = pembiayaan
         } else {
+            // Konvensional atau Konsolidasi
             kredit = sumBySandi(neraca, SANDI_KONVEN.kredit);
-            pembiayaan = sumBySandi(neraca, SANDI_KONVEN.pembiayaan);
+            // Pembiayaan Syariah selalu menggunakan prefix 01.09.03 (bukan 01.10)
+            pembiayaan = sumBySandiPrefix(neraca, '01.09.03');
         }
         
         const ckpn = sumBySandiPrefix(neraca, SANDI_KONVEN.ckpnPrefix);
