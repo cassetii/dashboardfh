@@ -505,6 +505,38 @@
         const pendapatanBunga = sumBySandi(labarugi, SANDI_KONVEN.pendapatanBunga);
         const bebanBunga = sumBySandi(labarugi, SANDI_KONVEN.bebanBunga);
         
+        // ==========================================
+        // TOTAL PENDAPATAN & BIAYA (untuk Card Neraca)
+        // Harus sinkron dengan Detail Pendapatan & Biaya
+        // ==========================================
+        // Helper untuk avoid double counting
+        function getValueOrLeaf(sandi, prefix) {
+            const summaryValue = sumBySandi(labarugi, sandi);
+            if (summaryValue > 0) return summaryValue;
+            // Sum leaf only (exclude .00.00.00)
+            return labarugi.filter(d => 
+                d.kode_cabang === targetKode && 
+                d.periode === currentFilters.periode && 
+                d.sandi && d.sandi.startsWith(prefix) &&
+                !d.sandi.endsWith('.00.00.00')
+            ).reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
+        }
+        
+        // Total Pendapatan = 04.11 + 04.12 + 04.20
+        const pendapatanBungaTotal = getValueOrLeaf('04.11.00.00.00.00', '04.11');
+        const pendapatanOpLainTotal = getValueOrLeaf('04.12.00.00.00.00', '04.12');
+        const pendapatanNonOpTotal = getValueOrLeaf('04.20.00.00.00.00', '04.20');
+        const totalPendapatan = pendapatanBungaTotal + pendapatanOpLainTotal + pendapatanNonOpTotal;
+        
+        // Total Biaya = 05.11 + 05.12 + 05.20
+        const bebanBungaTotal = getValueOrLeaf('05.11.00.00.00.00', '05.11');
+        const bebanOpLainTotal = getValueOrLeaf('05.12.00.00.00.00', '05.12');
+        const bebanNonOpTotal = getValueOrLeaf('05.20.00.00.00.00', '05.20');
+        const totalBiaya = bebanBungaTotal + bebanOpLainTotal + bebanNonOpTotal;
+        
+        console.log(`📊 Total Pendapatan: ${formatCurrency(totalPendapatan)} (Bunga: ${formatCurrency(pendapatanBungaTotal)}, OpLain: ${formatCurrency(pendapatanOpLainTotal)}, NonOp: ${formatCurrency(pendapatanNonOpTotal)})`);
+        console.log(`📊 Total Biaya: ${formatCurrency(totalBiaya)} (Bunga: ${formatCurrency(bebanBungaTotal)}, OpLain: ${formatCurrency(bebanOpLainTotal)}, NonOp: ${formatCurrency(bebanNonOpTotal)})`);
+        
         // Total Pendapatan & Beban Operasional for BOPO
         const pendapatanOperasional = sumBySandi(labarugi, '01.00.00.00.00.00');
         const bebanOperasional = sumBySandi(labarugi, '02.00.00.00.00.00');
@@ -570,8 +602,10 @@
             totalAset, kredit, pembiayaan, ckpn, ati, atiGross, atiAkum,
             dpk, giro, tabungan, deposito, modal,
             labaBersih, pendapatanBunga, bebanBunga,
-            totalPendapatan: pendapatanBunga,
-            totalBiaya: bebanBunga,
+            totalPendapatan, totalBiaya,
+            // Detail components for reference
+            pendapatanBungaTotal, pendapatanOpLainTotal, pendapatanNonOpTotal,
+            bebanBungaTotal, bebanOpLainTotal, bebanNonOpTotal,
             ldr, casa, bopo, roa, roe, nim, npl, car
         };
     }
