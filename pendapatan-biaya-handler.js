@@ -290,9 +290,11 @@ const PENDAPATAN_BIAYA_DATA = {
             syariah: 139.00,
             change: 8.5,
             items: [
-                { name: 'Bunga Kredit', value: 1850.50, konven: 1720.50, syariah: 130.00 },
-                { name: 'Bunga Penempatan', value: 280.38, konven: 271.38, syariah: 9.00 },
-                { name: 'Bunga Surat Berharga', value: 102.00, konven: 102.00, syariah: 0 }
+                { name: 'Penempatan pada Bank Indonesia', value: 13.22, konven: 13.22, syariah: 0 },
+                { name: 'Penempatan pada bank lain', value: 0, konven: 0, syariah: 0 },
+                { name: 'Surat Berharga yang dimiliki', value: 341.01, konven: 341.01, syariah: 0 },
+                { name: 'Kredit/piutang/pembiayaan', value: 1850.50, konven: 1720.50, syariah: 130.00 },
+                { name: 'Lainnya', value: 28.15, konven: 19.15, syariah: 9.00 }
             ]
         },
         operasionalLainnya: {
@@ -615,22 +617,34 @@ function getDetailPendapatanFromFirebase() {
         syariah: toMiliar(sumByPrefix('SYR', '04.11')),
         items: [
             { 
-                name: 'Bunga Kredit/Pembiayaan', 
-                value: toMiliar(sumByPrefix(targetKode, '04.11.04')),
-                konven: toMiliar(sumByPrefix('KON', '04.11.04')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.11.04'))
+                name: 'Penempatan pada Bank Indonesia', 
+                value: toMiliar(sumByPrefix(targetKode, '04.11.01')),
+                konven: toMiliar(sumByPrefix('KON', '04.11.01')),
+                syariah: toMiliar(sumByPrefix('SYR', '04.11.01'))
             },
             { 
-                name: 'Bunga Surat Berharga', 
+                name: 'Penempatan pada bank lain', 
+                value: toMiliar(sumByPrefix(targetKode, '04.11.02')),
+                konven: toMiliar(sumByPrefix('KON', '04.11.02')),
+                syariah: toMiliar(sumByPrefix('SYR', '04.11.02'))
+            },
+            { 
+                name: 'Surat Berharga yang dimiliki', 
                 value: toMiliar(sumByPrefix(targetKode, '04.11.03')),
                 konven: toMiliar(sumByPrefix('KON', '04.11.03')),
                 syariah: toMiliar(sumByPrefix('SYR', '04.11.03'))
             },
             { 
-                name: 'Bunga Penempatan', 
-                value: toMiliar(sumByPrefix(targetKode, '04.11.01') + sumByPrefix(targetKode, '04.11.02')),
-                konven: toMiliar(sumByPrefix('KON', '04.11.01') + sumByPrefix('KON', '04.11.02')),
-                syariah: toMiliar(sumByPrefix('SYR', '04.11.01') + sumByPrefix('SYR', '04.11.02'))
+                name: 'Kredit/piutang/pembiayaan', 
+                value: toMiliar(sumByPrefix(targetKode, '04.11.04')),
+                konven: toMiliar(sumByPrefix('KON', '04.11.04')),
+                syariah: toMiliar(sumByPrefix('SYR', '04.11.04'))
+            },
+            { 
+                name: 'Lainnya', 
+                value: toMiliar(sumByPrefix(targetKode, '04.11.99')),
+                konven: toMiliar(sumByPrefix('KON', '04.11.99')),
+                syariah: toMiliar(sumByPrefix('SYR', '04.11.99'))
             }
         ]
     };
