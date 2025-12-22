@@ -701,28 +701,64 @@ function getDetailPendapatanFromFirebase() {
         syariah: toMiliar(getValueBySandi('SYR', '04.12.00.00.00.00') || sumLeafOnly('SYR', '04.12')),
         items: [
             { 
-                name: 'Provisi & Komisi', 
-                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.07')),
-                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.07')),
-                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.07'))
+                name: 'Peningkatan nilai wajar aset keuangan', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.01')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.01')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.01'))
             },
             { 
-                name: 'Keuntungan Transaksi Valas', 
+                name: 'Penurunan nilai wajar liabilitas keuangan', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.02')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.02')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.02'))
+            },
+            { 
+                name: 'Keuntungan penjualan aset keuangan', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.03')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.03')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.03'))
+            },
+            { 
+                name: 'Keuntungan transaksi spot & derivatif', 
                 value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.04')),
                 konven: toMiliar(getValueOrSumLeaf('KON', '04.12.04')),
                 syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.04'))
             },
             { 
-                name: 'Pemulihan Aset/Kerugian', 
-                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.10')),
-                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.10')),
-                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.10'))
+                name: 'Keuntungan penyertaan (equity method)', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.06')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.06')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.06'))
             },
             { 
-                name: 'Pendapatan Lainnya', 
-                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.99')),
-                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.99')),
-                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.99'))
+                name: 'Keuntungan penjabaran valuta asing', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.09')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.09')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.09'))
+            },
+            { 
+                name: 'Komisi/provisi/fee dan administrasi', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.07')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.07')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.07'))
+            },
+            { 
+                name: 'Pendapatan lainnya', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.99') + getValueOrSumLeaf(targetKode, '04.12.08')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.99') + getValueOrSumLeaf('KON', '04.12.08')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.99') + getValueOrSumLeaf('SYR', '04.12.08'))
+            },
+            { 
+                name: 'Koreksi Cadangan Kerugian Nilai -/-', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.10.01')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.10.01')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.10.01'))
+            },
+            { 
+                name: 'Koreksi CKPN (Aset Non Keuangan) -/-', 
+                value: toMiliar(getValueOrSumLeaf(targetKode, '04.12.10.02') + getValueOrSumLeaf(targetKode, '04.12.10.99')),
+                konven: toMiliar(getValueOrSumLeaf('KON', '04.12.10.02') + getValueOrSumLeaf('KON', '04.12.10.99')),
+                syariah: toMiliar(getValueOrSumLeaf('SYR', '04.12.10.02') + getValueOrSumLeaf('SYR', '04.12.10.99'))
             }
         ]
     };
