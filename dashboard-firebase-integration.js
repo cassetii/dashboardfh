@@ -669,6 +669,58 @@
             window.refreshKonvenSyariah();
         }
         
+        // ==========================================
+        // SHOW/HIDE CARD KREDIT & PEMBIAYAAN
+        // - Konsolidasi: tampilkan keduanya
+        // - Konvensional/Cabang Konven: hide Pembiayaan
+        // - Syariah/Cabang Syariah: hide Kredit
+        // ==========================================
+        const cardKredit = document.getElementById('cardTotalKredit');
+        const cardPembiayaan = document.getElementById('cardTotalPembiayaan');
+        const layer2CardKredit = document.getElementById('layer2CardKredit');
+        const layer2CardPembiayaan = document.getElementById('layer2CardPembiayaan');
+        
+        const cabang = currentFilters.cabang;
+        const tipe = currentFilters.tipe;
+        
+        // Check if Syariah filter
+        const isSyariahFilter = tipe === 'syariah' || 
+                                CABANG_SYARIAH.includes(cabang);
+        
+        // Check if Konvensional filter
+        const isKonvenFilter = tipe === 'konvensional' || 
+                               CABANG_KONVEN.includes(cabang);
+        
+        // Apply visibility to Layer 1 cards
+        if (cardKredit && cardPembiayaan) {
+            if (isSyariahFilter) {
+                cardKredit.style.display = 'none';
+                cardPembiayaan.style.display = 'block';
+            } else if (isKonvenFilter) {
+                cardKredit.style.display = 'block';
+                cardPembiayaan.style.display = 'none';
+            } else {
+                cardKredit.style.display = 'block';
+                cardPembiayaan.style.display = 'block';
+            }
+        }
+        
+        // Apply visibility to Layer 2 chart cards
+        if (layer2CardKredit && layer2CardPembiayaan) {
+            if (isSyariahFilter) {
+                layer2CardKredit.style.display = 'none';
+                layer2CardPembiayaan.style.display = 'block';
+            } else if (isKonvenFilter) {
+                layer2CardKredit.style.display = 'block';
+                layer2CardPembiayaan.style.display = 'none';
+            } else {
+                layer2CardKredit.style.display = 'block';
+                layer2CardPembiayaan.style.display = 'block';
+            }
+        }
+        
+        console.log(`📊 Card Visibility: ${isSyariahFilter ? 'Syariah' : isKonvenFilter ? 'Konven' : 'Konsolidasi'}`);
+        
         console.log('✅ All cards updated');
     }
 
