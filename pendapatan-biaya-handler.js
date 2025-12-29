@@ -454,6 +454,14 @@ function renderPBPendapatanPie() {
     element.innerHTML = '';
     
     const data = PENDAPATAN_BIAYA_DATA.pendapatan;
+    const totalPendapatan = PENDAPATAN_BIAYA_DATA.summary.totalPendapatan || 0;
+    
+    // Format total for display
+    const formatTotal = (val) => {
+        if (val >= 1000) return (val / 1000).toFixed(2) + ' T';
+        return val.toFixed(2) + ' M';
+    };
+    
     const options = {
         series: [data.bungaImbalHasil.total, data.operasionalLainnya.total, data.nonOperasional.total],
         chart: { type: 'donut', height: 250 },
@@ -473,7 +481,7 @@ function renderPBPendapatanPie() {
                         total: {
                             show: true,
                             label: 'Total',
-                            formatter: () => 'Rp 2,766 M'
+                            formatter: () => 'Rp ' + formatTotal(totalPendapatan)
                         }
                     }
                 }
@@ -496,6 +504,14 @@ function renderPBBiayaPie() {
     element.innerHTML = '';
     
     const data = PENDAPATAN_BIAYA_DATA.biaya;
+    const totalBiaya = PENDAPATAN_BIAYA_DATA.summary.totalBiaya || 0;
+    
+    // Format total for display
+    const formatTotal = (val) => {
+        if (val >= 1000) return (val / 1000).toFixed(2) + ' T';
+        return val.toFixed(2) + ' M';
+    };
+    
     const options = {
         series: [data.bungaBagiHasil.total, data.operasional.total, data.nonOperasional.total],
         chart: { type: 'donut', height: 250 },
@@ -515,7 +531,7 @@ function renderPBBiayaPie() {
                         total: {
                             show: true,
                             label: 'Total',
-                            formatter: () => 'Rp 1,537 M'
+                            formatter: () => 'Rp ' + formatTotal(totalBiaya)
                         }
                     }
                 }
