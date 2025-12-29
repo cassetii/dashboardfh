@@ -111,13 +111,55 @@
         totalAset: '01.00.00.00.00.00',
         kredit: '01.09.01.00.00.00',
         pembiayaan: '01.10.00.00.00.00',
+        // CKPN (Cadangan Kerugian Penurunan Nilai Aset Keuangan)
         ckpnPrefix: '01.12',
-        atiGross: '01.14.01.00.00.00',
-        atiAkum: '01.14.02.00.00.00',
+        ckpnSuratBerharga: '01.12.01.00.00.00',        // a. Surat berharga yang dimiliki
+        ckpnKreditKonven: '01.12.02.01.00.00',         // b. Kredit yang diberikan (Konvensional)
+        ckpnPiutangMurabahah: '01.12.02.02.01.00',     // Piutang Murabahah
+        ckpnPiutangIstishna: '01.12.02.02.02.00',      // Piutang Istishna'
+        ckpnPiutangQardh: '01.12.02.02.03.00',         // Piutang Qardh
+        ckpnPiutangSewa: '01.12.02.02.04.00',          // Piutang Sewa
+        ckpnPiutangMultijasa: '01.12.02.02.05.00',     // Piutang Multijasa
+        ckpnPembiayaanMudharabah: '01.12.02.02.06.00', // Pembiayaan Mudharabah
+        ckpnPembiayaanMusyarakah: '01.12.02.02.07.00', // Pembiayaan Musyarakah
+        ckpnPembiayaanBagiHasilLain: '01.12.02.02.99.00', // Pembiayaan Bagi Hasil Lainnya
+        ckpnAsetKeuanganLain: '01.12.03.00.00.00',     // c. Aset keuangan lainnya
+        // ATI = Aset Tidak Berwujud + Aset Tetap & Inventaris
+        asetTdkBerwujud: '01.13.01.00.00.00',
+        akumAmortisasi: '01.13.02.00.00.00',
+        asetTetap: '01.14.01.00.00.00',
+        akumPenyusutan: '01.14.02.00.00.00',
         giro: '02.01.01.00.00.00',
         tabungan: '02.02.01.00.00.00',
         deposito: '02.03.01.00.00.00',
+        // MODAL (EKUITAS) - Complete Structure
         modal: '03.00.00.00.00.00',
+        // 15. Modal Disetor
+        modalDasar: '03.01.01.00.00.00',
+        modalBelumDisetor: '03.01.02.00.00.00',      // -/-
+        treasuryStock: '03.01.03.00.00.00',          // -/-
+        // 16. Tambahan Modal Disetor
+        agio: '03.02.01.00.00.00',
+        disagio: '03.02.02.00.00.00',                // -/-
+        danaSetoranModal: '03.02.06.00.00.00',
+        tambahanModalKeuntungan: '03.02.99.01.00.00',
+        tambahanModalKerugian: '03.02.99.02.00.00',  // -/-
+        modalSumbangan: '03.02.03.00.00.00',
+        waranDiterbitkan: '03.02.04.00.00.00',
+        opsiSaham: '03.02.05.00.00.00',
+        // 17. Penghasilan Komprehensif Lain
+        pklKeuntungan: '03.03.01.00.00.00',
+        pklKerugian: '03.03.02.00.00.00',            // -/-
+        // 18. Cadangan
+        cadanganUmum: '03.04.01.00.00.00',
+        cadanganTujuan: '03.04.02.00.00.00',
+        // 19. Laba/Rugi
+        labaTahunLalu: '03.05.01.01.00.00',
+        rugiTahunLalu: '03.05.01.02.00.00',          // -/-
+        labaTahunBerjalan: '03.05.02.01.00.00',
+        rugiTahunBerjalan: '03.05.02.02.00.00',      // -/-
+        dividenDibayarkan: '03.05.03.00.00.00',      // -/-
+        // Legacy (for backward compatibility)
         labaSebelumPajak: '03.05.02.01.00.00',
         pajakLaba: '03.05.02.02.00.00',
         pendapatanBunga: '04.11.00.00.00.00',
@@ -131,16 +173,52 @@
         totalAset: '01.00.00.00.00.00',
         kreditPrefix: '01.09.03',  // Sum all 01.09.03.xx.xx.xx
         pembiayaan: '01.10.00.00.00.00',
+        // CKPN (Cadangan Kerugian Penurunan Nilai Aset Keuangan)
         ckpnPrefix: '01.12',
-        atiGross: '01.14.01.00.00.00',
-        atiAkum: '01.14.02.00.00.00',
+        ckpnSuratBerharga: '01.12.01.00.00.00',        // a. Surat berharga yang dimiliki
+        ckpnKreditKonven: '01.12.02.01.00.00',         // b. Kredit yang diberikan (Konvensional)
+        ckpnPiutangMurabahah: '01.12.02.02.01.00',     // Piutang Murabahah
+        ckpnPiutangIstishna: '01.12.02.02.02.00',      // Piutang Istishna'
+        ckpnPiutangQardh: '01.12.02.02.03.00',         // Piutang Qardh
+        ckpnPiutangSewa: '01.12.02.02.04.00',          // Piutang Sewa
+        ckpnPiutangMultijasa: '01.12.02.02.05.00',     // Piutang Multijasa
+        ckpnPembiayaanMudharabah: '01.12.02.02.06.00', // Pembiayaan Mudharabah
+        ckpnPembiayaanMusyarakah: '01.12.02.02.07.00', // Pembiayaan Musyarakah
+        ckpnPembiayaanBagiHasilLain: '01.12.02.02.99.00', // Pembiayaan Bagi Hasil Lainnya
+        ckpnAsetKeuanganLain: '01.12.03.00.00.00',     // c. Aset keuangan lainnya
+        // ATI = Aset Tidak Berwujud + Aset Tetap & Inventaris
+        asetTdkBerwujud: '01.13.01.00.00.00',
+        akumAmortisasi: '01.13.02.00.00.00',
+        asetTetap: '01.14.01.00.00.00',
+        akumPenyusutan: '01.14.02.00.00.00',
         // Giro Syariah: Wadiah + Mudharabah + Lainnya
         giroList: ['02.01.02.01.00.00', '02.01.02.02.00.00', '02.01.02.03.00.00'],
         // Tabungan Syariah: Wadiah + Mudharabah + Lainnya
         tabunganList: ['02.02.02.01.00.00', '02.02.02.02.00.00', '02.02.02.03.00.00'],
         // Deposito Syariah: Mudharabah + Lainnya
         depositoList: ['02.03.02.01.00.00', '02.03.02.02.00.00'],
+        // MODAL (EKUITAS) - Same as Konven
         modal: '03.00.00.00.00.00',
+        modalDasar: '03.01.01.00.00.00',
+        modalBelumDisetor: '03.01.02.00.00.00',
+        treasuryStock: '03.01.03.00.00.00',
+        agio: '03.02.01.00.00.00',
+        disagio: '03.02.02.00.00.00',
+        danaSetoranModal: '03.02.06.00.00.00',
+        tambahanModalKeuntungan: '03.02.99.01.00.00',
+        tambahanModalKerugian: '03.02.99.02.00.00',
+        modalSumbangan: '03.02.03.00.00.00',
+        waranDiterbitkan: '03.02.04.00.00.00',
+        opsiSaham: '03.02.05.00.00.00',
+        pklKeuntungan: '03.03.01.00.00.00',
+        pklKerugian: '03.03.02.00.00.00',
+        cadanganUmum: '03.04.01.00.00.00',
+        cadanganTujuan: '03.04.02.00.00.00',
+        labaTahunLalu: '03.05.01.01.00.00',
+        rugiTahunLalu: '03.05.01.02.00.00',
+        labaTahunBerjalan: '03.05.02.01.00.00',
+        rugiTahunBerjalan: '03.05.02.02.00.00',
+        dividenDibayarkan: '03.05.03.00.00.00',
         labaSebelumPajak: '03.05.02.01.00.00',
         pajakLaba: '03.05.02.02.00.00',
         pendapatanBunga: '04.11.00.00.00.00',
@@ -535,10 +613,60 @@
             pembiayaan = sumBySandiPrefix(neraca, '01.09.03');
         }
         
-        const ckpn = sumBySandiPrefix(neraca, SANDI_KONVEN.ckpnPrefix);
-        const atiGross = sumBySandi(neraca, SANDI_KONVEN.atiGross);
-        const atiAkum = sumBySandi(neraca, SANDI_KONVEN.atiAkum);
+        // ==========================================
+        // CKPN (Cadangan Kerugian Penurunan Nilai Aset Keuangan)
+        // ==========================================
+        // a. Surat berharga yang dimiliki
+        const ckpnSuratBerharga = sumBySandi(neraca, SANDI_KONVEN.ckpnSuratBerharga);
+        
+        // b. Kredit/Pembiayaan yang diberikan
+        let ckpnKredit = 0;
+        if (isSyariah) {
+            // Syariah: Sum all piutang dan pembiayaan syariah
+            ckpnKredit = sumBySandi(neraca, SANDI_KONVEN.ckpnPiutangMurabahah)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPiutangIstishna)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPiutangQardh)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPiutangSewa)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPiutangMultijasa)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPembiayaanMudharabah)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPembiayaanMusyarakah)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPembiayaanBagiHasilLain);
+        } else {
+            // Konvensional: Kredit yang diberikan + Syariah components (for konsolidasi)
+            ckpnKredit = sumBySandi(neraca, SANDI_KONVEN.ckpnKreditKonven)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPiutangMurabahah)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPiutangIstishna)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPiutangQardh)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPiutangSewa)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPiutangMultijasa)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPembiayaanMudharabah)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPembiayaanMusyarakah)
+                       + sumBySandi(neraca, SANDI_KONVEN.ckpnPembiayaanBagiHasilLain);
+        }
+        
+        // c. Aset keuangan lainnya
+        const ckpnAsetLain = sumBySandi(neraca, SANDI_KONVEN.ckpnAsetKeuanganLain);
+        
+        // Total CKPN = a + b + c (semua nilai negatif di DB)
+        const ckpn = ckpnSuratBerharga + ckpnKredit + ckpnAsetLain;
+        
+        console.log(`🛡️ CKPN: SuratBerharga=${formatCurrency(ckpnSuratBerharga)}, Kredit=${formatCurrency(ckpnKredit)}, AsetLain=${formatCurrency(ckpnAsetLain)}, Total=${formatCurrency(ckpn)}`);
+        
+        // ATI = Aset Tidak Berwujud + Akum Amortisasi + Aset Tetap + Akum Penyusutan
+        // Note: Akumulasi sudah negatif di database, jadi dijumlahkan saja
+        const asetTdkBerwujud = sumBySandi(neraca, SANDI_KONVEN.asetTdkBerwujud);
+        const akumAmortisasi = sumBySandi(neraca, SANDI_KONVEN.akumAmortisasi);
+        const asetTetap = sumBySandi(neraca, SANDI_KONVEN.asetTetap);
+        const akumPenyusutan = sumBySandi(neraca, SANDI_KONVEN.akumPenyusutan);
+        
+        // ATI Gross = Aset Tidak Berwujud + Aset Tetap
+        const atiGross = asetTdkBerwujud + asetTetap;
+        // ATI Akum = Akumulasi Amortisasi + Akumulasi Penyusutan (negatif)
+        const atiAkum = akumAmortisasi + akumPenyusutan;
+        // ATI Neto = Gross + Akumulasi
         const ati = atiGross + atiAkum;
+        
+        console.log(`🏢 ATI: Gross=${formatCurrency(atiGross)} (TdkBerwujud=${formatCurrency(asetTdkBerwujud)}, Tetap=${formatCurrency(asetTetap)}), Akum=${formatCurrency(atiAkum)}, Neto=${formatCurrency(ati)}`);
         
         // ==========================================
         // DPK - CRITICAL: Different SANDI for Syariah!
@@ -560,7 +688,51 @@
         
         const dpk = giro + tabungan + deposito;
         
-        const modal = sumBySandi(neraca, SANDI_KONVEN.modal);
+        // ==========================================
+        // MODAL (EKUITAS) - Complete Calculation
+        // ==========================================
+        // Try summary first, fallback to component sum
+        let modal = sumBySandi(neraca, SANDI_KONVEN.modal);
+        
+        if (modal === 0) {
+            // 15. Modal Disetor
+            const modalDasar = sumBySandi(neraca, SANDI_KONVEN.modalDasar);
+            const modalBelumDisetor = sumBySandi(neraca, SANDI_KONVEN.modalBelumDisetor); // already negative
+            const treasuryStock = sumBySandi(neraca, SANDI_KONVEN.treasuryStock); // already negative
+            const modalDisetor = modalDasar + modalBelumDisetor + treasuryStock;
+            
+            // 16. Tambahan Modal Disetor
+            const agio = sumBySandi(neraca, SANDI_KONVEN.agio);
+            const disagio = sumBySandi(neraca, SANDI_KONVEN.disagio); // already negative
+            const danaSetoranModal = sumBySandi(neraca, SANDI_KONVEN.danaSetoranModal);
+            const tambahanLain = sumBySandi(neraca, SANDI_KONVEN.tambahanModalKeuntungan) 
+                               + sumBySandi(neraca, SANDI_KONVEN.tambahanModalKerugian)
+                               + sumBySandi(neraca, SANDI_KONVEN.modalSumbangan)
+                               + sumBySandi(neraca, SANDI_KONVEN.waranDiterbitkan)
+                               + sumBySandi(neraca, SANDI_KONVEN.opsiSaham);
+            const tambahanModalDisetor = agio + disagio + danaSetoranModal + tambahanLain;
+            
+            // 17. Penghasilan Komprehensif Lain
+            const pkl = sumBySandi(neraca, SANDI_KONVEN.pklKeuntungan) 
+                      + sumBySandi(neraca, SANDI_KONVEN.pklKerugian);
+            
+            // 18. Cadangan
+            const cadangan = sumBySandi(neraca, SANDI_KONVEN.cadanganUmum) 
+                           + sumBySandi(neraca, SANDI_KONVEN.cadanganTujuan);
+            
+            // 19. Laba/Rugi
+            const labaRugi = sumBySandi(neraca, SANDI_KONVEN.labaTahunLalu)
+                           + sumBySandi(neraca, SANDI_KONVEN.rugiTahunLalu)
+                           + sumBySandi(neraca, SANDI_KONVEN.labaTahunBerjalan)
+                           + sumBySandi(neraca, SANDI_KONVEN.rugiTahunBerjalan)
+                           + sumBySandi(neraca, SANDI_KONVEN.dividenDibayarkan);
+            
+            modal = modalDisetor + tambahanModalDisetor + pkl + cadangan + labaRugi;
+            
+            console.log(`💰 Modal Detail: Disetor=${formatCurrency(modalDisetor)}, Tambahan=${formatCurrency(tambahanModalDisetor)}, PKL=${formatCurrency(pkl)}, Cadangan=${formatCurrency(cadangan)}, LabaRugi=${formatCurrency(labaRugi)}`);
+        }
+        
+        console.log(`💰 Total Modal: ${formatCurrency(modal)}`);
         
         // ==========================================
         // LABA RUGI
