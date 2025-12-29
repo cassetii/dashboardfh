@@ -173,10 +173,41 @@ function updatePBFromFirebase() {
     const totalBebanFromSummary = bebanOpBunga + bebanOpLain + bebanNonOpAll;
     const finalBiayaAll = biayaAll > 0 ? biayaAll : totalBebanFromSummary;
     
-    // LABA - menggunakan targetKode dari filter
-    const labaAll = getValueBySandi(targetKode, '03.05.02.01.00.00');
-    const labaKon = targetKodeKon ? getValueBySandi(targetKodeKon, '03.05.02.01.00.00') : 0;
-    const labaSyr = targetKodeSyr ? getValueBySandi(targetKodeSyr, '03.05.02.01.00.00') : 0;
+    // ========================================
+    // LABA/RUGI - COMPLETE CALCULATION
+    // ========================================
+    
+    // LABA BERSIH = Laba Tahun Berjalan - Rugi Tahun Berjalan
+    const labaTahunBerjalan = getValueBySandi(targetKode, '03.05.02.01.00.00');
+    const rugiTahunBerjalan = getValueBySandi(targetKode, '03.05.02.02.00.00'); // sudah negatif
+    const labaAll = labaTahunBerjalan + rugiTahunBerjalan; // Laba - Rugi
+    
+    const labaTahunBerjalanKon = targetKodeKon ? getValueBySandi(targetKodeKon, '03.05.02.01.00.00') : 0;
+    const rugiTahunBerjalanKon = targetKodeKon ? getValueBySandi(targetKodeKon, '03.05.02.02.00.00') : 0;
+    const labaKon = labaTahunBerjalanKon + rugiTahunBerjalanKon;
+    
+    const labaTahunBerjalanSyr = targetKodeSyr ? getValueBySandi(targetKodeSyr, '03.05.02.01.00.00') : 0;
+    const rugiTahunBerjalanSyr = targetKodeSyr ? getValueBySandi(targetKodeSyr, '03.05.02.02.00.00') : 0;
+    const labaSyr = labaTahunBerjalanSyr + rugiTahunBerjalanSyr;
+    
+    // LABA SEBELUM PAJAK = Laba Sebelum Pajak - Rugi Sebelum Pajak
+    const labaSblmPajakPos = getValueBySandi(targetKode, '03.05.02.01.10.00');
+    const rugiSblmPajakPos = getValueBySandi(targetKode, '03.05.02.02.10.00'); // sudah negatif
+    const labaSblmPajak = labaSblmPajakPos + rugiSblmPajakPos;
+    
+    // PAJAK PENGHASILAN
+    // 1. Taksiran pajak tahun berjalan -/-
+    const taksiranPajak = getValueBySandi(targetKode, '03.05.02.01.40.00'); // negatif
+    // 2. Pajak Tangguhan
+    const pendapatanPajakTangguhan = getValueBySandi(targetKode, '03.05.02.02.40.01'); // positif
+    const bebanPajakTangguhan = getValueBySandi(targetKode, '03.05.02.02.40.02'); // negatif
+    const pajakPenghasilan = taksiranPajak + pendapatanPajakTangguhan + bebanPajakTangguhan;
+    
+    console.log('💰 Laba Detail:', {
+        labaSblmPajak: { laba: labaSblmPajakPos, rugi: rugiSblmPajakPos, neto: labaSblmPajak },
+        pajak: { taksiran: taksiranPajak, pendapatanTangguhan: pendapatanPajakTangguhan, bebanTangguhan: bebanPajakTangguhan, total: pajakPenghasilan },
+        labaBersih: { laba: labaTahunBerjalan, rugi: rugiTahunBerjalan, neto: labaAll }
+    });
     
     // Calculate Cost to Income Ratio
     const cti = finalPendapatanAll > 0 ? (finalBiayaAll / finalPendapatanAll) * 100 : 0;
@@ -278,11 +309,9 @@ function updatePBFromFirebase() {
     updateEl('pbLrBebanNonOp', '(Rp ' + formatMiliar(bebanNonOpAll) + ')');
     updateEl('pbLrTotalBeban', '(Rp ' + formatMiliar(finalBiayaAll) + ')');
     
-    // Laba - menggunakan targetKode
-    const labaSblmPajak = getValueBySandi(targetKode, '03.05.02.01.10.00');
-    const pajak = getValueBySandi(targetKode, '03.05.02.01.40.00');
+    // Laba Sebelum Pajak, Pajak, Laba Bersih - using calculated values from above
     updateEl('pbLrLabaSblmPajak', 'Rp ' + formatMiliar(labaSblmPajak));
-    updateEl('pbLrPajak', '(Rp ' + formatMiliar(pajak) + ')');
+    updateEl('pbLrPajak', '(Rp ' + formatMiliar(Math.abs(pajakPenghasilan)) + ')');
     updateEl('pbLrLabaBersih', 'Rp ' + formatMiliar(labaAll));
     
     // Update period badge
