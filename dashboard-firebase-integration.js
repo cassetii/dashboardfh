@@ -286,14 +286,53 @@
     }
 
     // ==========================================
-    // PERIOD DROPDOWN
+    // PERIOD DROPDOWN - SEPARATE YEAR & MONTH
     // ==========================================
     
     function updatePeriodDropdown() {
-        const select = document.getElementById('headerPeriodSelect');
-        if (!select) return;
+        const yearSelect = document.getElementById('headerYearSelect');
+        const monthSelect = document.getElementById('headerMonthSelect');
+        if (!yearSelect || !monthSelect) return;
         
-        select.innerHTML = '';
+        // Extract unique years and months from available periods
+        const years = new Set();
+        const monthsPerYear = {};
+        
+        availablePeriodes.forEach(periode => {
+            const [tahun, bulan] = periode.split('-');
+            years.add(tahun);
+            if (!monthsPerYear[tahun]) monthsPerYear[tahun] = new Set();
+            monthsPerYear[tahun].add(bulan);
+        });
+        
+        const sortedYears = Array.from(years).sort().reverse();
+        
+        // Update Year dropdown
+        yearSelect.innerHTML = '';
+        sortedYears.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelect.appendChild(option);
+        });
+        
+        // Set current year from filter
+        if (currentFilters.periode) {
+            const [currentYear, currentMonth] = currentFilters.periode.split('-');
+            yearSelect.value = currentYear;
+            updateMonthDropdown(currentYear, monthsPerYear);
+            monthSelect.value = currentMonth;
+        } else if (sortedYears.length > 0) {
+            yearSelect.value = sortedYears[0];
+            updateMonthDropdown(sortedYears[0], monthsPerYear);
+        }
+        
+        console.log(`📅 Period dropdowns updated: ${sortedYears.length} years`);
+    }
+    
+    function updateMonthDropdown(year, monthsPerYear) {
+        const monthSelect = document.getElementById('headerMonthSelect');
+        if (!monthSelect) return;
         
         const bulanNames = {
             '01': 'Januari', '02': 'Februari', '03': 'Maret', '04': 'April',
@@ -301,19 +340,29 @@
             '09': 'September', '10': 'Oktober', '11': 'November', '12': 'Desember'
         };
         
-        availablePeriodes.forEach(periode => {
-            const [tahun, bulan] = periode.split('-');
+        const availableMonths = monthsPerYear && monthsPerYear[year] 
+            ? Array.from(monthsPerYear[year]).sort().reverse() 
+            : ['12', '11', '10', '09', '08', '07', '06', '05', '04', '03', '02', '01'];
+        
+        monthSelect.innerHTML = '';
+        availableMonths.forEach(month => {
             const option = document.createElement('option');
-            option.value = periode;
-            option.textContent = `${bulanNames[bulan] || bulan} ${tahun}`;
-            select.appendChild(option);
+            option.value = month;
+            option.textContent = bulanNames[month] || month;
+            monthSelect.appendChild(option);
         });
         
-        if (currentFilters.periode) {
-            select.value = currentFilters.periode;
+        // Select first available month
+        if (availableMonths.length > 0) {
+            monthSelect.value = availableMonths[0];
         }
-        
-        console.log(`📅 Period dropdown updated: ${availablePeriodes.length} options`);
+    }
+    
+    function getPeriodeFromDropdowns() {
+        const yearSelect = document.getElementById('headerYearSelect');
+        const monthSelect = document.getElementById('headerMonthSelect');
+        if (!yearSelect || !monthSelect) return null;
+        return `${yearSelect.value}-${monthSelect.value}`;
     }
 
     // ==========================================
@@ -445,6 +494,20 @@
 
         console.log(`📊 Calculating: ${neraca.length} neraca, ${labarugi.length} labarugi`);
         
+        // Early return if no data
+        if (neraca.length === 0 && labarugi.length === 0) {
+            console.warn('⚠️ No data available after filtering');
+            return {
+                totalAset: 0, kredit: 0, pembiayaan: 0, ckpn: 0, ati: 0, atiGross: 0, atiAkum: 0,
+                dpk: 0, giro: 0, tabungan: 0, deposito: 0, modal: 0,
+                labaBersih: 0, pendapatanBunga: 0, bebanBunga: 0,
+                totalPendapatan: 0, totalBiaya: 0,
+                pendapatanBungaTotal: 0, pendapatanOpLainTotal: 0, pendapatanNonOpTotal: 0,
+                bebanBungaTotal: 0, bebanOpLainTotal: 0, bebanNonOpTotal: 0,
+                ldr: 0, casa: 0, bopo: 0, roa: 0, roe: 0, nim: 0, npl: 0, car: 0
+            };
+        }
+        
         // ==========================================
         // DETECT BRANCH TYPE FOR CORRECT SANDI
         // ==========================================
@@ -509,29 +572,33 @@
         // TOTAL PENDAPATAN & BIAYA (untuk Card Neraca)
         // Harus sinkron dengan Detail Pendapatan & Biaya
         // ==========================================
-        // Helper untuk avoid double counting
-        function getValueOrLeaf(sandi, prefix) {
-            const summaryValue = sumBySandi(labarugi, sandi);
-            if (summaryValue > 0) return summaryValue;
-            // Sum leaf only (exclude .00.00.00)
-            return labarugi.filter(d => 
-                d.kode_cabang === targetKode && 
-                d.periode === currentFilters.periode && 
-                d.sandi && d.sandi.startsWith(prefix) &&
+        
+        // Helper: sum leaf only (exclude summary sandi .00.00.00)
+        function sumLeafOnly(data, prefix) {
+            return data.filter(d => 
+                d.sandi && 
+                d.sandi.startsWith(prefix) &&
                 !d.sandi.endsWith('.00.00.00')
             ).reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
         }
         
+        // Helper: get summary value OR sum leaf if no summary
+        function getValueOrLeaf(data, summarySandi, prefix) {
+            const summaryValue = sumBySandi(data, summarySandi);
+            if (summaryValue !== 0) return Math.abs(summaryValue);
+            return sumLeafOnly(data, prefix);
+        }
+        
         // Total Pendapatan = 04.11 + 04.12 + 04.20
-        const pendapatanBungaTotal = getValueOrLeaf('04.11.00.00.00.00', '04.11');
-        const pendapatanOpLainTotal = getValueOrLeaf('04.12.00.00.00.00', '04.12');
-        const pendapatanNonOpTotal = getValueOrLeaf('04.20.00.00.00.00', '04.20');
+        const pendapatanBungaTotal = getValueOrLeaf(labarugi, '04.11.00.00.00.00', '04.11');
+        const pendapatanOpLainTotal = getValueOrLeaf(labarugi, '04.12.00.00.00.00', '04.12');
+        const pendapatanNonOpTotal = getValueOrLeaf(labarugi, '04.20.00.00.00.00', '04.20');
         const totalPendapatan = pendapatanBungaTotal + pendapatanOpLainTotal + pendapatanNonOpTotal;
         
         // Total Biaya = 05.11 + 05.12 + 05.20
-        const bebanBungaTotal = getValueOrLeaf('05.11.00.00.00.00', '05.11');
-        const bebanOpLainTotal = getValueOrLeaf('05.12.00.00.00.00', '05.12');
-        const bebanNonOpTotal = getValueOrLeaf('05.20.00.00.00.00', '05.20');
+        const bebanBungaTotal = getValueOrLeaf(labarugi, '05.11.00.00.00.00', '05.11');
+        const bebanOpLainTotal = getValueOrLeaf(labarugi, '05.12.00.00.00.00', '05.12');
+        const bebanNonOpTotal = getValueOrLeaf(labarugi, '05.20.00.00.00.00', '05.20');
         const totalBiaya = bebanBungaTotal + bebanOpLainTotal + bebanNonOpTotal;
         
         console.log(`📊 Total Pendapatan: ${formatCurrency(totalPendapatan)} (Bunga: ${formatCurrency(pendapatanBungaTotal)}, OpLain: ${formatCurrency(pendapatanOpLainTotal)}, NonOp: ${formatCurrency(pendapatanNonOpTotal)})`);
@@ -816,11 +883,32 @@
     // ==========================================
     
     function setupEventListeners() {
-        const periodeSelect = document.getElementById('headerPeriodSelect');
-        if (periodeSelect) {
-            periodeSelect.addEventListener('change', function() {
-                currentFilters.periode = this.value;
-                console.log(`📅 Period: ${this.value}`);
+        // Year dropdown change
+        const yearSelect = document.getElementById('headerYearSelect');
+        if (yearSelect) {
+            yearSelect.addEventListener('change', function() {
+                // Update month dropdown based on available months for selected year
+                const monthsPerYear = {};
+                availablePeriodes.forEach(periode => {
+                    const [tahun, bulan] = periode.split('-');
+                    if (!monthsPerYear[tahun]) monthsPerYear[tahun] = new Set();
+                    monthsPerYear[tahun].add(bulan);
+                });
+                updateMonthDropdown(this.value, monthsPerYear);
+                
+                // Update periode
+                currentFilters.periode = getPeriodeFromDropdowns();
+                console.log(`📅 Year changed - Period: ${currentFilters.periode}`);
+                updateAllCards();
+            });
+        }
+        
+        // Month dropdown change
+        const monthSelect = document.getElementById('headerMonthSelect');
+        if (monthSelect) {
+            monthSelect.addEventListener('change', function() {
+                currentFilters.periode = getPeriodeFromDropdowns();
+                console.log(`📅 Month changed - Period: ${currentFilters.periode}`);
                 updateAllCards();
             });
         }
