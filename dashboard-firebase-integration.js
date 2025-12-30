@@ -669,21 +669,39 @@
         console.log(`🏢 ATI: Gross=${formatCurrency(atiGross)} (TdkBerwujud=${formatCurrency(asetTdkBerwujud)}, Tetap=${formatCurrency(asetTetap)}), Akum=${formatCurrency(atiAkum)}, Neto=${formatCurrency(ati)}`);
         
         // ==========================================
-        // DPK - CRITICAL: Different SANDI for Syariah!
+        // DPK - CRITICAL: Different SANDI for each type!
+        // Konsolidasi = Konven + Syariah
         // ==========================================
         let giro, tabungan, deposito;
         
+        // DPK Konvensional
+        const giroKonven = sumBySandi(neraca, SANDI_KONVEN.giro);           // 02.01.01
+        const tabunganKonven = sumBySandi(neraca, SANDI_KONVEN.tabungan);   // 02.02.01
+        const depositoKonven = sumBySandi(neraca, SANDI_KONVEN.deposito);   // 02.03.01
+        
+        // DPK Syariah (multiple sandi)
+        const giroSyariah = sumBySandiList(neraca, SANDI_SYARIAH.giroList);       // 02.01.02.xx
+        const tabunganSyariah = sumBySandiList(neraca, SANDI_SYARIAH.tabunganList); // 02.02.02.xx
+        const depositoSyariah = sumBySandiList(neraca, SANDI_SYARIAH.depositoList); // 02.03.02.xx
+        
         if (isSyariah) {
-            // Syariah: Sum multiple sandi codes
-            giro = sumBySandiList(neraca, SANDI_SYARIAH.giroList);
-            tabungan = sumBySandiList(neraca, SANDI_SYARIAH.tabunganList);
-            deposito = sumBySandiList(neraca, SANDI_SYARIAH.depositoList);
+            // Syariah only
+            giro = giroSyariah;
+            tabungan = tabunganSyariah;
+            deposito = depositoSyariah;
             console.log(`💰 DPK Syariah - Giro: ${formatCurrency(giro)}, Tab: ${formatCurrency(tabungan)}, Dep: ${formatCurrency(deposito)}`);
+        } else if (currentFilters.tipe === 'konvensional' || CABANG_KONVEN.includes(currentFilters.cabang)) {
+            // Konvensional only
+            giro = giroKonven;
+            tabungan = tabunganKonven;
+            deposito = depositoKonven;
+            console.log(`💰 DPK Konven - Giro: ${formatCurrency(giro)}, Tab: ${formatCurrency(tabungan)}, Dep: ${formatCurrency(deposito)}`);
         } else {
-            // Konvensional: Single sandi code
-            giro = sumBySandi(neraca, SANDI_KONVEN.giro);
-            tabungan = sumBySandi(neraca, SANDI_KONVEN.tabungan);
-            deposito = sumBySandi(neraca, SANDI_KONVEN.deposito);
+            // Konsolidasi = Konven + Syariah
+            giro = giroKonven + giroSyariah;
+            tabungan = tabunganKonven + tabunganSyariah;
+            deposito = depositoKonven + depositoSyariah;
+            console.log(`💰 DPK Konsolidasi - Giro: ${formatCurrency(giro)} (K:${formatCurrency(giroKonven)} + S:${formatCurrency(giroSyariah)}), Tab: ${formatCurrency(tabungan)}, Dep: ${formatCurrency(deposito)}`);
         }
         
         const dpk = giro + tabungan + deposito;
