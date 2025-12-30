@@ -1348,7 +1348,14 @@
         refresh: loadData, 
         updateCards: updateAllCards,
         getFilters: () => currentFilters,
-        setFilter: (k, v) => { currentFilters[k] = v; updateAllCards(); },
+        setFilter: (k, v) => { 
+            currentFilters[k] = v; 
+            updateAllCards(); 
+            // Dispatch event untuk notify komponen lain (termasuk Layer 2 charts)
+            window.dispatchEvent(new CustomEvent('filterChanged', { 
+                detail: { ...currentFilters } 
+            }));
+        },
         getData: () => ({ neraca: neracaData, labarugi: labarugiData }),
         getMetrics: calculateMetrics,
         getPeriodes: () => availablePeriodes
