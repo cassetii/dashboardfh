@@ -51,11 +51,7 @@ const NeracaCardDetail = (function() {
                     { sandi: '01.09.01.00.00.00', nama: 'Kredit Konvensional' },
                 ],
                 syariah: [
-                    { sandi: '01.09.03.01.01.00', nama: 'Murabahah' },
-                    { sandi: '01.09.03.01.02.00', nama: 'Istishna' },
-                    { sandi: '01.09.03.01.05.00', nama: 'Mudharabah' },
-                    { sandi: '01.09.03.02.01.00', nama: 'Qardh' },
-                    { sandi: '01.09.03.02.02.00', nama: 'Ijarah' },
+                    { sandi: '01.09.03', nama: 'Pembiayaan Syariah', prefix: true },
                 ]
             }
         },
@@ -66,13 +62,10 @@ const NeracaCardDetail = (function() {
             splitType: 'jenis-pembiayaan',
             komponen: {
                 piutang: [
-                    { sandi: '01.09.03.01.01.00', nama: 'Piutang Murabahah' },
-                    { sandi: '01.09.03.01.02.00', nama: 'Piutang Istishna' },
-                    { sandi: '01.09.03.01.05.00', nama: 'Piutang Mudharabah' },
+                    { sandi: '01.09.03.01', nama: 'Piutang Syariah', prefix: true },
                 ],
                 pembiayaan: [
-                    { sandi: '01.09.03.02.01.00', nama: 'Pembiayaan Qardh' },
-                    { sandi: '01.09.03.02.02.00', nama: 'Pembiayaan Ijarah' },
+                    { sandi: '01.09.03.02', nama: 'Pembiayaan Syariah', prefix: true },
                 ]
             }
         },
@@ -86,15 +79,18 @@ const NeracaCardDetail = (function() {
                     { sandi: '02.01.01.00.00.00', nama: 'Giro Konvensional' },
                     { sandi: '02.01.02.01.00.00', nama: 'Giro Syariah Wadiah' },
                     { sandi: '02.01.02.02.00.00', nama: 'Giro Syariah Mudharabah' },
+                    { sandi: '02.01.02.03.00.00', nama: 'Giro Syariah Lainnya' },
                 ],
                 tabungan: [
                     { sandi: '02.02.01.00.00.00', nama: 'Tabungan Konvensional' },
                     { sandi: '02.02.02.01.00.00', nama: 'Tabungan Syariah Wadiah' },
                     { sandi: '02.02.02.02.00.00', nama: 'Tabungan Syariah Mudharabah' },
+                    { sandi: '02.02.02.03.00.00', nama: 'Tabungan Syariah Lainnya' },
                 ],
                 deposito: [
                     { sandi: '02.03.01.00.00.00', nama: 'Deposito Konvensional' },
-                    { sandi: '02.03.02.01.00.00', nama: 'Deposito Syariah' },
+                    { sandi: '02.03.02.01.00.00', nama: 'Deposito Syariah Wadiah' },
+                    { sandi: '02.03.02.02.00.00', nama: 'Deposito Syariah Mudharabah' },
                 ]
             }
         },
@@ -105,9 +101,11 @@ const NeracaCardDetail = (function() {
             splitType: 'gross-akumulasi',
             komponen: {
                 gross: [
-                    { sandi: '01.14.01.00.00.00', nama: 'ATI (Nilai Perolehan)' },
+                    { sandi: '01.13.01.00.00.00', nama: 'Aset Tidak Berwujud' },
+                    { sandi: '01.14.01.00.00.00', nama: 'Aset Tetap & Inventaris' },
                 ],
                 akumulasi: [
+                    { sandi: '01.13.02.00.00.00', nama: 'Akumulasi Amortisasi' },
                     { sandi: '01.14.02.00.00.00', nama: 'Akumulasi Penyusutan' },
                 ]
             }
@@ -116,17 +114,24 @@ const NeracaCardDetail = (function() {
             title: 'CKPN (Cadangan Kerugian)',
             icon: 'fa-shield-alt',
             color: '#f59e0b',
-            splitType: 'tahap',
+            splitType: 'jenis-ckpn',
             komponen: {
-                tahap1: [
-                    { sandi: '01.12.01.00.00.00', nama: 'CKPN Tahap 1' },
+                suratBerharga: [
+                    { sandi: '01.12.01.00.00.00', nama: 'CKPN Surat Berharga' },
                 ],
-                tahap2: [
-                    { sandi: '01.12.02.01.00.00', nama: 'CKPN Tahap 2 - Kredit' },
-                    { sandi: '01.12.02.02', nama: 'CKPN Tahap 2 - Lainnya', prefix: true },
+                kredit: [
+                    { sandi: '01.12.02.01.00.00', nama: 'CKPN Kredit Konvensional' },
+                    { sandi: '01.12.02.02.01.00', nama: 'CKPN Piutang Murabahah' },
+                    { sandi: '01.12.02.02.02.00', nama: 'CKPN Piutang Istishna' },
+                    { sandi: '01.12.02.02.03.00', nama: 'CKPN Piutang Qardh' },
+                    { sandi: '01.12.02.02.04.00', nama: 'CKPN Piutang Sewa' },
+                    { sandi: '01.12.02.02.05.00', nama: 'CKPN Piutang Multijasa' },
+                    { sandi: '01.12.02.02.06.00', nama: 'CKPN Pembiayaan Mudharabah' },
+                    { sandi: '01.12.02.02.07.00', nama: 'CKPN Pembiayaan Musyarakah' },
+                    { sandi: '01.12.02.02.99.00', nama: 'CKPN Pembiayaan Bagi Hasil Lain' },
                 ],
-                tahap3: [
-                    { sandi: '01.12.03.00.00.00', nama: 'CKPN Tahap 3' },
+                asetLain: [
+                    { sandi: '01.12.03.00.00.00', nama: 'CKPN Aset Keuangan Lainnya' },
                 ]
             }
         },
@@ -1119,50 +1124,50 @@ const NeracaCardDetail = (function() {
             };
             
         } else if (cardType === 'ckpn') {
-            // CKPN: Tahap 1, 2, 3
-            let tahap1Total = 0, tahap2Total = 0, tahap3Total = 0;
-            const tahap1Items = [], tahap2Items = [], tahap3Items = [];
+            // CKPN: Surat Berharga, Kredit, Aset Lain
+            let sbTotal = 0, kreditTotal = 0, asetLainTotal = 0;
+            const sbItems = [], kreditItems = [], asetLainItems = [];
             
-            for (const item of config.komponen.tahap1) {
+            for (const item of config.komponen.suratBerharga) {
                 const nilai = getValue(item.sandi, item.prefix);
                 if (nilai !== 0) {
-                    tahap1Items.push({ nama: item.nama, nilai });
-                    tahap1Total += nilai;
+                    sbItems.push({ nama: item.nama, nilai });
+                    sbTotal += nilai;
                 }
             }
             
-            for (const item of config.komponen.tahap2) {
+            for (const item of config.komponen.kredit) {
                 const nilai = getValue(item.sandi, item.prefix);
                 if (nilai !== 0) {
-                    tahap2Items.push({ nama: item.nama, nilai });
-                    tahap2Total += nilai;
+                    kreditItems.push({ nama: item.nama, nilai });
+                    kreditTotal += nilai;
                 }
             }
             
-            for (const item of config.komponen.tahap3) {
+            for (const item of config.komponen.asetLain) {
                 const nilai = getValue(item.sandi, item.prefix);
                 if (nilai !== 0) {
-                    tahap3Items.push({ nama: item.nama, nilai });
-                    tahap3Total += nilai;
+                    asetLainItems.push({ nama: item.nama, nilai });
+                    asetLainTotal += nilai;
                 }
             }
             
-            totalValue = tahap1Total + tahap2Total + tahap3Total;
+            totalValue = sbTotal + kreditTotal + asetLainTotal;
             
             tableData = {
                 groups: [
-                    { nama: 'CKPN TAHAP 1 (Performing)', color: 'green', items: tahap1Items, subtotal: tahap1Total },
-                    { nama: 'CKPN TAHAP 2 (Under-Performing)', color: 'yellow', items: tahap2Items, subtotal: tahap2Total },
-                    { nama: 'CKPN TAHAP 3 (Non-Performing)', color: 'red', items: tahap3Items, subtotal: tahap3Total },
+                    { nama: 'CKPN SURAT BERHARGA', color: 'blue', items: sbItems, subtotal: sbTotal },
+                    { nama: 'CKPN KREDIT / PEMBIAYAAN', color: 'yellow', items: kreditItems, subtotal: kreditTotal },
+                    { nama: 'CKPN ASET KEUANGAN LAINNYA', color: 'red', items: asetLainItems, subtotal: asetLainTotal },
                 ],
                 total: totalValue
             };
             
             chartData = {
                 type: 'doughnut',
-                labels: ['Tahap 1', 'Tahap 2', 'Tahap 3'],
-                data: [Math.abs(tahap1Total), Math.abs(tahap2Total), Math.abs(tahap3Total)],
-                colors: ['#22c55e', '#f59e0b', '#ef4444']
+                labels: ['Surat Berharga', 'Kredit/Pembiayaan', 'Aset Lainnya'],
+                data: [Math.abs(sbTotal), Math.abs(kreditTotal), Math.abs(asetLainTotal)],
+                colors: ['#3b82f6', '#f59e0b', '#ef4444']
             };
         } else if (cardType === 'modal') {
             // MODAL (EKUITAS): 5 Komponen Utama
