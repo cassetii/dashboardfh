@@ -174,15 +174,25 @@ const NeracaCardDetail = (function() {
             }
         },
         'laba': {
-            title: 'LABA BERSIH',
+            title: 'LABA SEBELUM PAJAK',
             icon: 'fa-chart-line',
             color: '#3b82f6',
-            splitType: 'laba-rugi',
+            splitType: 'laba-3-grup',
             komponen: {
-                laba: [
-                    { sandi: '03.05.02.01.00.00', nama: 'Laba Bersih Tahun Berjalan' },
+                // Grup 1: Laba (Rugi) Tahun Berjalan Sebelum Pajak
+                sebelumPajak: [
+                    { sandi: '03.05.02.01.10.00', nama: 'Laba Tahun Berjalan Sebelum Pajak' },
+                    { sandi: '03.05.02.02.10.00', nama: 'Rugi Tahun Berjalan Sebelum Pajak -/-' },
                 ],
-                rugi: [
+                // Grup 2: Pajak Penghasilan
+                pajakPenghasilan: [
+                    { sandi: '03.05.02.01.40.00', nama: 'Taksiran Pajak Tahun Berjalan -/-' },
+                    { sandi: '03.05.02.02.40.01', nama: 'Pendapatan Pajak Tangguhan' },
+                    { sandi: '03.05.02.02.40.02', nama: 'Beban Pajak Tangguhan -/-' },
+                ],
+                // Grup 3: Laba (Rugi) Bersih Tahun Berjalan
+                bersih: [
+                    { sandi: '03.05.02.01.00.00', nama: 'Laba Bersih Tahun Berjalan' },
                     { sandi: '03.05.02.02.00.00', nama: 'Rugi Bersih Tahun Berjalan -/-' },
                 ]
             }
@@ -1235,41 +1245,54 @@ const NeracaCardDetail = (function() {
             };
             
         } else if (cardType === 'laba') {
-            // LABA BERSIH: Laba - Rugi
-            let labaTotal = 0, rugiTotal = 0;
-            const labaItems = [], rugiItems = [];
+            // LABA SEBELUM PAJAK: 3 Grup (Sebelum Pajak, Pajak Penghasilan, Laba Bersih)
+            let sebelumPajakTotal = 0, pajakTotal = 0, bersihTotal = 0;
+            const sebelumPajakItems = [], pajakItems = [], bersihItems = [];
             
-            for (const item of config.komponen.laba) {
+            // Grup 1: Laba (Rugi) Tahun Berjalan Sebelum Pajak
+            for (const item of config.komponen.sebelumPajak) {
                 const nilai = getValue(item.sandi, item.prefix);
                 if (nilai !== 0) {
-                    labaItems.push({ nama: item.nama, nilai });
-                    labaTotal += nilai;
+                    sebelumPajakItems.push({ nama: item.nama, nilai });
+                    sebelumPajakTotal += nilai;
                 }
             }
             
-            for (const item of config.komponen.rugi) {
+            // Grup 2: Pajak Penghasilan
+            for (const item of config.komponen.pajakPenghasilan) {
                 const nilai = getValue(item.sandi, item.prefix);
                 if (nilai !== 0) {
-                    rugiItems.push({ nama: item.nama, nilai });
-                    rugiTotal += nilai;
+                    pajakItems.push({ nama: item.nama, nilai });
+                    pajakTotal += nilai;
                 }
             }
             
-            totalValue = labaTotal + rugiTotal; // rugiTotal is negative
+            // Grup 3: Laba (Rugi) Bersih Tahun Berjalan
+            for (const item of config.komponen.bersih) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    bersihItems.push({ nama: item.nama, nilai });
+                    bersihTotal += nilai;
+                }
+            }
+            
+            // Total = Laba Sebelum Pajak (nilai yang ditampilkan di card)
+            totalValue = sebelumPajakTotal;
             
             tableData = {
                 groups: [
-                    { nama: 'LABA BERSIH', color: 'green', items: labaItems, subtotal: labaTotal },
-                    { nama: 'RUGI BERSIH', color: 'red', items: rugiItems, subtotal: rugiTotal },
+                    { nama: 'LABA (RUGI) TAHUN BERJALAN SEBELUM PAJAK', color: 'blue', items: sebelumPajakItems, subtotal: sebelumPajakTotal },
+                    { nama: 'PAJAK PENGHASILAN', color: 'orange', items: pajakItems, subtotal: pajakTotal },
+                    { nama: 'LABA (RUGI) BERSIH TAHUN BERJALAN', color: 'green', items: bersihItems, subtotal: bersihTotal },
                 ],
                 total: totalValue
             };
             
             chartData = {
                 type: 'doughnut',
-                labels: ['Laba', 'Rugi'],
-                data: [Math.abs(labaTotal), Math.abs(rugiTotal)],
-                colors: ['#22c55e', '#ef4444']
+                labels: ['Laba Sebelum Pajak', 'Pajak Penghasilan', 'Laba Bersih'],
+                data: [Math.abs(sebelumPajakTotal), Math.abs(pajakTotal), Math.abs(bersihTotal)],
+                colors: ['#3b82f6', '#f97316', '#22c55e']
             };
             
         } else if (cardType === 'pendapatan') {
