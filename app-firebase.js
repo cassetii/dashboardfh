@@ -214,6 +214,12 @@ function selectBusinessLine(businessLine) {
     
     showToast('Menampilkan data ' + businessLine, 'info');
     
+    // Update DashboardFirebase filter (untuk Layer 2 charts)
+    if (window.DashboardFirebase?.setFilter) {
+        window.DashboardFirebase.setFilter('tipe', businessLine);
+        window.DashboardFirebase.setFilter('cabang', null);
+    }
+    
     // Reload data
     loadDashboardData();
 }
@@ -240,6 +246,12 @@ function selectBranch(branchCode) {
     const displayEl = document.getElementById('currentBusinessLine');
     if (displayEl) {
         displayEl.textContent = branchName;
+    }
+    
+    // Update DashboardFirebase filter (untuk Layer 2 charts)
+    if (window.DashboardFirebase?.setFilter) {
+        window.DashboardFirebase.setFilter('cabang', branchCode);
+        window.DashboardFirebase.setFilter('tipe', null);
     }
     
     // Load branch data
