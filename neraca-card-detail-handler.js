@@ -189,13 +189,13 @@ const NeracaCardDetail = (function() {
             splitType: 'pendapatan-3-komponen',
             komponen: {
                 bunga: [
-                    { sandi: '04.11.00.00.00.00', nama: 'Pendapatan Bunga / Imbal Hasil' },
+                    { sandi: '04.11', nama: 'Pendapatan Bunga / Imbal Hasil', prefix: true },
                 ],
                 opLain: [
-                    { sandi: '04.12.00.00.00.00', nama: 'Pendapatan Operasional Lainnya' },
+                    { sandi: '04.12', nama: 'Pendapatan Operasional Lainnya', prefix: true },
                 ],
                 nonOp: [
-                    { sandi: '04.20.00.00.00.00', nama: 'Pendapatan Non Operasional' },
+                    { sandi: '04.20', nama: 'Pendapatan Non Operasional', prefix: true },
                 ]
             }
         },
@@ -206,13 +206,13 @@ const NeracaCardDetail = (function() {
             splitType: 'biaya-3-komponen',
             komponen: {
                 bunga: [
-                    { sandi: '05.11.00.00.00.00', nama: 'Beban Bunga / Bagi Hasil' },
+                    { sandi: '05.11', nama: 'Beban Bunga / Bagi Hasil', prefix: true },
                 ],
                 opLain: [
-                    { sandi: '05.12.00.00.00.00', nama: 'Beban Operasional Lainnya' },
+                    { sandi: '05.12', nama: 'Beban Operasional Lainnya', prefix: true },
                 ],
                 nonOp: [
-                    { sandi: '05.20.00.00.00.00', nama: 'Beban Non Operasional' },
+                    { sandi: '05.20', nama: 'Beban Non Operasional', prefix: true },
                 ]
             }
         }
@@ -862,6 +862,9 @@ const NeracaCardDetail = (function() {
         // Get data from Firebase (use existing loaded data)
         const data = window.DashboardFirebase?.getData?.() || {};
         const neracaData = data.neraca || [];
+        const labarugiDataAll = data.labarugi || [];
+        
+        console.log('📊 Data available - Neraca:', neracaData.length, 'LabaRugi:', labarugiDataAll.length);
         
         // Helper function
         function getValue(sandi, isPrefix = false) {
@@ -1268,49 +1271,43 @@ const NeracaCardDetail = (function() {
             // PENDAPATAN: Bunga + Op Lain + Non-Op (dari Laba Rugi)
             const labarugiData = data.labarugi || [];
             
-            function getValueLR(sandi, isPrefix = false) {
-                if (isPrefix) {
-                    return labarugiData
-                        .filter(d => d.kode_cabang === kode && d.periode === periode && 
-                                    d.sandi && d.sandi.startsWith(sandi))
-                        .reduce((sum, d) => sum + (d.total || 0), 0);
-                }
+            console.log('📊 Pendapatan - LabaRugi data:', labarugiData.length, 'records');
+            console.log('📊 Filter - Kode:', kode, 'Periode:', periode);
+            
+            // Helper: get exact sandi value
+            function getValueLR(sandi) {
                 const item = labarugiData.find(d => 
                     d.kode_cabang === kode && 
                     d.periode === periode && 
                     d.sandi === sandi
                 );
-                return item ? (item.total || 0) : 0;
+                return item ? Math.abs(item.total || 0) : 0;
             }
             
-            let bungaTotal = 0, opLainTotal = 0, nonOpTotal = 0;
-            const bungaItems = [], opLainItems = [], nonOpItems = [];
-            
-            for (const item of config.komponen.bunga) {
-                const nilai = getValueLR(item.sandi, item.prefix);
-                if (nilai !== 0) {
-                    bungaItems.push({ nama: item.nama, nilai });
-                    bungaTotal += nilai;
-                }
+            // Helper: sum leaf nodes only (exclude .00.00.00 to avoid double counting)
+            function sumLeafOnly(sandiPrefix) {
+                const filtered = labarugiData.filter(d => 
+                    d.kode_cabang === kode && 
+                    d.periode === periode && 
+                    d.sandi && d.sandi.startsWith(sandiPrefix) &&
+                    !d.sandi.endsWith('.00.00.00') // Exclude summary
+                );
+                return filtered.reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
             }
             
-            for (const item of config.komponen.opLain) {
-                const nilai = getValueLR(item.sandi, item.prefix);
-                if (nilai !== 0) {
-                    opLainItems.push({ nama: item.nama, nilai });
-                    opLainTotal += nilai;
-                }
-            }
+            // Get values using same logic as pendapatan-biaya-handler.js
+            const bungaTotal = getValueLR('04.11.00.00.00.00') || sumLeafOnly('04.11');
+            const opLainTotal = getValueLR('04.12.00.00.00.00') || sumLeafOnly('04.12');
+            const nonOpTotal = getValueLR('04.20.00.00.00.00') || sumLeafOnly('04.20');
             
-            for (const item of config.komponen.nonOp) {
-                const nilai = getValueLR(item.sandi, item.prefix);
-                if (nilai !== 0) {
-                    nonOpItems.push({ nama: item.nama, nilai });
-                    nonOpTotal += nilai;
-                }
-            }
+            console.log('📊 Pendapatan Components:', { bungaTotal, opLainTotal, nonOpTotal });
+            
+            const bungaItems = bungaTotal > 0 ? [{ nama: 'Pendapatan Bunga / Imbal Hasil', nilai: bungaTotal }] : [];
+            const opLainItems = opLainTotal > 0 ? [{ nama: 'Pendapatan Operasional Lainnya', nilai: opLainTotal }] : [];
+            const nonOpItems = nonOpTotal > 0 ? [{ nama: 'Pendapatan Non Operasional', nilai: nonOpTotal }] : [];
             
             totalValue = bungaTotal + opLainTotal + nonOpTotal;
+            console.log('📊 Pendapatan Total:', totalValue);
             
             tableData = {
                 groups: [
@@ -1332,49 +1329,43 @@ const NeracaCardDetail = (function() {
             // BIAYA: Bunga + Op Lain + Non-Op (dari Laba Rugi)
             const labarugiData = data.labarugi || [];
             
-            function getValueLR(sandi, isPrefix = false) {
-                if (isPrefix) {
-                    return labarugiData
-                        .filter(d => d.kode_cabang === kode && d.periode === periode && 
-                                    d.sandi && d.sandi.startsWith(sandi))
-                        .reduce((sum, d) => sum + (d.total || 0), 0);
-                }
+            console.log('📊 Biaya - LabaRugi data:', labarugiData.length, 'records');
+            console.log('📊 Filter - Kode:', kode, 'Periode:', periode);
+            
+            // Helper: get exact sandi value
+            function getValueLR(sandi) {
                 const item = labarugiData.find(d => 
                     d.kode_cabang === kode && 
                     d.periode === periode && 
                     d.sandi === sandi
                 );
-                return item ? (item.total || 0) : 0;
+                return item ? Math.abs(item.total || 0) : 0;
             }
             
-            let bungaTotal = 0, opLainTotal = 0, nonOpTotal = 0;
-            const bungaItems = [], opLainItems = [], nonOpItems = [];
-            
-            for (const item of config.komponen.bunga) {
-                const nilai = getValueLR(item.sandi, item.prefix);
-                if (nilai !== 0) {
-                    bungaItems.push({ nama: item.nama, nilai });
-                    bungaTotal += nilai;
-                }
+            // Helper: sum leaf nodes only (exclude .00.00.00 to avoid double counting)
+            function sumLeafOnly(sandiPrefix) {
+                const filtered = labarugiData.filter(d => 
+                    d.kode_cabang === kode && 
+                    d.periode === periode && 
+                    d.sandi && d.sandi.startsWith(sandiPrefix) &&
+                    !d.sandi.endsWith('.00.00.00') // Exclude summary
+                );
+                return filtered.reduce((sum, d) => sum + Math.abs(d.total || 0), 0);
             }
             
-            for (const item of config.komponen.opLain) {
-                const nilai = getValueLR(item.sandi, item.prefix);
-                if (nilai !== 0) {
-                    opLainItems.push({ nama: item.nama, nilai });
-                    opLainTotal += nilai;
-                }
-            }
+            // Get values using same logic as pendapatan-biaya-handler.js
+            const bungaTotal = getValueLR('05.11.00.00.00.00') || sumLeafOnly('05.11');
+            const opLainTotal = getValueLR('05.12.00.00.00.00') || sumLeafOnly('05.12');
+            const nonOpTotal = getValueLR('05.20.00.00.00.00') || sumLeafOnly('05.20');
             
-            for (const item of config.komponen.nonOp) {
-                const nilai = getValueLR(item.sandi, item.prefix);
-                if (nilai !== 0) {
-                    nonOpItems.push({ nama: item.nama, nilai });
-                    nonOpTotal += nilai;
-                }
-            }
+            console.log('📊 Biaya Components:', { bungaTotal, opLainTotal, nonOpTotal });
+            
+            const bungaItems = bungaTotal > 0 ? [{ nama: 'Beban Bunga / Bagi Hasil', nilai: bungaTotal }] : [];
+            const opLainItems = opLainTotal > 0 ? [{ nama: 'Beban Operasional Lainnya', nilai: opLainTotal }] : [];
+            const nonOpItems = nonOpTotal > 0 ? [{ nama: 'Beban Non Operasional', nilai: nonOpTotal }] : [];
             
             totalValue = bungaTotal + opLainTotal + nonOpTotal;
+            console.log('📊 Biaya Total:', totalValue);
             
             tableData = {
                 groups: [
