@@ -162,6 +162,16 @@
         // Legacy (for backward compatibility)
         labaSebelumPajak: '03.05.02.01.00.00',
         pajakLaba: '03.05.02.02.00.00',
+        // Laba Sebelum Pajak (untuk card utama)
+        labaThnBerjalanSblmPajak: '03.05.02.01.10.00',
+        rugiThnBerjalanSblmPajak: '03.05.02.02.10.00',
+        // Pajak Penghasilan
+        taksiranPajakThnBerjalan: '03.05.02.01.40.00',
+        pendapatanPajakTangguhan: '03.05.02.02.40.01',
+        bebanPajakTangguhan: '03.05.02.02.40.02',
+        // Laba Bersih Tahun Berjalan
+        labaBersihThnBerjalan: '03.05.02.01.00.00',
+        rugiBersihThnBerjalan: '03.05.02.02.00.00',
         pendapatanBunga: '04.11.00.00.00.00',
         bebanBunga: '05.11.00.00.00.00'
     };
@@ -221,6 +231,16 @@
         dividenDibayarkan: '03.05.03.00.00.00',
         labaSebelumPajak: '03.05.02.01.00.00',
         pajakLaba: '03.05.02.02.00.00',
+        // Laba Sebelum Pajak (untuk card utama)
+        labaThnBerjalanSblmPajak: '03.05.02.01.10.00',
+        rugiThnBerjalanSblmPajak: '03.05.02.02.10.00',
+        // Pajak Penghasilan
+        taksiranPajakThnBerjalan: '03.05.02.01.40.00',
+        pendapatanPajakTangguhan: '03.05.02.02.40.01',
+        bebanPajakTangguhan: '03.05.02.02.40.02',
+        // Laba Bersih Tahun Berjalan
+        labaBersihThnBerjalan: '03.05.02.01.00.00',
+        rugiBersihThnBerjalan: '03.05.02.02.00.00',
         pendapatanBunga: '04.11.00.00.00.00',
         bebanBunga: '05.11.00.00.00.00'
     };
@@ -578,7 +598,7 @@
             return {
                 totalAset: 0, kredit: 0, pembiayaan: 0, ckpn: 0, ati: 0, atiGross: 0, atiAkum: 0,
                 dpk: 0, giro: 0, tabungan: 0, deposito: 0, modal: 0,
-                labaBersih: 0, pendapatanBunga: 0, bebanBunga: 0,
+                labaSebelumPajak: 0, labaBersih: 0, pendapatanBunga: 0, bebanBunga: 0,
                 totalPendapatan: 0, totalBiaya: 0,
                 pendapatanBungaTotal: 0, pendapatanOpLainTotal: 0, pendapatanNonOpTotal: 0,
                 bebanBungaTotal: 0, bebanOpLainTotal: 0, bebanNonOpTotal: 0,
@@ -805,22 +825,39 @@
         const pendapatanOperasional = sumBySandi(labarugi, '01.00.00.00.00.00');
         const bebanOperasional = sumBySandi(labarugi, '02.00.00.00.00.00');
         
-        // Laba Bersih = Laba Sebelum Pajak - Pajak
-        let labaSebelumPajak = sumBySandi(labarugi, SANDI_KONVEN.labaSebelumPajak);
-        let pajakLaba = sumBySandi(labarugi, SANDI_KONVEN.pajakLaba);
+        // ==========================================
+        // LABA SEBELUM PAJAK (untuk Card Utama)
+        // 03.05.02.01.10.00 - 03.05.02.02.10.00
+        // ==========================================
+        let labaThnBerjalanSblmPajak = sumBySandi(neraca, SANDI_KONVEN.labaThnBerjalanSblmPajak);
+        let rugiThnBerjalanSblmPajak = sumBySandi(neraca, SANDI_KONVEN.rugiThnBerjalanSblmPajak);
         
-        // Fallback to neraca if labarugi is empty
-        if (labaSebelumPajak === 0) {
-            labaSebelumPajak = sumBySandi(neraca, SANDI_KONVEN.labaSebelumPajak);
-            pajakLaba = sumBySandi(neraca, SANDI_KONVEN.pajakLaba);
+        // Fallback to labarugi if neraca is empty
+        if (labaThnBerjalanSblmPajak === 0 && rugiThnBerjalanSblmPajak === 0) {
+            labaThnBerjalanSblmPajak = sumBySandi(labarugi, SANDI_KONVEN.labaThnBerjalanSblmPajak);
+            rugiThnBerjalanSblmPajak = sumBySandi(labarugi, SANDI_KONVEN.rugiThnBerjalanSblmPajak);
         }
         
-        // Calculate Laba Bersih = 03.05.02.01.00.00 - 03.05.02.02.00.00
-        let labaBersih = labaSebelumPajak - pajakLaba;
+        // Laba Sebelum Pajak = Laba - Rugi (rugi sudah negatif)
+        let labaSebelumPajak = labaThnBerjalanSblmPajak + rugiThnBerjalanSblmPajak;
         
-        console.log(`💰 Laba Sebelum Pajak: ${formatCurrency(labaSebelumPajak)}`);
-        console.log(`💰 Pajak Laba: ${formatCurrency(pajakLaba)}`);
-        console.log(`💰 Laba Bersih: ${formatCurrency(labaBersih)}`);
+        // ==========================================
+        // LABA BERSIH (untuk perhitungan rasio ROA/ROE)
+        // 03.05.02.01.00.00 - 03.05.02.02.00.00
+        // ==========================================
+        let labaBersihThnBerjalan = sumBySandi(neraca, SANDI_KONVEN.labaBersihThnBerjalan);
+        let rugiBersihThnBerjalan = sumBySandi(neraca, SANDI_KONVEN.rugiBersihThnBerjalan);
+        
+        // Fallback to labarugi if neraca is empty
+        if (labaBersihThnBerjalan === 0 && rugiBersihThnBerjalan === 0) {
+            labaBersihThnBerjalan = sumBySandi(labarugi, SANDI_KONVEN.labaBersihThnBerjalan);
+            rugiBersihThnBerjalan = sumBySandi(labarugi, SANDI_KONVEN.rugiBersihThnBerjalan);
+        }
+        
+        let labaBersih = labaBersihThnBerjalan + rugiBersihThnBerjalan;
+        
+        console.log(`💰 Laba Sebelum Pajak: ${formatCurrency(labaSebelumPajak)} (Laba: ${formatCurrency(labaThnBerjalanSblmPajak)}, Rugi: ${formatCurrency(rugiThnBerjalanSblmPajak)})`);
+        console.log(`💰 Laba Bersih: ${formatCurrency(labaBersih)} (Laba: ${formatCurrency(labaBersihThnBerjalan)}, Rugi: ${formatCurrency(rugiBersihThnBerjalan)})`);
 
         // Try Excel ratios first
         const excelRatios = getRatiosFromExcel();
@@ -865,7 +902,7 @@
         return {
             totalAset, kredit, pembiayaan, ckpn, ati, atiGross, atiAkum,
             dpk, giro, tabungan, deposito, modal,
-            labaBersih, pendapatanBunga, bebanBunga,
+            labaSebelumPajak, labaBersih, pendapatanBunga, bebanBunga,
             totalPendapatan, totalBiaya,
             // Detail components for reference
             pendapatanBungaTotal, pendapatanOpLainTotal, pendapatanNonOpTotal,
@@ -915,7 +952,7 @@
         updateText('statValueAsset', formatCurrency(m.totalAset));
         updateText('statValueDpk', formatCurrency(m.dpk));
         updateText('statValueKredit', formatCurrency(m.kredit));
-        updateText('statValueLaba', formatCurrency(m.labaBersih));
+        updateText('statValueLaba', formatCurrency(m.labaSebelumPajak));
         updateText('statValuePendapatan', formatCurrency(m.pendapatanBunga));
         updateText('statValueBeban', formatCurrency(m.bebanBunga));
 
@@ -927,7 +964,7 @@
         updateCard('neracaCkpnValue', m.ckpn);
         updateCard('neracaDpkValue', m.dpk);
         updateCard('neracaModalValue', m.modal);
-        updateCard('neracaLabaValue', m.labaBersih);
+        updateCard('neracaLabaValue', m.labaSebelumPajak);
         updateCard('neracaPendapatanValue', m.totalPendapatan);
         updateCard('neracaBiayaValue', m.totalBiaya);
 
