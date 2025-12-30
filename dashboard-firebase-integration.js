@@ -689,50 +689,57 @@
         const dpk = giro + tabungan + deposito;
         
         // ==========================================
-        // MODAL (EKUITAS) - Complete Calculation
+        // MODAL (EKUITAS) - Complete Calculation from 19 Components
+        // SELALU hitung dari komponen, bukan dari summary 03.00.00.00.00.00
         // ==========================================
-        // Try summary first, fallback to component sum
-        let modal = sumBySandi(neraca, SANDI_KONVEN.modal);
         
-        if (modal === 0) {
-            // 15. Modal Disetor
-            const modalDasar = sumBySandi(neraca, SANDI_KONVEN.modalDasar);
-            const modalBelumDisetor = sumBySandi(neraca, SANDI_KONVEN.modalBelumDisetor); // already negative
-            const treasuryStock = sumBySandi(neraca, SANDI_KONVEN.treasuryStock); // already negative
-            const modalDisetor = modalDasar + modalBelumDisetor + treasuryStock;
-            
-            // 16. Tambahan Modal Disetor
-            const agio = sumBySandi(neraca, SANDI_KONVEN.agio);
-            const disagio = sumBySandi(neraca, SANDI_KONVEN.disagio); // already negative
-            const danaSetoranModal = sumBySandi(neraca, SANDI_KONVEN.danaSetoranModal);
-            const tambahanLain = sumBySandi(neraca, SANDI_KONVEN.tambahanModalKeuntungan) 
-                               + sumBySandi(neraca, SANDI_KONVEN.tambahanModalKerugian)
-                               + sumBySandi(neraca, SANDI_KONVEN.modalSumbangan)
-                               + sumBySandi(neraca, SANDI_KONVEN.waranDiterbitkan)
-                               + sumBySandi(neraca, SANDI_KONVEN.opsiSaham);
-            const tambahanModalDisetor = agio + disagio + danaSetoranModal + tambahanLain;
-            
-            // 17. Penghasilan Komprehensif Lain
-            const pkl = sumBySandi(neraca, SANDI_KONVEN.pklKeuntungan) 
-                      + sumBySandi(neraca, SANDI_KONVEN.pklKerugian);
-            
-            // 18. Cadangan
-            const cadangan = sumBySandi(neraca, SANDI_KONVEN.cadanganUmum) 
-                           + sumBySandi(neraca, SANDI_KONVEN.cadanganTujuan);
-            
-            // 19. Laba/Rugi
-            const labaRugi = sumBySandi(neraca, SANDI_KONVEN.labaTahunLalu)
-                           + sumBySandi(neraca, SANDI_KONVEN.rugiTahunLalu)
-                           + sumBySandi(neraca, SANDI_KONVEN.labaTahunBerjalan)
-                           + sumBySandi(neraca, SANDI_KONVEN.rugiTahunBerjalan)
-                           + sumBySandi(neraca, SANDI_KONVEN.dividenDibayarkan);
-            
-            modal = modalDisetor + tambahanModalDisetor + pkl + cadangan + labaRugi;
-            
-            console.log(`💰 Modal Detail: Disetor=${formatCurrency(modalDisetor)}, Tambahan=${formatCurrency(tambahanModalDisetor)}, PKL=${formatCurrency(pkl)}, Cadangan=${formatCurrency(cadangan)}, LabaRugi=${formatCurrency(labaRugi)}`);
-        }
+        // 15. Modal Disetor
+        const modalDasar = sumBySandi(neraca, SANDI_KONVEN.modalDasar);              // 03.01.01
+        const modalBelumDisetor = sumBySandi(neraca, SANDI_KONVEN.modalBelumDisetor); // 03.01.02 -/-
+        const treasuryStock = sumBySandi(neraca, SANDI_KONVEN.treasuryStock);         // 03.01.03 -/-
+        const modalDisetor = modalDasar + modalBelumDisetor + treasuryStock;
         
-        console.log(`💰 Total Modal: ${formatCurrency(modal)}`);
+        // 16. Tambahan Modal Disetor
+        const agio = sumBySandi(neraca, SANDI_KONVEN.agio);                           // 03.02.01
+        const disagio = sumBySandi(neraca, SANDI_KONVEN.disagio);                     // 03.02.02 -/-
+        const danaSetoranModal = sumBySandi(neraca, SANDI_KONVEN.danaSetoranModal);   // 03.02.06
+        const tambahanModalKeuntungan = sumBySandi(neraca, SANDI_KONVEN.tambahanModalKeuntungan); // 03.02.99.01
+        const tambahanModalKerugian = sumBySandi(neraca, SANDI_KONVEN.tambahanModalKerugian);     // 03.02.99.02 -/-
+        const modalSumbangan = sumBySandi(neraca, SANDI_KONVEN.modalSumbangan);       // 03.02.03
+        const waranDiterbitkan = sumBySandi(neraca, SANDI_KONVEN.waranDiterbitkan);   // 03.02.04
+        const opsiSaham = sumBySandi(neraca, SANDI_KONVEN.opsiSaham);                 // 03.02.05
+        const tambahanModalDisetor = agio + disagio + danaSetoranModal + tambahanModalKeuntungan 
+                                   + tambahanModalKerugian + modalSumbangan + waranDiterbitkan + opsiSaham;
+        
+        // 17. Penghasilan Komprehensif Lain
+        const pklKeuntungan = sumBySandi(neraca, SANDI_KONVEN.pklKeuntungan);         // 03.03.01
+        const pklKerugian = sumBySandi(neraca, SANDI_KONVEN.pklKerugian);             // 03.03.02 -/-
+        const pkl = pklKeuntungan + pklKerugian;
+        
+        // 18. Cadangan
+        const cadanganUmum = sumBySandi(neraca, SANDI_KONVEN.cadanganUmum);           // 03.04.01
+        const cadanganTujuan = sumBySandi(neraca, SANDI_KONVEN.cadanganTujuan);       // 03.04.02
+        const cadangan = cadanganUmum + cadanganTujuan;
+        
+        // 19. Laba/Rugi
+        const labaTahunLalu = sumBySandi(neraca, SANDI_KONVEN.labaTahunLalu);         // 03.05.01.01
+        const rugiTahunLalu = sumBySandi(neraca, SANDI_KONVEN.rugiTahunLalu);         // 03.05.01.02 -/-
+        const labaTahunBerjalan_modal = sumBySandi(neraca, SANDI_KONVEN.labaTahunBerjalan); // 03.05.02.01
+        const rugiTahunBerjalan_modal = sumBySandi(neraca, SANDI_KONVEN.rugiTahunBerjalan); // 03.05.02.02 -/-
+        const dividenDibayarkan = sumBySandi(neraca, SANDI_KONVEN.dividenDibayarkan); // 03.05.03 -/-
+        const labaRugiModal = labaTahunLalu + rugiTahunLalu + labaTahunBerjalan_modal + rugiTahunBerjalan_modal + dividenDibayarkan;
+        
+        // TOTAL MODAL = 15 + 16 + 17 + 18 + 19
+        const modal = modalDisetor + tambahanModalDisetor + pkl + cadangan + labaRugiModal;
+        
+        console.log(`💰 Modal Detail:
+           15. Modal Disetor: ${formatCurrency(modalDisetor)} (Dasar=${formatCurrency(modalDasar)}, BelumDisetor=${formatCurrency(modalBelumDisetor)}, Treasury=${formatCurrency(treasuryStock)})
+           16. Tambahan Modal: ${formatCurrency(tambahanModalDisetor)} (Agio=${formatCurrency(agio)}, Disagio=${formatCurrency(disagio)}, Dana=${formatCurrency(danaSetoranModal)}, Lainnya=${formatCurrency(tambahanModalKeuntungan + tambahanModalKerugian + modalSumbangan + waranDiterbitkan + opsiSaham)})
+           17. PKL: ${formatCurrency(pkl)} (Keuntungan=${formatCurrency(pklKeuntungan)}, Kerugian=${formatCurrency(pklKerugian)})
+           18. Cadangan: ${formatCurrency(cadangan)} (Umum=${formatCurrency(cadanganUmum)}, Tujuan=${formatCurrency(cadanganTujuan)})
+           19. Laba/Rugi: ${formatCurrency(labaRugiModal)} (ThnLalu=${formatCurrency(labaTahunLalu + rugiTahunLalu)}, ThnBerjalan=${formatCurrency(labaTahunBerjalan_modal + rugiTahunBerjalan_modal)}, Dividen=${formatCurrency(dividenDibayarkan)})
+           TOTAL MODAL: ${formatCurrency(modal)}`);
+        
         
         // ==========================================
         // LABA RUGI
