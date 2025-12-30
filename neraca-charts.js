@@ -18,52 +18,57 @@ const NeracaCharts = {
     // ========================================
     SANDI_MAPPING: {
         asset: {
+            // Total Asset = sandi summary, BUKAN prefix (untuk avoid double count)
             sandi: '01.00.00.00.00.00',
-            prefix: '01',
             label: 'Total Asset',
             unit: 'T',
             color: '#ff9800'
         },
         kredit: {
             sandi: '01.09.01.00.00.00',
-            prefix: null,
             label: 'Total Kredit',
             unit: 'T',
             color: '#1e3a5f'
         },
         pembiayaan: {
-            sandi: null,
+            // Pembiayaan Syariah = sum prefix 01.09.03 (exclude summary)
             prefix: '01.09.03',
+            excludeSummary: true,
             label: 'Total Pembiayaan',
             unit: 'T',
             color: '#e91e63'
         },
         dpk: {
-            // DPK = Giro + Tabungan + Deposito
-            components: ['02.01.01.00.00.00', '02.02.01.00.00.00', '02.03.01.00.00.00'],
-            componentsSyariah: [
-                ['02.01.02.01.00.00', '02.01.02.02.00.00', '02.01.02.03.00.00'],
-                ['02.02.02.01.00.00', '02.02.02.02.00.00', '02.02.02.03.00.00'],
-                ['02.03.02.01.00.00', '02.03.02.02.00.00']
+            // DPK = Giro + Tabungan + Deposito (Konven + Syariah)
+            components: [
+                '02.01.01.00.00.00', '02.02.01.00.00.00', '02.03.01.00.00.00', // Konven
+                '02.01.02.01.00.00', '02.01.02.02.00.00', '02.01.02.03.00.00', // Giro Syariah
+                '02.02.02.01.00.00', '02.02.02.02.00.00', '02.02.02.03.00.00', // Tab Syariah
+                '02.03.02.01.00.00', '02.03.02.02.00.00'  // Dep Syariah
             ],
             label: 'Dana Pihak Ketiga',
             unit: 'T',
             color: '#3498db'
         },
         ati: {
-            // ATI = Aset Tidak Berwujud + Akum Amortisasi + Aset Tetap + Akum Penyusutan
+            // ATI = Aset Tidak Berwujud + Aset Tetap (gross & akum)
             components: ['01.13.01.00.00.00', '01.13.02.00.00.00', '01.14.01.00.00.00', '01.14.02.00.00.00'],
             label: 'ATI',
             unit: 'M',
             color: '#14b8a6'
         },
         ckpn: {
+            // CKPN = sandi summary
+            sandi: '01.12.00.00.00.00',
+            // Fallback to prefix if summary not found
             prefix: '01.12',
+            excludeSummary: true,
             label: 'CKPN',
             unit: 'M',
             color: '#f59e0b'
         },
         laba: {
+            // Laba = Laba Tahun Berjalan - Rugi Tahun Berjalan
             sandi: '03.05.02.01.00.00',
             sandiRugi: '03.05.02.02.00.00',
             label: 'Laba Bersih',
@@ -71,14 +76,16 @@ const NeracaCharts = {
             color: '#8b5cf6'
         },
         modal: {
-            // Modal = Sum all 03.xx components
-            prefix: '03',
+            // Modal = sandi summary
+            sandi: '03.00.00.00.00.00',
             label: 'Total Modal',
             unit: 'T',
             color: '#1e3a5f'
         },
         pendapatan: {
-            // Pendapatan = 04.11 + 04.12 + 04.20
+            // Pendapatan = 04.11 + 04.12 + 04.20 (summary sandi)
+            components: ['04.11.00.00.00.00', '04.12.00.00.00.00', '04.20.00.00.00.00'],
+            // Fallback prefixes if summary not found
             prefixes: ['04.11', '04.12', '04.20'],
             label: 'Total Pendapatan',
             unit: 'T',
@@ -86,7 +93,9 @@ const NeracaCharts = {
             isLabarugi: true
         },
         biaya: {
-            // Biaya = 05.11 + 05.12 + 05.20
+            // Biaya = 05.11 + 05.12 + 05.20 (summary sandi)
+            components: ['05.11.00.00.00.00', '05.12.00.00.00.00', '05.20.00.00.00.00'],
+            // Fallback prefixes if summary not found
             prefixes: ['05.11', '05.12', '05.20'],
             label: 'Total Biaya',
             unit: 'T',
@@ -149,8 +158,10 @@ const NeracaCharts = {
         
         if (!config) return 0;
         
-        // Helper function
-        const getValue = (sandi, collection = neraca) => {
+        const collection = config.isLabarugi ? labarugi : neraca;
+        
+        // Helper function - get exact sandi value
+        const getValue = (sandi) => {
             const item = collection.find(d => 
                 d.kode_cabang === kodeCabang && 
                 d.periode === periode && 
@@ -159,55 +170,59 @@ const NeracaCharts = {
             return item?.total || 0;
         };
         
-        const sumPrefix = (prefix, collection = neraca) => {
+        // Helper - sum by prefix (optionally exclude summary sandi)
+        const sumPrefix = (prefix, excludeSummary = false) => {
             return collection
                 .filter(d => 
                     d.kode_cabang === kodeCabang && 
                     d.periode === periode && 
                     d.sandi?.startsWith(prefix) &&
-                    !d.sandi?.endsWith('.00.00.00')
+                    (!excludeSummary || !d.sandi?.endsWith('.00.00.00'))
                 )
                 .reduce((sum, d) => sum + (d.total || 0), 0);
         };
         
-        const sumPrefixes = (prefixes, collection = neraca) => {
-            return prefixes.reduce((sum, prefix) => sum + sumPrefix(prefix, collection), 0);
+        // Helper - sum multiple prefixes
+        const sumPrefixes = (prefixes, excludeSummary = false) => {
+            return prefixes.reduce((sum, prefix) => sum + sumPrefix(prefix, excludeSummary), 0);
         };
         
-        const sumComponents = (components, collection = neraca) => {
-            return components.reduce((sum, sandi) => sum + getValue(sandi, collection), 0);
+        // Helper - sum components (exact sandi list)
+        const sumComponents = (components) => {
+            return components.reduce((sum, sandi) => sum + getValue(sandi), 0);
         };
         
-        // Calculate based on config
-        if (config.isLabarugi) {
-            // Use labarugi collection
-            if (config.prefixes) {
-                return sumPrefixes(config.prefixes, labarugi);
-            }
-            return config.sandi ? getValue(config.sandi, labarugi) : 0;
-        }
+        // Priority: sandi > components > prefixes > prefix
+        let result = 0;
         
-        if (config.components) {
-            return sumComponents(config.components);
-        }
-        
-        if (config.prefixes) {
-            return sumPrefixes(config.prefixes);
-        }
-        
-        if (config.prefix) {
-            return sumPrefix(config.prefix);
-        }
-        
+        // 1. Try exact sandi first
         if (config.sandi) {
-            let val = getValue(config.sandi);
+            result = getValue(config.sandi);
             if (config.sandiRugi) {
-                val += getValue(config.sandiRugi); // Rugi is negative
+                result += getValue(config.sandiRugi); // Rugi is negative
             }
-            return val;
+            // If found, return it
+            if (result !== 0) return result;
         }
         
-        return 0;
+        // 2. Try components (list of exact sandi)
+        if (config.components && config.components.length > 0) {
+            result = sumComponents(config.components);
+            if (result !== 0) return result;
+        }
+        
+        // 3. Try prefixes (multiple prefix sum)
+        if (config.prefixes && config.prefixes.length > 0) {
+            result = sumPrefixes(config.prefixes, config.excludeSummary);
+            if (result !== 0) return result;
+        }
+        
+        // 4. Try single prefix
+        if (config.prefix) {
+            result = sumPrefix(config.prefix, config.excludeSummary);
+        }
+        
+        return result;
     },
     
     // ========================================
@@ -215,56 +230,79 @@ const NeracaCharts = {
     // ========================================
     getTargetValue(metricKey, triwulan, kodeCabang = 'ALL') {
         const targetLoader = window.TargetFirebaseLoader;
-        if (!targetLoader?.isLoaded) return 0;
+        
+        if (!targetLoader?.isLoaded) {
+            return 0;
+        }
         
         const config = this.SANDI_MAPPING[metricKey];
         if (!config) return 0;
         
         const periode = `TRW${triwulan}_2025`;
         const collection = config.isLabarugi ? 'labarugi' : 'neraca';
+        const dataArray = targetLoader[collection === 'neraca' ? 'targetNeracaData' : 'targetLabarugiData'] || [];
         
-        // Helper function
+        // Helper - get exact sandi value
         const getValue = (sandi) => {
-            return targetLoader.getTargetValue(sandi, periode, kodeCabang, collection);
+            const item = dataArray.find(d => 
+                d.kode_cabang === kodeCabang && 
+                d.periode === periode && 
+                d.sandi === sandi
+            );
+            return item?.total || 0;
         };
         
-        const sumPrefix = (prefix) => {
-            const data = targetLoader[collection === 'neraca' ? 'targetNeracaData' : 'targetLabarugiData'] || [];
-            return data
-                .filter(d => 
-                    d.kode_cabang === kodeCabang && 
-                    d.periode === periode && 
-                    d.sandi?.startsWith(prefix)
-                )
-                .reduce((sum, d) => sum + (d.total || 0), 0);
+        // Helper - sum by prefix
+        const sumPrefix = (prefix, excludeSummary = false) => {
+            const filtered = dataArray.filter(d => 
+                d.kode_cabang === kodeCabang && 
+                d.periode === periode && 
+                d.sandi?.startsWith(prefix) &&
+                (!excludeSummary || !d.sandi?.endsWith('.00.00.00'))
+            );
+            return filtered.reduce((sum, d) => sum + (d.total || 0), 0);
         };
         
+        // Helper - sum prefixes
+        const sumPrefixes = (prefixes, excludeSummary = false) => {
+            return prefixes.reduce((sum, prefix) => sum + sumPrefix(prefix, excludeSummary), 0);
+        };
+        
+        // Helper - sum components
         const sumComponents = (components) => {
             return components.reduce((sum, sandi) => sum + getValue(sandi), 0);
         };
         
-        // Calculate based on config
-        if (config.components) {
-            return sumComponents(config.components);
-        }
+        // Priority: sandi > components > prefixes > prefix
+        let result = 0;
         
-        if (config.prefixes) {
-            return config.prefixes.reduce((sum, prefix) => sum + sumPrefix(prefix), 0);
-        }
-        
-        if (config.prefix) {
-            return sumPrefix(config.prefix);
-        }
-        
+        // 1. Try exact sandi first
         if (config.sandi) {
-            let val = getValue(config.sandi);
+            result = getValue(config.sandi);
             if (config.sandiRugi) {
-                val += getValue(config.sandiRugi);
+                result += getValue(config.sandiRugi);
             }
-            return val;
+            if (result !== 0) return result;
         }
         
-        return 0;
+        // 2. Try components
+        if (config.components && config.components.length > 0) {
+            result = sumComponents(config.components);
+            if (result !== 0) return result;
+        }
+        
+        // 3. Try prefixes
+        if (config.prefixes && config.prefixes.length > 0) {
+            result = sumPrefixes(config.prefixes, config.excludeSummary);
+            if (result !== 0) return result;
+        }
+        
+        // 4. Try single prefix
+        if (config.prefix) {
+            result = sumPrefix(config.prefix, config.excludeSummary);
+        }
+        
+        return result;
     },
     
     // ========================================
@@ -280,13 +318,40 @@ const NeracaCharts = {
         const target = [];
         const labels = [];
         
-        // Get available periods
+        // Get available periods from aktual data
         const data = window.DashboardFirebase?.getData?.();
         const allPeriods = new Set();
         (data?.neraca || []).forEach(d => allPeriods.add(d.periode));
         
         // Sort periods
         const sortedPeriods = Array.from(allPeriods).sort();
+        
+        console.log(`📊 getChartData: ${metricKey}, kodeCabang=${kodeCabang}`);
+        console.log(`   Available periods:`, sortedPeriods);
+        
+        // Determine target branch code
+        // Target data might use different branch codes
+        const targetLoader = window.TargetFirebaseLoader;
+        let targetBranchCode = kodeCabang;
+        
+        if (targetLoader?.isLoaded && targetLoader.targetNeracaData?.length > 0) {
+            const availableBranches = [...new Set(targetLoader.targetNeracaData.map(d => d.kode_cabang))];
+            console.log(`   Available target branches:`, availableBranches.slice(0, 10));
+            
+            // If 'ALL' not in target data, try to find alternative
+            if (kodeCabang === 'ALL' && !availableBranches.includes('ALL')) {
+                // Try common alternatives
+                if (availableBranches.includes('KON')) {
+                    targetBranchCode = 'KON';
+                } else if (availableBranches.includes('001')) {
+                    targetBranchCode = '001';
+                } else if (availableBranches.length > 0) {
+                    // Use first available
+                    targetBranchCode = availableBranches[0];
+                }
+                console.log(`   Using target branch: ${targetBranchCode} (ALL not found)`);
+            }
+        }
         
         // Map period to month and get values
         sortedPeriods.forEach(periode => {
@@ -301,14 +366,18 @@ const NeracaCharts = {
             
             labels.push(monthName);
             
+            // Get aktual value
             const aktualVal = this.getAktualValue(metricKey, periode, kodeCabang);
             aktual.push(aktualVal / divisor);
             
             // Get target for corresponding triwulan
             const trw = Math.ceil(parseInt(month) / 3);
-            const targetVal = this.getTargetValue(metricKey, trw, kodeCabang);
+            const targetVal = this.getTargetValue(metricKey, trw, targetBranchCode);
             target.push(targetVal / divisor);
         });
+        
+        console.log(`   Aktual values:`, aktual);
+        console.log(`   Target values:`, target);
         
         return { labels, aktual, target, unit };
     },
