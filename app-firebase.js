@@ -215,9 +215,12 @@ function selectBusinessLine(businessLine) {
     showToast('Menampilkan data ' + businessLine, 'info');
     
     // Update DashboardFirebase filter (untuk Layer 2 charts)
-    if (window.DashboardFirebase?.setFilter) {
-        window.DashboardFirebase.setFilter('tipe', businessLine);
-        window.DashboardFirebase.setFilter('cabang', null);
+    // Use setFilters untuk batch update (hanya dispatch event sekali)
+    if (window.DashboardFirebase?.setFilters) {
+        window.DashboardFirebase.setFilters({
+            tipe: businessLine,
+            cabang: null
+        });
     }
     
     // Reload data
@@ -249,9 +252,15 @@ function selectBranch(branchCode) {
     }
     
     // Update DashboardFirebase filter (untuk Layer 2 charts)
-    if (window.DashboardFirebase?.setFilter) {
-        window.DashboardFirebase.setFilter('cabang', branchCode);
-        window.DashboardFirebase.setFilter('tipe', null);
+    // Use setFilters untuk batch update (hanya dispatch event sekali)
+    console.log('🏢 selectBranch: calling setFilters with cabang =', branchCode);
+    if (window.DashboardFirebase?.setFilters) {
+        window.DashboardFirebase.setFilters({
+            cabang: branchCode,
+            tipe: null
+        });
+    } else {
+        console.warn('⚠️ DashboardFirebase.setFilters not available!');
     }
     
     // Load branch data
