@@ -136,8 +136,9 @@ const NeracaCharts = {
         
         // Listen for filter changes
         window.addEventListener('filterChanged', (e) => {
-            console.log('🔄 Filter changed, refreshing Layer 2 charts...', e.detail);
+            console.log('🔄 filterChanged event received:', e.detail);
             this.currentKodeCabang = this.getCurrentKodeCabang();
+            console.log('🔄 New currentKodeCabang:', this.currentKodeCabang);
             this.renderAllCharts();
         });
     },
@@ -148,16 +149,29 @@ const NeracaCharts = {
     getCurrentKodeCabang() {
         const filters = window.DashboardFirebase?.getFilters?.() || {};
         
+        console.log('🔍 getCurrentKodeCabang - filters:', filters);
+        
         // If specific cabang selected, use it
         if (filters.cabang) {
+            console.log('   → Using cabang:', filters.cabang);
             return filters.cabang;
         }
         
         // Otherwise, use tipe (konsolidasi/konvensional/syariah)
-        if (filters.tipe === 'konsolidasi') return 'ALL';
-        if (filters.tipe === 'konvensional') return 'KON';
-        if (filters.tipe === 'syariah') return 'SYR';
+        if (filters.tipe === 'konsolidasi') {
+            console.log('   → Using tipe konsolidasi: ALL');
+            return 'ALL';
+        }
+        if (filters.tipe === 'konvensional') {
+            console.log('   → Using tipe konvensional: KON');
+            return 'KON';
+        }
+        if (filters.tipe === 'syariah') {
+            console.log('   → Using tipe syariah: SYR');
+            return 'SYR';
+        }
         
+        console.log('   → Default: ALL');
         return 'ALL'; // Default
     },
     
@@ -193,6 +207,17 @@ const NeracaCharts = {
         
         const collection = config.isLabarugi ? labarugi : neraca;
         
+        // Debug: Check if data exists for this kodeCabang
+        const dataForCabang = collection.filter(d => d.kode_cabang === kodeCabang && d.periode === periode);
+        console.log(`   📋 Data count for ${kodeCabang}/${periode}: ${dataForCabang.length}`);
+        
+        if (dataForCabang.length === 0) {
+            console.warn(`   ⚠️ No data for kodeCabang=${kodeCabang}, periode=${periode}`);
+            // Log available kode_cabang for this periode
+            const availableCabang = [...new Set(collection.filter(d => d.periode === periode).map(d => d.kode_cabang))];
+            console.log(`   📋 Available kode_cabang:`, availableCabang.slice(0, 10));
+        }
+        
         // Helper function - get exact sandi value
         const getValue = (sandi) => {
             const item = collection.find(d => 
@@ -200,7 +225,11 @@ const NeracaCharts = {
                 d.periode === periode && 
                 d.sandi === sandi
             );
-            return item?.total || 0;
+            const val = item?.total || 0;
+            if (val !== 0) {
+                console.log(`   ✅ Found ${sandi}: ${val.toLocaleString()}`);
+            }
+            return val;
         };
         
         // Helper - sum by prefix (optionally exclude summary sandi)
@@ -342,6 +371,8 @@ const NeracaCharts = {
     // GET MONTHLY DATA FOR CHART
     // ========================================
     getChartData(metricKey, kodeCabang = 'ALL') {
+        console.log(`📈 getChartData: ${metricKey}, kodeCabang=${kodeCabang}`);
+        
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
         const config = this.SANDI_MAPPING[metricKey];
         const unit = config?.unit || 'M';
@@ -361,6 +392,15 @@ const NeracaCharts = {
         
         console.log(`📊 getChartData: ${metricKey}, kodeCabang=${kodeCabang}`);
         console.log(`   Available periods:`, sortedPeriods);
+        
+        // Debug: Show available kode_cabang
+        const availableCabangInData = [...new Set((data?.neraca || []).map(d => d.kode_cabang))];
+        console.log(`   Available kode_cabang in neraca:`, availableCabangInData.slice(0, 15));
+        
+        // Check if requested kodeCabang exists
+        if (!availableCabangInData.includes(kodeCabang)) {
+            console.warn(`   ⚠️ kodeCabang '${kodeCabang}' NOT FOUND in data!`);
+        }
         
         // Determine target branch code
         // Target data might use different branch codes
@@ -401,6 +441,7 @@ const NeracaCharts = {
             
             // Get aktual value
             const aktualVal = this.getAktualValue(metricKey, periode, kodeCabang);
+            console.log(`   ${monthName}: aktual raw = ${aktualVal.toLocaleString()}, after divisor = ${(aktualVal / divisor).toFixed(2)}`);
             aktual.push(aktualVal / divisor);
             
             // Get target for corresponding triwulan
