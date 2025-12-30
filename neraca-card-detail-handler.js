@@ -129,6 +129,92 @@ const NeracaCardDetail = (function() {
                     { sandi: '01.12.03.00.00.00', nama: 'CKPN Tahap 3' },
                 ]
             }
+        },
+        'modal': {
+            title: 'TOTAL MODAL (EKUITAS)',
+            icon: 'fa-landmark',
+            color: '#1e3a5f',
+            splitType: 'ekuitas-5-komponen',
+            komponen: {
+                modalDisetor: [
+                    { sandi: '03.01.01.00.00.00', nama: 'Modal Dasar' },
+                    { sandi: '03.01.02.00.00.00', nama: 'Modal Belum Disetor -/-' },
+                    { sandi: '03.01.03.00.00.00', nama: 'Treasury Stock -/-' },
+                ],
+                tambahanModal: [
+                    { sandi: '03.02.01.00.00.00', nama: 'Agio' },
+                    { sandi: '03.02.02.00.00.00', nama: 'Disagio -/-' },
+                    { sandi: '03.02.06.00.00.00', nama: 'Dana Setoran Modal' },
+                    { sandi: '03.02.03.00.00.00', nama: 'Modal Sumbangan' },
+                    { sandi: '03.02.04.00.00.00', nama: 'Waran Diterbitkan' },
+                    { sandi: '03.02.05.00.00.00', nama: 'Opsi Saham' },
+                    { sandi: '03.02.99.01.00.00', nama: 'Lainnya - Keuntungan' },
+                    { sandi: '03.02.99.02.00.00', nama: 'Lainnya - Kerugian -/-' },
+                ],
+                pkl: [
+                    { sandi: '03.03.01.00.00.00', nama: 'PKL - Keuntungan' },
+                    { sandi: '03.03.02.00.00.00', nama: 'PKL - Kerugian -/-' },
+                ],
+                cadangan: [
+                    { sandi: '03.04.01.00.00.00', nama: 'Cadangan Umum' },
+                    { sandi: '03.04.02.00.00.00', nama: 'Cadangan Tujuan' },
+                ],
+                labaRugi: [
+                    { sandi: '03.05.01.01.00.00', nama: 'Laba Tahun Lalu' },
+                    { sandi: '03.05.01.02.00.00', nama: 'Rugi Tahun Lalu -/-' },
+                    { sandi: '03.05.02.01.00.00', nama: 'Laba Tahun Berjalan' },
+                    { sandi: '03.05.02.02.00.00', nama: 'Rugi Tahun Berjalan -/-' },
+                    { sandi: '03.05.03.00.00.00', nama: 'Dividen Dibayarkan -/-' },
+                ]
+            }
+        },
+        'laba': {
+            title: 'LABA BERSIH',
+            icon: 'fa-chart-line',
+            color: '#3b82f6',
+            splitType: 'laba-rugi',
+            komponen: {
+                laba: [
+                    { sandi: '03.05.02.01.00.00', nama: 'Laba Bersih Tahun Berjalan' },
+                ],
+                rugi: [
+                    { sandi: '03.05.02.02.00.00', nama: 'Rugi Bersih Tahun Berjalan -/-' },
+                ]
+            }
+        },
+        'pendapatan': {
+            title: 'TOTAL PENDAPATAN',
+            icon: 'fa-arrow-trend-up',
+            color: '#10b981',
+            splitType: 'pendapatan-3-komponen',
+            komponen: {
+                bunga: [
+                    { sandi: '04.11.00.00.00.00', nama: 'Pendapatan Bunga / Imbal Hasil' },
+                ],
+                opLain: [
+                    { sandi: '04.12.00.00.00.00', nama: 'Pendapatan Operasional Lainnya' },
+                ],
+                nonOp: [
+                    { sandi: '04.20.00.00.00.00', nama: 'Pendapatan Non Operasional' },
+                ]
+            }
+        },
+        'biaya': {
+            title: 'TOTAL BIAYA',
+            icon: 'fa-arrow-trend-down',
+            color: '#ef4444',
+            splitType: 'biaya-3-komponen',
+            komponen: {
+                bunga: [
+                    { sandi: '05.11.00.00.00.00', nama: 'Beban Bunga / Bagi Hasil' },
+                ],
+                opLain: [
+                    { sandi: '05.12.00.00.00.00', nama: 'Beban Operasional Lainnya' },
+                ],
+                nonOp: [
+                    { sandi: '05.20.00.00.00.00', nama: 'Beban Non Operasional' },
+                ]
+            }
         }
     };
     
@@ -1074,6 +1160,236 @@ const NeracaCardDetail = (function() {
                 labels: ['Tahap 1', 'Tahap 2', 'Tahap 3'],
                 data: [Math.abs(tahap1Total), Math.abs(tahap2Total), Math.abs(tahap3Total)],
                 colors: ['#22c55e', '#f59e0b', '#ef4444']
+            };
+        } else if (cardType === 'modal') {
+            // MODAL (EKUITAS): 5 Komponen Utama
+            let modalDisetorTotal = 0, tambahanModalTotal = 0, pklTotal = 0, cadanganTotal = 0, labaRugiTotal = 0;
+            const modalDisetorItems = [], tambahanModalItems = [], pklItems = [], cadanganItems = [], labaRugiItems = [];
+            
+            for (const item of config.komponen.modalDisetor) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    modalDisetorItems.push({ nama: item.nama, nilai });
+                    modalDisetorTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.tambahanModal) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    tambahanModalItems.push({ nama: item.nama, nilai });
+                    tambahanModalTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.pkl) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    pklItems.push({ nama: item.nama, nilai });
+                    pklTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.cadangan) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    cadanganItems.push({ nama: item.nama, nilai });
+                    cadanganTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.labaRugi) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    labaRugiItems.push({ nama: item.nama, nilai });
+                    labaRugiTotal += nilai;
+                }
+            }
+            
+            totalValue = modalDisetorTotal + tambahanModalTotal + pklTotal + cadanganTotal + labaRugiTotal;
+            
+            tableData = {
+                groups: [
+                    { nama: '15. MODAL DISETOR', color: 'blue', items: modalDisetorItems, subtotal: modalDisetorTotal },
+                    { nama: '16. TAMBAHAN MODAL DISETOR', color: 'green', items: tambahanModalItems, subtotal: tambahanModalTotal },
+                    { nama: '17. PENGHASILAN KOMPREHENSIF LAIN', color: 'purple', items: pklItems, subtotal: pklTotal },
+                    { nama: '18. CADANGAN', color: 'yellow', items: cadanganItems, subtotal: cadanganTotal },
+                    { nama: '19. LABA/RUGI', color: 'red', items: labaRugiItems, subtotal: labaRugiTotal },
+                ],
+                total: totalValue
+            };
+            
+            chartData = {
+                type: 'doughnut',
+                labels: ['Modal Disetor', 'Tambahan Modal', 'PKL', 'Cadangan', 'Laba/Rugi'],
+                data: [Math.abs(modalDisetorTotal), Math.abs(tambahanModalTotal), Math.abs(pklTotal), Math.abs(cadanganTotal), Math.abs(labaRugiTotal)],
+                colors: ['#3b82f6', '#22c55e', '#8b5cf6', '#f59e0b', '#ef4444']
+            };
+            
+        } else if (cardType === 'laba') {
+            // LABA BERSIH: Laba - Rugi
+            let labaTotal = 0, rugiTotal = 0;
+            const labaItems = [], rugiItems = [];
+            
+            for (const item of config.komponen.laba) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    labaItems.push({ nama: item.nama, nilai });
+                    labaTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.rugi) {
+                const nilai = getValue(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    rugiItems.push({ nama: item.nama, nilai });
+                    rugiTotal += nilai;
+                }
+            }
+            
+            totalValue = labaTotal + rugiTotal; // rugiTotal is negative
+            
+            tableData = {
+                groups: [
+                    { nama: 'LABA BERSIH', color: 'green', items: labaItems, subtotal: labaTotal },
+                    { nama: 'RUGI BERSIH', color: 'red', items: rugiItems, subtotal: rugiTotal },
+                ],
+                total: totalValue
+            };
+            
+            chartData = {
+                type: 'doughnut',
+                labels: ['Laba', 'Rugi'],
+                data: [Math.abs(labaTotal), Math.abs(rugiTotal)],
+                colors: ['#22c55e', '#ef4444']
+            };
+            
+        } else if (cardType === 'pendapatan') {
+            // PENDAPATAN: Bunga + Op Lain + Non-Op (dari Laba Rugi)
+            const labarugiData = data.labarugi || [];
+            
+            function getValueLR(sandi, isPrefix = false) {
+                if (isPrefix) {
+                    return labarugiData
+                        .filter(d => d.kode_cabang === kode && d.periode === periode && 
+                                    d.sandi && d.sandi.startsWith(sandi))
+                        .reduce((sum, d) => sum + (d.total || 0), 0);
+                }
+                const item = labarugiData.find(d => 
+                    d.kode_cabang === kode && 
+                    d.periode === periode && 
+                    d.sandi === sandi
+                );
+                return item ? (item.total || 0) : 0;
+            }
+            
+            let bungaTotal = 0, opLainTotal = 0, nonOpTotal = 0;
+            const bungaItems = [], opLainItems = [], nonOpItems = [];
+            
+            for (const item of config.komponen.bunga) {
+                const nilai = getValueLR(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    bungaItems.push({ nama: item.nama, nilai });
+                    bungaTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.opLain) {
+                const nilai = getValueLR(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    opLainItems.push({ nama: item.nama, nilai });
+                    opLainTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.nonOp) {
+                const nilai = getValueLR(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    nonOpItems.push({ nama: item.nama, nilai });
+                    nonOpTotal += nilai;
+                }
+            }
+            
+            totalValue = bungaTotal + opLainTotal + nonOpTotal;
+            
+            tableData = {
+                groups: [
+                    { nama: 'PENDAPATAN BUNGA / IMBAL HASIL', color: 'green', items: bungaItems, subtotal: bungaTotal },
+                    { nama: 'PENDAPATAN OPERASIONAL LAINNYA', color: 'blue', items: opLainItems, subtotal: opLainTotal },
+                    { nama: 'PENDAPATAN NON OPERASIONAL', color: 'purple', items: nonOpItems, subtotal: nonOpTotal },
+                ],
+                total: totalValue
+            };
+            
+            chartData = {
+                type: 'doughnut',
+                labels: ['Bunga/Imbal Hasil', 'Op. Lainnya', 'Non-Operasional'],
+                data: [Math.abs(bungaTotal), Math.abs(opLainTotal), Math.abs(nonOpTotal)],
+                colors: ['#22c55e', '#3b82f6', '#8b5cf6']
+            };
+            
+        } else if (cardType === 'biaya') {
+            // BIAYA: Bunga + Op Lain + Non-Op (dari Laba Rugi)
+            const labarugiData = data.labarugi || [];
+            
+            function getValueLR(sandi, isPrefix = false) {
+                if (isPrefix) {
+                    return labarugiData
+                        .filter(d => d.kode_cabang === kode && d.periode === periode && 
+                                    d.sandi && d.sandi.startsWith(sandi))
+                        .reduce((sum, d) => sum + (d.total || 0), 0);
+                }
+                const item = labarugiData.find(d => 
+                    d.kode_cabang === kode && 
+                    d.periode === periode && 
+                    d.sandi === sandi
+                );
+                return item ? (item.total || 0) : 0;
+            }
+            
+            let bungaTotal = 0, opLainTotal = 0, nonOpTotal = 0;
+            const bungaItems = [], opLainItems = [], nonOpItems = [];
+            
+            for (const item of config.komponen.bunga) {
+                const nilai = getValueLR(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    bungaItems.push({ nama: item.nama, nilai });
+                    bungaTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.opLain) {
+                const nilai = getValueLR(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    opLainItems.push({ nama: item.nama, nilai });
+                    opLainTotal += nilai;
+                }
+            }
+            
+            for (const item of config.komponen.nonOp) {
+                const nilai = getValueLR(item.sandi, item.prefix);
+                if (nilai !== 0) {
+                    nonOpItems.push({ nama: item.nama, nilai });
+                    nonOpTotal += nilai;
+                }
+            }
+            
+            totalValue = bungaTotal + opLainTotal + nonOpTotal;
+            
+            tableData = {
+                groups: [
+                    { nama: 'BEBAN BUNGA / BAGI HASIL', color: 'red', items: bungaItems, subtotal: bungaTotal },
+                    { nama: 'BEBAN OPERASIONAL LAINNYA', color: 'yellow', items: opLainItems, subtotal: opLainTotal },
+                    { nama: 'BEBAN NON OPERASIONAL', color: 'purple', items: nonOpItems, subtotal: nonOpTotal },
+                ],
+                total: totalValue
+            };
+            
+            chartData = {
+                type: 'doughnut',
+                labels: ['Bunga/Bagi Hasil', 'Op. Lainnya', 'Non-Operasional'],
+                data: [Math.abs(bungaTotal), Math.abs(opLainTotal), Math.abs(nonOpTotal)],
+                colors: ['#ef4444', '#f59e0b', '#8b5cf6']
             };
         }
         
