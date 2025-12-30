@@ -1356,6 +1356,20 @@
                 detail: { ...currentFilters } 
             }));
         },
+        // Batch set multiple filters (only dispatch once)
+        setFilters: (updates) => {
+            console.log('🔧 setFilters called with:', updates);
+            Object.entries(updates).forEach(([k, v]) => {
+                currentFilters[k] = v;
+            });
+            console.log('🔧 currentFilters now:', currentFilters);
+            updateAllCards();
+            console.log('🔧 Dispatching filterChanged event...');
+            window.dispatchEvent(new CustomEvent('filterChanged', { 
+                detail: { ...currentFilters } 
+            }));
+            console.log('✅ filterChanged event dispatched');
+        },
         getData: () => ({ neraca: neracaData, labarugi: labarugiData }),
         getMetrics: calculateMetrics,
         getPeriodes: () => availablePeriodes
