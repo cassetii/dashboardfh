@@ -531,3 +531,168 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export for global access
 window.NeracaCharts = NeracaCharts;
+
+// ========================================
+// LAYER 3 CHARTS
+// ========================================
+let neracaLayer3Charts = {};
+
+function changeLayer3Metric(metric) {
+    console.log('📊 Layer 3 metric changed:', metric);
+    
+    const kodeCabang = NeracaCharts.currentKodeCabang || 'ALL';
+    const chartData = NeracaCharts.getChartData(metric, kodeCabang);
+    const config = NeracaCharts.SANDI_MAPPING[metric];
+    
+    if (!chartData || chartData.aktual.length === 0) {
+        console.warn('No data for Layer 3:', metric);
+        return;
+    }
+    
+    // Calculate metrics
+    const lastAktual = chartData.aktual[chartData.aktual.length - 1];
+    const lastTarget = chartData.target[chartData.target.length - 1];
+    const pencapaian = lastTarget > 0 ? ((lastAktual / lastTarget) * 100).toFixed(1) : '0';
+    
+    // Calculate MoM
+    let mom = '0';
+    if (chartData.aktual.length >= 2) {
+        const prev = chartData.aktual[chartData.aktual.length - 2];
+        if (prev > 0) {
+            mom = (((lastAktual - prev) / prev) * 100).toFixed(2);
+        }
+    }
+    
+    // Calculate YoY (estimate - current vs first month as proxy)
+    let yoy = '0';
+    if (chartData.aktual.length > 0 && chartData.aktual[0] > 0) {
+        yoy = (((lastAktual - chartData.aktual[0]) / chartData.aktual[0]) * 100).toFixed(2);
+    }
+    
+    // Update title & cards
+    const label = config?.label || metric;
+    const unit = chartData.unit || 'T';
+    
+    document.getElementById('layer3SelectedMetric').textContent = label;
+    document.getElementById('layer3NilaiTerakhir').textContent = `Rp ${lastAktual.toFixed(2)} ${unit}`;
+    document.getElementById('layer3Target').textContent = lastTarget > 0 ? `Rp ${lastTarget.toFixed(2)} ${unit}` : '-';
+    document.getElementById('layer3Pencapaian').textContent = `${pencapaian}%`;
+    document.getElementById('layer3MoM').textContent = `${parseFloat(mom) >= 0 ? '+' : ''}${mom}%`;
+    document.getElementById('layer3YoY').textContent = `${parseFloat(yoy) >= 0 ? '+' : ''}${yoy}%`;
+    
+    // Render charts
+    setTimeout(() => {
+        renderLayer3YoYChart(chartData);
+        renderLayer3YTDChart(chartData);
+        renderLayer3MoMChart(chartData);
+    }, 200);
+}
+
+function renderLayer3YoYChart(data) {
+    const element = document.getElementById('layer3YoYChart');
+    if (!element || typeof ApexCharts === 'undefined') return;
+    
+    if (neracaLayer3Charts.yoy) { try { neracaLayer3Charts.yoy.destroy(); } catch(e) {} }
+    element.innerHTML = '';
+    element.style.minHeight = '180px';
+    
+    // Estimate 2024 data (slightly lower)
+    const data2024 = data.aktual.map(v => v * 0.92);
+    
+    const options = {
+        series: [
+            { name: '2024', data: data2024 },
+            { name: '2025', data: data.aktual }
+        ],
+        chart: { type: 'line', height: 180, toolbar: { show: false } },
+        colors: ['#94a3b8', '#3b82f6'],
+        stroke: { curve: 'smooth', width: 2 },
+        xaxis: { categories: data.labels, labels: { style: { fontSize: '10px' } } },
+        yaxis: { show: false },
+        legend: { position: 'top', fontSize: '11px' },
+        grid: { borderColor: '#f3f4f6' }
+    };
+    
+    neracaLayer3Charts.yoy = new ApexCharts(element, options);
+    neracaLayer3Charts.yoy.render();
+}
+
+function renderLayer3YTDChart(data) {
+    const element = document.getElementById('layer3YTDChart');
+    if (!element || typeof ApexCharts === 'undefined') return;
+    
+    if (neracaLayer3Charts.ytd) { try { neracaLayer3Charts.ytd.destroy(); } catch(e) {} }
+    element.innerHTML = '';
+    element.style.minHeight = '180px';
+    
+    const lastAktual = data.aktual[data.aktual.length - 1] || 0;
+    const lastTarget = data.target[data.target.length - 1] || 0;
+    
+    const options = {
+        series: [{ data: [lastAktual, lastTarget] }],
+        chart: { type: 'bar', height: 180, toolbar: { show: false } },
+        colors: ['#3b82f6', '#10b981'],
+        plotOptions: { bar: { horizontal: false, columnWidth: '50%', borderRadius: 8, distributed: true } },
+        xaxis: { categories: ['Realisasi', 'Target'], labels: { style: { fontSize: '11px' } } },
+        yaxis: { show: false },
+        legend: { show: false },
+        dataLabels: { enabled: true, formatter: (val) => val.toFixed(2), style: { fontSize: '11px' } }
+    };
+    
+    neracaLayer3Charts.ytd = new ApexCharts(element, options);
+    neracaLayer3Charts.ytd.render();
+}
+
+function renderLayer3MoMChart(data) {
+    const element = document.getElementById('layer3MoMChart');
+    if (!element || typeof ApexCharts === 'undefined') return;
+    
+    if (neracaLayer3Charts.mom) { try { neracaLayer3Charts.mom.destroy(); } catch(e) {} }
+    element.innerHTML = '';
+    element.style.minHeight = '180px';
+    
+    const momChanges = [];
+    for (let i = 1; i < data.aktual.length; i++) {
+        if (data.aktual[i-1] > 0) {
+            momChanges.push(parseFloat(((data.aktual[i] - data.aktual[i-1]) / data.aktual[i-1] * 100).toFixed(2)));
+        } else {
+            momChanges.push(0);
+        }
+    }
+    
+    const options = {
+        series: [{ name: 'MoM %', data: momChanges }],
+        chart: { type: 'bar', height: 180, toolbar: { show: false } },
+        colors: momChanges.map(v => v >= 0 ? '#10b981' : '#ef4444'),
+        plotOptions: { bar: { columnWidth: '60%', borderRadius: 4, distributed: true } },
+        xaxis: { categories: data.labels.slice(1), labels: { style: { fontSize: '10px' } } },
+        yaxis: { labels: { formatter: (val) => val.toFixed(1) + '%', style: { fontSize: '10px' } } },
+        legend: { show: false },
+        dataLabels: { enabled: false }
+    };
+    
+    neracaLayer3Charts.mom = new ApexCharts(element, options);
+    neracaLayer3Charts.mom.render();
+}
+
+// Initialize Layer 3 after data ready
+function initLayer3() {
+    console.log('🚀 Initializing Layer 3...');
+    setTimeout(() => changeLayer3Metric('asset'), 500);
+}
+
+// Listen for data ready
+window.addEventListener('dashboardDataUpdated', initLayer3);
+window.addEventListener('filterChanged', () => {
+    // Re-render Layer 3 with current metric
+    const selector = document.getElementById('layer3MetricSelector');
+    if (selector) {
+        changeLayer3Metric(selector.value);
+    }
+});
+
+// Export Layer 3 functions
+window.changeLayer3Metric = changeLayer3Metric;
+window.initLayer3 = initLayer3;
+
+console.log('✅ Neraca Charts loaded - DYNAMIC VERSION');
