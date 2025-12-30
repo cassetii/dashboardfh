@@ -71,10 +71,10 @@ const NeracaCharts = {
             color: '#f59e0b'
         },
         laba: {
-            // Laba = Laba Tahun Berjalan - Rugi Tahun Berjalan
-            sandi: '03.05.02.01.00.00',
-            sandiRugi: '03.05.02.02.00.00',
-            label: 'Laba Bersih',
+            // Laba Sebelum Pajak = Laba Thn Berjalan Sblm Pajak - Rugi Thn Berjalan Sblm Pajak
+            sandi: '03.05.02.01.10.00',
+            sandiRugi: '03.05.02.02.10.00',
+            label: 'Laba Sebelum Pajak',
             unit: 'M',
             color: '#8b5cf6'
         },
