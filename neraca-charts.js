@@ -135,12 +135,15 @@ const NeracaCharts = {
         });
         
         // Listen for filter changes
+        console.log('👂 NeracaCharts: Registering filterChanged listener...');
         window.addEventListener('filterChanged', (e) => {
-            console.log('🔄 filterChanged event received:', e.detail);
+            console.log('🔄 NeracaCharts: filterChanged event received:', e.detail);
             this.currentKodeCabang = this.getCurrentKodeCabang();
-            console.log('🔄 New currentKodeCabang:', this.currentKodeCabang);
+            console.log('🔄 NeracaCharts: New currentKodeCabang:', this.currentKodeCabang);
             this.renderAllCharts();
         });
+        console.log('✅ NeracaCharts: filterChanged listener registered');
+        console.log('🚀 NeracaCharts init complete!');
     },
     
     // ========================================
