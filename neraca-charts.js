@@ -13,6 +13,9 @@ const NeracaCharts = {
     aktualData: {},
     targetData: {},
     
+    // Current filter
+    currentKodeCabang: 'ALL',
+    
     // ========================================
     // SANDI MAPPING
     // ========================================
@@ -113,12 +116,16 @@ const NeracaCharts = {
         // Wait for data to be ready
         await this.waitForData();
         
+        // Get initial filter
+        this.currentKodeCabang = this.getCurrentKodeCabang();
+        
         // Render all charts
         this.renderAllCharts();
         
         // Listen for data updates
         window.addEventListener('dashboardDataUpdated', () => {
             console.log('📊 Data updated, refreshing charts...');
+            this.currentKodeCabang = this.getCurrentKodeCabang();
             this.renderAllCharts();
         });
         
@@ -126,6 +133,32 @@ const NeracaCharts = {
             console.log('🎯 Target data loaded, refreshing charts...');
             this.renderAllCharts();
         });
+        
+        // Listen for filter changes
+        window.addEventListener('filterChanged', (e) => {
+            console.log('🔄 Filter changed, refreshing Layer 2 charts...', e.detail);
+            this.currentKodeCabang = this.getCurrentKodeCabang();
+            this.renderAllCharts();
+        });
+    },
+    
+    // ========================================
+    // GET CURRENT KODE CABANG FROM FILTER
+    // ========================================
+    getCurrentKodeCabang() {
+        const filters = window.DashboardFirebase?.getFilters?.() || {};
+        
+        // If specific cabang selected, use it
+        if (filters.cabang) {
+            return filters.cabang;
+        }
+        
+        // Otherwise, use tipe (konsolidasi/konvensional/syariah)
+        if (filters.tipe === 'konsolidasi') return 'ALL';
+        if (filters.tipe === 'konvensional') return 'KON';
+        if (filters.tipe === 'syariah') return 'SYR';
+        
+        return 'ALL'; // Default
     },
     
     // ========================================
@@ -385,14 +418,14 @@ const NeracaCharts = {
     // ========================================
     // RENDER SINGLE CHART
     // ========================================
-    renderChart(containerId, metricKey, colors = ['#3b82f6', '#10b981']) {
+    renderChart(containerId, metricKey, colors = ['#3b82f6', '#10b981'], kodeCabang = 'ALL') {
         const container = document.getElementById(containerId);
         if (!container) {
             console.warn(`Container ${containerId} not found`);
             return;
         }
         
-        const chartData = this.getChartData(metricKey);
+        const chartData = this.getChartData(metricKey, kodeCabang);
         const config = this.SANDI_MAPPING[metricKey];
         
         // Destroy existing chart
@@ -451,7 +484,8 @@ const NeracaCharts = {
     // RENDER ALL CHARTS
     // ========================================
     renderAllCharts() {
-        console.log('📊 Rendering all Layer 2 charts...');
+        const kodeCabang = this.currentKodeCabang || 'ALL';
+        console.log(`📊 Rendering all Layer 2 charts for: ${kodeCabang}`);
         
         const chartConfigs = [
             ['layer2ChartAsset', 'asset', ['#ff9800', '#10b981']],
@@ -467,7 +501,7 @@ const NeracaCharts = {
         ];
         
         chartConfigs.forEach(([containerId, metricKey, colors]) => {
-            this.renderChart(containerId, metricKey, colors);
+            this.renderChart(containerId, metricKey, colors, kodeCabang);
         });
         
         console.log('✅ All charts rendered');
