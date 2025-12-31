@@ -1273,6 +1273,13 @@
             
             if (isDataLoaded) updateAllCards();
             if (window.appState) window.appState.currentBusinessLine = type;
+            
+            // Dispatch filterChanged event untuk update charts
+            console.log('🔧 Dispatching filterChanged from selectBusinessLine...');
+            window.dispatchEvent(new CustomEvent('filterChanged', { 
+                detail: { ...currentFilters } 
+            }));
+            console.log('✅ filterChanged dispatched');
         };
         
         window.selectBranch = function(branchCode) {
@@ -1301,6 +1308,13 @@
             }
             
             if (isDataLoaded) updateAllCards();
+            
+            // Dispatch filterChanged event untuk update charts
+            console.log('🔧 Dispatching filterChanged from selectBranch...');
+            window.dispatchEvent(new CustomEvent('filterChanged', { 
+                detail: { ...currentFilters } 
+            }));
+            console.log('✅ filterChanged dispatched');
         };
         
         // Event listener untuk tutup dropdown saat klik di luar
