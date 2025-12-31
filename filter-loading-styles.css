@@ -1,0 +1,222 @@
+/* =====================================================
+   FILTER LOADING OVERLAY STYLES
+   Animasi loading keren saat filter berubah
+   ===================================================== */
+
+/* Overlay Background */
+.filter-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Loading Content Container */
+.filter-loading-content {
+    text-align: center;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.filter-loading-overlay.active .filter-loading-content {
+    transform: scale(1) translateY(0);
+}
+
+/* Spinner Container */
+.filter-loading-spinner {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 24px;
+}
+
+/* Animated Rings */
+.spinner-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    animation: spinRing 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+}
+
+.spinner-ring:nth-child(1) {
+    width: 100%;
+    height: 100%;
+    margin: -50% 0 0 -50%;
+    border-top-color: #3b82f6;
+    border-right-color: #3b82f6;
+    animation-delay: 0s;
+}
+
+.spinner-ring:nth-child(2) {
+    width: 75%;
+    height: 75%;
+    margin: -37.5% 0 0 -37.5%;
+    border-top-color: #10b981;
+    border-left-color: #10b981;
+    animation-delay: 0.15s;
+    animation-direction: reverse;
+}
+
+.spinner-ring:nth-child(3) {
+    width: 50%;
+    height: 50%;
+    margin: -25% 0 0 -25%;
+    border-bottom-color: #f59e0b;
+    border-right-color: #f59e0b;
+    animation-delay: 0.3s;
+}
+
+/* Center Icon */
+.spinner-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    color: #fff;
+    animation: pulseIcon 1.5s ease-in-out infinite;
+}
+
+/* Loading Text */
+.filter-loading-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+    animation: fadeText 1.5s ease-in-out infinite;
+}
+
+/* Progress Bar */
+.filter-loading-progress {
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b, #3b82f6);
+    background-size: 300% 100%;
+    border-radius: 2px;
+    animation: progressMove 1.5s ease-in-out infinite;
+}
+
+/* Keyframes */
+@keyframes spinRing {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulseIcon {
+    0%, 100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+}
+
+@keyframes fadeText {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+@keyframes progressMove {
+    0% {
+        width: 0%;
+        background-position: 0% 50%;
+    }
+    50% {
+        width: 70%;
+        background-position: 100% 50%;
+    }
+    100% {
+        width: 100%;
+        background-position: 200% 50%;
+    }
+}
+
+/* Loading States dengan pesan berbeda */
+.filter-loading-overlay[data-state="filtering"] .filter-loading-text::after {
+    content: "";
+}
+
+.filter-loading-overlay[data-state="calculating"] .filter-loading-text::after {
+    content: "";
+}
+
+.filter-loading-overlay[data-state="rendering"] .filter-loading-text::after {
+    content: "";
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filter-loading-spinner {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .spinner-icon {
+        font-size: 20px;
+    }
+    
+    .filter-loading-text {
+        font-size: 14px;
+    }
+    
+    .filter-loading-progress {
+        width: 150px;
+    }
+}
+
+/* Dark/Light mode support */
+@media (prefers-color-scheme: light) {
+    .filter-loading-overlay {
+        background: rgba(255, 255, 255, 0.9);
+    }
+    
+    .filter-loading-text {
+        color: #1e293b;
+    }
+    
+    .spinner-icon {
+        color: #3b82f6;
+    }
+    
+    .filter-loading-progress {
+        background: rgba(0, 0, 0, 0.1);
+    }
+}
