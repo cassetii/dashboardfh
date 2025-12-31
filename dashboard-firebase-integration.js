@@ -900,6 +900,30 @@
     }
 
     // ==========================================
+    // FILTER LOADING OVERLAY
+    // ==========================================
+    
+    function showFilterLoading(message = 'Memuat Data...') {
+        const overlay = document.getElementById('filterLoadingOverlay');
+        if (overlay) {
+            const textEl = overlay.querySelector('.filter-loading-text');
+            if (textEl) textEl.textContent = message;
+            overlay.classList.add('active');
+        }
+    }
+    
+    function hideFilterLoading() {
+        const overlay = document.getElementById('filterLoadingOverlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+    }
+    
+    // Expose to window for other modules
+    window.showFilterLoading = showFilterLoading;
+    window.hideFilterLoading = hideFilterLoading;
+
+    // ==========================================
     // FORMATTING
     // ==========================================
     
@@ -911,12 +935,23 @@
         const abs = Math.abs(value);
         const sign = value < 0 ? '-' : '';
         
+        // Format dalam Jutaan dengan auto-scale
         if (abs >= 1e12) {
-            return { text: `${sign}Rp ${(abs / 1e12).toFixed(2)}`, unit: 'Triliun' };
+            // Triliun -> tampilkan dalam juta
+            const juta = abs / 1e6;
+            return { text: `${sign}Rp ${juta.toLocaleString('id-ID', {maximumFractionDigits: 0})}`, unit: 'Juta' };
         } else if (abs >= 1e9) {
-            return { text: `${sign}Rp ${(abs / 1e9).toFixed(2)}`, unit: 'Miliar' };
+            // Miliar -> tampilkan dalam juta
+            const juta = abs / 1e6;
+            return { text: `${sign}Rp ${juta.toLocaleString('id-ID', {maximumFractionDigits: 0})}`, unit: 'Juta' };
         } else if (abs >= 1e6) {
-            return { text: `${sign}Rp ${(abs / 1e6).toFixed(2)}`, unit: 'Jt' };
+            // Juta
+            const juta = abs / 1e6;
+            return { text: `${sign}Rp ${juta.toLocaleString('id-ID', {maximumFractionDigits: 2})}`, unit: 'Juta' };
+        } else if (abs >= 1e3) {
+            // Ribuan -> tampilkan dalam juta dengan desimal
+            const juta = abs / 1e6;
+            return { text: `${sign}Rp ${juta.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 4})}`, unit: 'Juta' };
         }
         return { text: `${sign}Rp ${abs.toLocaleString('id-ID')}`, unit: '' };
     }
@@ -1271,7 +1306,14 @@
             const sel = document.getElementById('branchSelector');
             if (sel) sel.value = '';
             
-            if (isDataLoaded) updateAllCards();
+            if (isDataLoaded) {
+                showFilterLoading('Memuat Data ' + (names[type] || type) + '...');
+                // Delay sedikit untuk animasi terlihat
+                setTimeout(() => {
+                    updateAllCards();
+                    hideFilterLoading();
+                }, 300);
+            }
             if (window.appState) window.appState.currentBusinessLine = type;
             
             // Dispatch filterChanged event untuk update charts
@@ -1307,7 +1349,15 @@
                 branchDropdown.style.display = 'none';
             }
             
-            if (isDataLoaded) updateAllCards();
+            if (isDataLoaded) {
+                const branchName = neracaData.find(d => d.kode_cabang === branchCode && !d.is_ratio)?.nama_cabang || branchCode || 'Konsolidasi';
+                showFilterLoading('Memuat Data ' + branchName + '...');
+                // Delay sedikit untuk animasi terlihat
+                setTimeout(() => {
+                    updateAllCards();
+                    hideFilterLoading();
+                }, 300);
+            }
             
             // Dispatch filterChanged event untuk update charts
             console.log('🔧 Dispatching filterChanged from selectBranch...');
