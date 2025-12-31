@@ -1289,6 +1289,7 @@
             const branchDropdown = document.getElementById('branchDropdownContainer');
             const cabangBtn = document.querySelector('[data-business-line="cabang"]');
             
+            // Jika type adalah 'cabang', toggle dropdown saja - tidak perlu loading
             if (type === 'cabang') {
                 if (branchDropdown && cabangBtn) {
                     const isVisible = branchDropdown.classList.contains('show');
@@ -1313,6 +1314,10 @@
                 return;
             }
             
+            // Show loading IMMEDIATELY untuk konsolidasi/konvensional/syariah
+            const names = { 'konsolidasi': 'Konsolidasi', 'konvensional': 'Konvensional', 'syariah': 'Syariah' };
+            showFilterLoading('Memuat Data ' + (names[type] || type) + '...');
+            
             currentFilters.tipe = type;
             currentFilters.cabang = null;
             
@@ -1321,7 +1326,6 @@
                 if (btn.dataset.businessLine === type) btn.classList.add('active');
             });
             
-            const names = { 'konsolidasi': 'Konsolidasi', 'konvensional': 'Konvensional', 'syariah': 'Syariah' };
             const el = document.getElementById('currentBusinessLine');
             if (el) el.textContent = names[type] || type;
             
@@ -1334,26 +1338,35 @@
             const sel = document.getElementById('branchSelector');
             if (sel) sel.value = '';
             
-            if (isDataLoaded) {
-                showFilterLoading('Memuat Data ' + (names[type] || type) + '...');
-                // Delay sedikit untuk animasi terlihat
-                setTimeout(() => {
-                    updateAllCards();
-                    hideFilterLoading();
-                }, 300);
-            }
             if (window.appState) window.appState.currentBusinessLine = type;
             
-            // Dispatch filterChanged event untuk update charts
-            console.log('🔧 Dispatching filterChanged from selectBusinessLine...');
-            window.dispatchEvent(new CustomEvent('filterChanged', { 
-                detail: { ...currentFilters } 
-            }));
-            console.log('✅ filterChanged dispatched');
+            // Delay untuk animasi loading terlihat
+            setTimeout(() => {
+                if (isDataLoaded) {
+                    updateAllCards();
+                }
+                
+                // Dispatch filterChanged event untuk update charts
+                console.log('🔧 Dispatching filterChanged from selectBusinessLine...');
+                window.dispatchEvent(new CustomEvent('filterChanged', { 
+                    detail: { ...currentFilters } 
+                }));
+                console.log('✅ filterChanged dispatched');
+                
+                // Hide loading after everything done
+                setTimeout(() => hideFilterLoading(), 200);
+            }, 100);
         };
         
         window.selectBranch = function(branchCode) {
             console.log('🔄 [Firebase] selectBranch:', branchCode);
+            
+            // Show loading IMMEDIATELY
+            const branchName = branchCode 
+                ? (neracaData.find(d => d.kode_cabang === branchCode && !d.is_ratio)?.nama_cabang || branchCode)
+                : 'Konsolidasi';
+            showFilterLoading('Memuat Data ' + branchName + '...');
+            
             const branchDropdown = document.getElementById('branchDropdownContainer');
             
             if (!branchCode) {
@@ -1366,9 +1379,8 @@
                 currentFilters.cabang = branchCode;
                 currentFilters.tipe = null; // Clear tipe when selecting branch
                 document.body.classList.add('branch-mode');
-                const branch = neracaData.find(d => d.kode_cabang === branchCode && !d.is_ratio);
                 const el = document.getElementById('currentBusinessLine');
-                if (el) el.textContent = branch?.nama_cabang || branchCode;
+                if (el) el.textContent = branchName;
             }
             
             // Sembunyikan dropdown setelah pilih
@@ -1377,22 +1389,22 @@
                 branchDropdown.style.display = 'none';
             }
             
-            if (isDataLoaded) {
-                const branchName = neracaData.find(d => d.kode_cabang === branchCode && !d.is_ratio)?.nama_cabang || branchCode || 'Konsolidasi';
-                showFilterLoading('Memuat Data ' + branchName + '...');
-                // Delay sedikit untuk animasi terlihat
-                setTimeout(() => {
+            // Delay untuk animasi loading terlihat, lalu update data
+            setTimeout(() => {
+                if (isDataLoaded) {
                     updateAllCards();
-                    hideFilterLoading();
-                }, 300);
-            }
-            
-            // Dispatch filterChanged event untuk update charts
-            console.log('🔧 Dispatching filterChanged from selectBranch...');
-            window.dispatchEvent(new CustomEvent('filterChanged', { 
-                detail: { ...currentFilters } 
-            }));
-            console.log('✅ filterChanged dispatched');
+                }
+                
+                // Dispatch filterChanged event untuk update charts
+                console.log('🔧 Dispatching filterChanged from selectBranch...');
+                window.dispatchEvent(new CustomEvent('filterChanged', { 
+                    detail: { ...currentFilters } 
+                }));
+                console.log('✅ filterChanged dispatched');
+                
+                // Hide loading after everything done
+                setTimeout(() => hideFilterLoading(), 200);
+            }, 100);
         };
         
         // Event listener untuk tutup dropdown saat klik di luar
