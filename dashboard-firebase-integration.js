@@ -162,14 +162,14 @@
         // Legacy (for backward compatibility)
         labaSebelumPajak: '03.05.02.01.00.00',
         pajakLaba: '03.05.02.02.00.00',
-        // Laba Sebelum Pajak (untuk card utama)
+        // Laba Sebelum Pajak (dari LABARUGI)
         labaThnBerjalanSblmPajak: '03.05.02.01.10.00',
         rugiThnBerjalanSblmPajak: '03.05.02.02.10.00',
-        // Pajak Penghasilan
+        // Pajak Penghasilan (dari LABARUGI)
         taksiranPajakThnBerjalan: '03.05.02.01.40.00',
         pendapatanPajakTangguhan: '03.05.02.02.40.01',
         bebanPajakTangguhan: '03.05.02.02.40.02',
-        // Laba Bersih Tahun Berjalan
+        // Laba Bersih (dari LABARUGI)
         labaBersihThnBerjalan: '03.05.02.01.00.00',
         rugiBersihThnBerjalan: '03.05.02.02.00.00',
         pendapatanBunga: '04.11.00.00.00.00',
@@ -231,14 +231,14 @@
         dividenDibayarkan: '03.05.03.00.00.00',
         labaSebelumPajak: '03.05.02.01.00.00',
         pajakLaba: '03.05.02.02.00.00',
-        // Laba Sebelum Pajak (untuk card utama)
+        // Laba Sebelum Pajak (dari LABARUGI)
         labaThnBerjalanSblmPajak: '03.05.02.01.10.00',
         rugiThnBerjalanSblmPajak: '03.05.02.02.10.00',
-        // Pajak Penghasilan
+        // Pajak Penghasilan (dari LABARUGI)
         taksiranPajakThnBerjalan: '03.05.02.01.40.00',
         pendapatanPajakTangguhan: '03.05.02.02.40.01',
         bebanPajakTangguhan: '03.05.02.02.40.02',
-        // Laba Bersih Tahun Berjalan
+        // Laba Bersih (dari LABARUGI)
         labaBersihThnBerjalan: '03.05.02.01.00.00',
         rugiBersihThnBerjalan: '03.05.02.02.00.00',
         pendapatanBunga: '04.11.00.00.00.00',
@@ -826,35 +826,23 @@
         const bebanOperasional = sumBySandi(labarugi, '02.00.00.00.00.00');
         
         // ==========================================
-        // LABA SEBELUM PAJAK (untuk Card Utama)
+        // LABA SEBELUM PAJAK (dari LABARUGI)
         // 03.05.02.01.10.00 - 03.05.02.02.10.00
         // ==========================================
-        let labaThnBerjalanSblmPajak = sumBySandi(neraca, SANDI_KONVEN.labaThnBerjalanSblmPajak);
-        let rugiThnBerjalanSblmPajak = sumBySandi(neraca, SANDI_KONVEN.rugiThnBerjalanSblmPajak);
+        let labaThnBerjalanSblmPajak = sumBySandi(labarugi, SANDI_KONVEN.labaThnBerjalanSblmPajak);
+        let rugiThnBerjalanSblmPajak = sumBySandi(labarugi, SANDI_KONVEN.rugiThnBerjalanSblmPajak);
         
-        // Fallback to labarugi if neraca is empty
-        if (labaThnBerjalanSblmPajak === 0 && rugiThnBerjalanSblmPajak === 0) {
-            labaThnBerjalanSblmPajak = sumBySandi(labarugi, SANDI_KONVEN.labaThnBerjalanSblmPajak);
-            rugiThnBerjalanSblmPajak = sumBySandi(labarugi, SANDI_KONVEN.rugiThnBerjalanSblmPajak);
-        }
-        
-        // Laba Sebelum Pajak = Laba - Rugi (rugi sudah negatif)
-        let labaSebelumPajak = labaThnBerjalanSblmPajak + rugiThnBerjalanSblmPajak;
+        // Laba Sebelum Pajak = Laba - Rugi
+        let labaSebelumPajak = labaThnBerjalanSblmPajak - rugiThnBerjalanSblmPajak;
         
         // ==========================================
-        // LABA BERSIH (untuk perhitungan rasio ROA/ROE)
+        // LABA BERSIH (dari LABARUGI untuk rasio ROA/ROE)
         // 03.05.02.01.00.00 - 03.05.02.02.00.00
         // ==========================================
-        let labaBersihThnBerjalan = sumBySandi(neraca, SANDI_KONVEN.labaBersihThnBerjalan);
-        let rugiBersihThnBerjalan = sumBySandi(neraca, SANDI_KONVEN.rugiBersihThnBerjalan);
+        let labaBersihThnBerjalan = sumBySandi(labarugi, SANDI_KONVEN.labaBersihThnBerjalan);
+        let rugiBersihThnBerjalan = sumBySandi(labarugi, SANDI_KONVEN.rugiBersihThnBerjalan);
         
-        // Fallback to labarugi if neraca is empty
-        if (labaBersihThnBerjalan === 0 && rugiBersihThnBerjalan === 0) {
-            labaBersihThnBerjalan = sumBySandi(labarugi, SANDI_KONVEN.labaBersihThnBerjalan);
-            rugiBersihThnBerjalan = sumBySandi(labarugi, SANDI_KONVEN.rugiBersihThnBerjalan);
-        }
-        
-        let labaBersih = labaBersihThnBerjalan + rugiBersihThnBerjalan;
+        let labaBersih = labaBersihThnBerjalan - rugiBersihThnBerjalan;
         
         console.log(`💰 Laba Sebelum Pajak: ${formatCurrency(labaSebelumPajak)} (Laba: ${formatCurrency(labaThnBerjalanSblmPajak)}, Rugi: ${formatCurrency(rugiThnBerjalanSblmPajak)})`);
         console.log(`💰 Laba Bersih: ${formatCurrency(labaBersih)} (Laba: ${formatCurrency(labaBersihThnBerjalan)}, Rugi: ${formatCurrency(rugiBersihThnBerjalan)})`);
