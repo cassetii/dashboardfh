@@ -24,13 +24,13 @@ const NeracaCharts = {
             // Total Asset = sandi summary, BUKAN prefix (untuk avoid double count)
             sandi: '01.00.00.00.00.00',
             label: 'Total Asset',
-            unit: 'T',
+            unit: 'Jt',
             color: '#ff9800'
         },
         kredit: {
             sandi: '01.09.01.00.00.00',
             label: 'Total Kredit',
-            unit: 'T',
+            unit: 'Jt',
             color: '#1e3a5f'
         },
         pembiayaan: {
@@ -38,7 +38,7 @@ const NeracaCharts = {
             prefix: '01.09.03',
             excludeSummary: true,
             label: 'Total Pembiayaan',
-            unit: 'T',
+            unit: 'Jt',
             color: '#e91e63'
         },
         dpk: {
@@ -50,14 +50,14 @@ const NeracaCharts = {
                 '02.03.02.01.00.00', '02.03.02.02.00.00'  // Dep Syariah
             ],
             label: 'Dana Pihak Ketiga',
-            unit: 'T',
+            unit: 'Jt',
             color: '#3498db'
         },
         ati: {
             // ATI = Aset Tidak Berwujud + Aset Tetap (gross & akum)
             components: ['01.13.01.00.00.00', '01.13.02.00.00.00', '01.14.01.00.00.00', '01.14.02.00.00.00'],
             label: 'ATI',
-            unit: 'M',
+            unit: 'Jt',
             color: '#14b8a6'
         },
         ckpn: {
@@ -67,7 +67,7 @@ const NeracaCharts = {
             prefix: '01.12',
             excludeSummary: true,
             label: 'CKPN',
-            unit: 'M',
+            unit: 'Jt',
             color: '#f59e0b'
         },
         laba: {
@@ -76,14 +76,14 @@ const NeracaCharts = {
             sandiRugi: '03.05.02.02.10.00',
             isLabarugi: true,  // Ambil dari labarugi, bukan neraca
             label: 'Laba Sebelum Pajak',
-            unit: 'M',
+            unit: 'Jt',
             color: '#8b5cf6'
         },
         modal: {
             // Modal = sandi summary
             sandi: '03.00.00.00.00.00',
             label: 'Total Modal',
-            unit: 'T',
+            unit: 'Jt',
             color: '#1e3a5f'
         },
         pendapatan: {
@@ -92,7 +92,7 @@ const NeracaCharts = {
             // Fallback prefixes if summary not found
             prefixes: ['04.11', '04.12', '04.20'],
             label: 'Total Pendapatan',
-            unit: 'T',
+            unit: 'Jt',
             color: '#10b981',
             isLabarugi: true
         },
@@ -102,7 +102,7 @@ const NeracaCharts = {
             // Fallback prefixes if summary not found
             prefixes: ['05.11', '05.12', '05.20'],
             label: 'Total Biaya',
-            unit: 'T',
+            unit: 'Jt',
             color: '#ef4444',
             isLabarugi: true
         }
@@ -386,8 +386,9 @@ const NeracaCharts = {
         
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
         const config = this.SANDI_MAPPING[metricKey];
-        const unit = config?.unit || 'M';
-        const divisor = unit === 'T' ? 1e12 : 1e9;
+        const unit = config?.unit || 'Jt';
+        // Semua dalam jutaan
+        const divisor = 1e6;
         
         const aktual = [];
         const target = [];
@@ -517,11 +518,11 @@ const NeracaCharts = {
             yaxis: {
                 labels: {
                     style: { fontSize: '10px' },
-                    formatter: val => val.toFixed(2) + ' ' + chartData.unit
+                    formatter: val => val.toLocaleString('id-ID', {maximumFractionDigits: 0}) + ' Jt'
                 }
             },
             tooltip: {
-                y: { formatter: val => 'Rp ' + val.toFixed(2) + ' ' + chartData.unit }
+                y: { formatter: val => 'Rp ' + val.toLocaleString('id-ID', {maximumFractionDigits: 0}) + ' Juta' }
             },
             legend: { show: false },
             grid: { borderColor: '#e5e7eb', strokeDashArray: 3 }
@@ -562,10 +563,10 @@ const NeracaCharts = {
     // ========================================
     // FORMAT HELPERS
     // ========================================
-    formatCurrency(value, unit = 'M') {
+    formatCurrency(value, unit = 'Jt') {
         if (!value || value === 0) return 'Rp 0';
-        const divisor = unit === 'T' ? 1e12 : 1e9;
-        return `Rp ${(value / divisor).toFixed(2)} ${unit}`;
+        // Semua dalam jutaan
+        return `Rp ${value.toLocaleString('id-ID', {maximumFractionDigits: 0})} Jt`;
     }
 };
 
