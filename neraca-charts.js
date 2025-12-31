@@ -71,9 +71,10 @@ const NeracaCharts = {
             color: '#f59e0b'
         },
         laba: {
-            // Laba Sebelum Pajak = Laba Thn Berjalan Sblm Pajak - Rugi Thn Berjalan Sblm Pajak
+            // Laba Sebelum Pajak dari LABARUGI
             sandi: '03.05.02.01.10.00',
             sandiRugi: '03.05.02.02.10.00',
+            isLabarugi: true,  // Ambil dari labarugi, bukan neraca
             label: 'Laba Sebelum Pajak',
             unit: 'M',
             color: '#8b5cf6'
@@ -264,7 +265,14 @@ const NeracaCharts = {
         if (config.sandi) {
             result = getValue(config.sandi);
             if (config.sandiRugi) {
-                result += getValue(config.sandiRugi); // Rugi is negative
+                const rugiVal = getValue(config.sandiRugi);
+                // For labarugi data, rugi is stored as positive, so subtract
+                // For neraca data, rugi is already negative, so add
+                if (config.isLabarugi) {
+                    result -= rugiVal; // Subtract for labarugi
+                } else {
+                    result += rugiVal; // Add for neraca (rugi is negative)
+                }
             }
             // If found, return it
             if (result !== 0) return result;
