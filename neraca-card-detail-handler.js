@@ -178,22 +178,23 @@ const NeracaCardDetail = (function() {
             icon: 'fa-chart-line',
             color: '#3b82f6',
             splitType: 'laba-3-grup',
+            dataSource: 'labarugi',  // Ambil dari labarugi, bukan neraca
             komponen: {
                 // Grup 1: Laba (Rugi) Tahun Berjalan Sebelum Pajak
                 sebelumPajak: [
                     { sandi: '03.05.02.01.10.00', nama: 'Laba Tahun Berjalan Sebelum Pajak' },
-                    { sandi: '03.05.02.02.10.00', nama: 'Rugi Tahun Berjalan Sebelum Pajak -/-' },
+                    { sandi: '03.05.02.02.10.00', nama: 'Rugi Tahun Berjalan Sebelum Pajak -/-', isNegative: true },
                 ],
                 // Grup 2: Pajak Penghasilan
                 pajakPenghasilan: [
-                    { sandi: '03.05.02.01.40.00', nama: 'Taksiran Pajak Tahun Berjalan -/-' },
+                    { sandi: '03.05.02.01.40.00', nama: 'Taksiran Pajak Tahun Berjalan -/-', isNegative: true },
                     { sandi: '03.05.02.02.40.01', nama: 'Pendapatan Pajak Tangguhan' },
-                    { sandi: '03.05.02.02.40.02', nama: 'Beban Pajak Tangguhan -/-' },
+                    { sandi: '03.05.02.02.40.02', nama: 'Beban Pajak Tangguhan -/-', isNegative: true },
                 ],
                 // Grup 3: Laba (Rugi) Bersih Tahun Berjalan
                 bersih: [
                     { sandi: '03.05.02.01.00.00', nama: 'Laba Bersih Tahun Berjalan' },
-                    { sandi: '03.05.02.02.00.00', nama: 'Rugi Bersih Tahun Berjalan -/-' },
+                    { sandi: '03.05.02.02.00.00', nama: 'Rugi Bersih Tahun Berjalan -/-', isNegative: true },
                 ]
             }
         },
@@ -1245,13 +1246,29 @@ const NeracaCardDetail = (function() {
             };
             
         } else if (cardType === 'laba') {
-            // LABA SEBELUM PAJAK: 3 Grup (Sebelum Pajak, Pajak Penghasilan, Laba Bersih)
+            // LABA SEBELUM PAJAK: 3 Grup dari LABARUGI
+            const labarugiData = data.labarugi || [];
+            
+            console.log('📊 Laba - LabaRugi data:', labarugiData.length, 'records');
+            console.log('📊 Filter - Kode:', kode, 'Periode:', periode);
+            
+            // Helper: get value from labarugi
+            function getValueLR(sandi) {
+                const item = labarugiData.find(d => 
+                    d.kode_cabang === kode && 
+                    d.periode === periode && 
+                    d.sandi === sandi
+                );
+                return item ? (item.total || 0) : 0;
+            }
+            
             let sebelumPajakTotal = 0, pajakTotal = 0, bersihTotal = 0;
             const sebelumPajakItems = [], pajakItems = [], bersihItems = [];
             
             // Grup 1: Laba (Rugi) Tahun Berjalan Sebelum Pajak
             for (const item of config.komponen.sebelumPajak) {
-                const nilai = getValue(item.sandi, item.prefix);
+                let nilai = getValueLR(item.sandi);
+                if (item.isNegative && nilai > 0) nilai = -nilai;
                 if (nilai !== 0) {
                     sebelumPajakItems.push({ nama: item.nama, nilai });
                     sebelumPajakTotal += nilai;
@@ -1260,7 +1277,8 @@ const NeracaCardDetail = (function() {
             
             // Grup 2: Pajak Penghasilan
             for (const item of config.komponen.pajakPenghasilan) {
-                const nilai = getValue(item.sandi, item.prefix);
+                let nilai = getValueLR(item.sandi);
+                if (item.isNegative && nilai > 0) nilai = -nilai;
                 if (nilai !== 0) {
                     pajakItems.push({ nama: item.nama, nilai });
                     pajakTotal += nilai;
@@ -1269,7 +1287,8 @@ const NeracaCardDetail = (function() {
             
             // Grup 3: Laba (Rugi) Bersih Tahun Berjalan
             for (const item of config.komponen.bersih) {
-                const nilai = getValue(item.sandi, item.prefix);
+                let nilai = getValueLR(item.sandi);
+                if (item.isNegative && nilai > 0) nilai = -nilai;
                 if (nilai !== 0) {
                     bersihItems.push({ nama: item.nama, nilai });
                     bersihTotal += nilai;
@@ -1278,6 +1297,10 @@ const NeracaCardDetail = (function() {
             
             // Total = Laba Sebelum Pajak (nilai yang ditampilkan di card)
             totalValue = sebelumPajakTotal;
+            
+            console.log('📊 Laba Sebelum Pajak:', sebelumPajakTotal);
+            console.log('📊 Pajak Penghasilan:', pajakTotal);
+            console.log('📊 Laba Bersih:', bersihTotal);
             
             tableData = {
                 groups: [
