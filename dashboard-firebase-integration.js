@@ -1227,12 +1227,31 @@
             const branchSelector = document.getElementById('branchSelector');
             if (branchSelector) branchSelector.value = '';
             
-            updateAllCards();
+            // Show loading
+            showFilterLoading('Memuat Data ' + (names[type] || type) + '...');
+            
+            // Delay untuk animasi loading terlihat
+            setTimeout(() => {
+                updateAllCards();
+                hideFilterLoading();
+                
+                // Dispatch filterChanged event
+                window.dispatchEvent(new CustomEvent('filterChanged', { 
+                    detail: { ...currentFilters } 
+                }));
+            }, 400);
             
             if (window.appState) window.appState.currentBusinessLine = type;
         };
 
         window.selectBranch = function(branchCode) {
+            const branchName = branchCode 
+                ? (neracaData.find(d => d.kode_cabang === branchCode && !d.is_ratio)?.nama_cabang || branchCode)
+                : 'Konsolidasi';
+            
+            // Show loading
+            showFilterLoading('Memuat Data ' + branchName + '...');
+            
             if (!branchCode) {
                 currentFilters.cabang = null;
                 document.body.classList.remove('branch-mode');
@@ -1240,12 +1259,21 @@
             } else {
                 currentFilters.cabang = branchCode;
                 document.body.classList.add('branch-mode');
-                const branchData = neracaData.find(d => d.kode_cabang === branchCode && !d.is_ratio);
-                updateText('currentBusinessLine', branchData?.nama_cabang || branchCode);
+                updateText('currentBusinessLine', branchName);
             }
             
             document.getElementById('branchDropdownContainer')?.classList.remove('show');
-            updateAllCards();
+            
+            // Delay untuk animasi loading terlihat
+            setTimeout(() => {
+                updateAllCards();
+                hideFilterLoading();
+                
+                // Dispatch filterChanged event
+                window.dispatchEvent(new CustomEvent('filterChanged', { 
+                    detail: { ...currentFilters } 
+                }));
+            }, 400);
         };
     }
 
