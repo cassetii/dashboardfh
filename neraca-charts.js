@@ -546,38 +546,32 @@ const NeracaCharts = {
             }
         }
         
-        // Map period to month and get values - ONLY 3 MONTHS FOR SELECTED TRW
+        // Map period to month and get values - SHOW ALL 3 MONTHS FOR SELECTED TRW
         // Calculate TRW month range
         const trwStartMonth = (filterTrw - 1) * 3 + 1; // TRW I: 1, TRW II: 4, TRW III: 7, TRW IV: 10
         const trwEndMonth = filterTrw * 3; // TRW I: 3, TRW II: 6, TRW III: 9, TRW IV: 12
         
         console.log(`   TRW ${trwRoman}: Bulan ${trwStartMonth} - ${trwEndMonth}`);
         
-        sortedPeriods.forEach(periode => {
-            const match = periode.match(/(\d{4})-(\d{2})/);
-            if (!match) return;
-            
-            const [, year, month] = match;
-            if (year !== filterYear) return;
-            
-            const monthNum = parseInt(month);
-            
-            // Only include months within TRW range AND up to filter month
-            if (monthNum < trwStartMonth || monthNum > trwEndMonth) return;
-            if (monthNum > filterMonth) return;
-            
+        // Generate all 3 months for this TRW (even if no data yet)
+        const trwMonths = [];
+        for (let m = trwStartMonth; m <= trwEndMonth; m++) {
+            trwMonths.push(m);
+        }
+        
+        trwMonths.forEach(monthNum => {
             const monthIdx = monthNum - 1;
             const monthName = months[monthIdx];
+            const periode = `${filterYear}-${String(monthNum).padStart(2, '0')}`;
             
             labels.push(monthName);
             
-            // Get aktual value
+            // Get aktual value (will be 0 if no data for this month)
             const aktualVal = this.getAktualValue(metricKey, periode, kodeCabang);
             console.log(`   ${monthName}: aktual raw = ${aktualVal.toLocaleString()}, after divisor = ${(aktualVal / divisor).toFixed(2)}`);
             aktual.push(aktualVal / divisor);
             
-            // Get target for the FILTER's triwulan (not the month's triwulan)
-            // This ensures all months show the same target line for the selected TRW
+            // Get target for this TRW
             const targetVal = this.getTargetValue(metricKey, filterTrw, targetBranchCode);
             target.push(targetVal / divisor);
         });
