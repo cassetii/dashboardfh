@@ -705,8 +705,85 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000);
 });
 
+// ========================================
+// LISTEN FOR FILTER CHANGES (MULTIPLE SOURCES)
+// ========================================
+
+// Listen to filter dropdowns directly
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        // Listen to month/period selector
+        const periodSelector = document.getElementById('filterPeriode') || 
+                               document.getElementById('periodSelector') ||
+                               document.querySelector('select[name="periode"]') ||
+                               document.querySelector('.filter-periode select');
+        
+        if (periodSelector) {
+            periodSelector.addEventListener('change', () => {
+                console.log('📅 Period selector changed, refreshing charts...');
+                setTimeout(() => {
+                    NeracaCharts.renderAllCharts();
+                    // Refresh Layer 3 too
+                    const layer3Selector = document.getElementById('layer3MetricSelector');
+                    if (layer3Selector && typeof changeLayer3Metric === 'function') {
+                        changeLayer3Metric(layer3Selector.value);
+                    }
+                }, 500);
+            });
+            console.log('✅ Period selector listener attached');
+        }
+        
+        // Listen to year selector
+        const yearSelector = document.getElementById('filterTahun') ||
+                             document.getElementById('yearSelector') ||
+                             document.querySelector('select[name="tahun"]');
+        
+        if (yearSelector) {
+            yearSelector.addEventListener('change', () => {
+                console.log('📅 Year selector changed, refreshing charts...');
+                setTimeout(() => {
+                    NeracaCharts.renderAllCharts();
+                    const layer3Selector = document.getElementById('layer3MetricSelector');
+                    if (layer3Selector && typeof changeLayer3Metric === 'function') {
+                        changeLayer3Metric(layer3Selector.value);
+                    }
+                }, 500);
+            });
+            console.log('✅ Year selector listener attached');
+        }
+        
+        // Also listen to any .filter-control changes
+        document.querySelectorAll('.filter-control select, .filter-dropdown select').forEach(select => {
+            select.addEventListener('change', () => {
+                console.log('🔄 Filter control changed, refreshing charts...');
+                setTimeout(() => {
+                    NeracaCharts.renderAllCharts();
+                    const layer3Selector = document.getElementById('layer3MetricSelector');
+                    if (layer3Selector && typeof changeLayer3Metric === 'function') {
+                        changeLayer3Metric(layer3Selector.value);
+                    }
+                }, 500);
+            });
+        });
+        
+    }, 4000); // Wait for DOM to be fully ready
+});
+
 // Export for global access
 window.NeracaCharts = NeracaCharts;
+
+// Global function to refresh all Layer 2 & 3 charts
+window.refreshNeracaCharts = function() {
+    console.log('🔄 refreshNeracaCharts called');
+    if (window.NeracaCharts) {
+        NeracaCharts.renderAllCharts();
+    }
+    // Refresh Layer 3 too
+    const layer3Selector = document.getElementById('layer3MetricSelector');
+    if (layer3Selector && typeof changeLayer3Metric === 'function') {
+        changeLayer3Metric(layer3Selector.value);
+    }
+};
 
 // ========================================
 // LAYER 3 CHARTS
