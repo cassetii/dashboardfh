@@ -609,46 +609,133 @@ const NeracaCharts = {
         // Get TRW from chartData (already calculated based on filter)
         const currentTrw = chartData.trw || 'I';
         
-        // Create chart options
+        // ========================================
+        // BAR + LINE COMBO CHART
+        // Bar = Aktual (nilai realisasi)
+        // Line = Target (benchmark)
+        // ========================================
         const options = {
             series: [
-                { name: 'Aktual', data: chartData.aktual },
-                { name: `Target TRW ${currentTrw}`, data: chartData.target }
+                { 
+                    name: 'Aktual', 
+                    type: 'column',
+                    data: chartData.aktual 
+                },
+                { 
+                    name: `Target TRW ${currentTrw}`, 
+                    type: 'line',
+                    data: chartData.target 
+                }
             ],
             chart: {
-                type: 'area',
-                height: 180,
-                sparkline: { enabled: false },
+                type: 'line', // Base type for combo
+                height: 200,
                 toolbar: { show: false },
-                animations: { enabled: true, speed: 500 }
+                animations: { enabled: true, speed: 500 },
+                dropShadow: {
+                    enabled: true,
+                    top: 2,
+                    left: 0,
+                    blur: 3,
+                    opacity: 0.1
+                }
             },
-            colors: colors,
-            stroke: { curve: 'smooth', width: 2 },
+            colors: [colors[0], colors[1]], // [Bar color, Line color]
+            stroke: { 
+                width: [0, 3], // 0 for bar, 3 for line
+                curve: 'smooth',
+                dashArray: [0, 0] // Solid line
+            },
             fill: {
-                type: 'gradient',
-                gradient: { opacityFrom: 0.4, opacityTo: 0.1 }
+                type: ['solid', 'solid'],
+                opacity: [0.9, 1]
+            },
+            plotOptions: {
+                bar: {
+                    columnWidth: '50%',
+                    borderRadius: 6,
+                    dataLabels: { position: 'top' }
+                }
+            },
+            markers: {
+                size: [0, 5], // No markers for bar, show for line
+                colors: [colors[0], colors[1]],
+                strokeColors: '#fff',
+                strokeWidth: 2,
+                hover: { sizeOffset: 2 }
             },
             xaxis: {
                 categories: chartData.labels,
-                labels: { style: { fontSize: '10px' } }
+                labels: { 
+                    style: { fontSize: '11px', fontWeight: 500 },
+                    offsetY: 0
+                },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
             },
             yaxis: {
                 labels: {
                     style: { fontSize: '10px' },
-                    formatter: val => val.toLocaleString('id-ID', {maximumFractionDigits: 0}) + ' Jt'
-                }
+                    formatter: val => {
+                        if (val >= 1000) {
+                            return (val / 1000).toFixed(1) + ' T';
+                        }
+                        return val.toLocaleString('id-ID', {maximumFractionDigits: 0}) + ' Jt';
+                    }
+                },
+                min: 0
             },
             tooltip: {
-                y: { formatter: val => 'Rp ' + val.toLocaleString('id-ID', {maximumFractionDigits: 0}) + ' Juta' }
+                shared: true,
+                intersect: false,
+                y: { 
+                    formatter: val => {
+                        if (val >= 1000) {
+                            return 'Rp ' + (val / 1000).toFixed(2) + ' Triliun';
+                        }
+                        return 'Rp ' + val.toLocaleString('id-ID', {maximumFractionDigits: 0}) + ' Juta';
+                    }
+                }
             },
             dataLabels: {
                 enabled: true,
-                formatter: val => val.toLocaleString('id-ID', {maximumFractionDigits: 0}),
-                style: { fontSize: '9px', fontWeight: 600 },
-                offsetY: -5
+                enabledOnSeries: [0], // Only show on bars (Aktual)
+                formatter: val => {
+                    if (val >= 1000) {
+                        return (val / 1000).toFixed(1) + 'T';
+                    }
+                    return val.toLocaleString('id-ID', {maximumFractionDigits: 0});
+                },
+                style: { 
+                    fontSize: '10px', 
+                    fontWeight: 600,
+                    colors: ['#1e3a5f']
+                },
+                offsetY: -20,
+                background: {
+                    enabled: true,
+                    foreColor: '#fff',
+                    borderRadius: 4,
+                    padding: 4,
+                    opacity: 0.9,
+                    borderWidth: 0,
+                    dropShadow: { enabled: false }
+                }
             },
-            legend: { show: true, position: 'top', fontSize: '11px' },
-            grid: { borderColor: '#e5e7eb', strokeDashArray: 3 }
+            legend: { 
+                show: true, 
+                position: 'top', 
+                horizontalAlign: 'right',
+                fontSize: '11px',
+                fontWeight: 500,
+                markers: { width: 10, height: 10, radius: 2 },
+                itemMargin: { horizontal: 10 }
+            },
+            grid: { 
+                borderColor: '#e5e7eb', 
+                strokeDashArray: 4,
+                padding: { left: 10, right: 10 }
+            }
         };
         
         // Render chart
@@ -664,16 +751,17 @@ const NeracaCharts = {
         console.log(`📊 Rendering all Layer 2 charts for: ${kodeCabang}`);
         
         const chartConfigs = [
-            ['layer2ChartAsset', 'asset', ['#ff9800', '#10b981']],
-            ['layer2ChartKredit', 'kredit', ['#1e3a5f', '#10b981']],
-            ['layer2ChartPembiayaan', 'pembiayaan', ['#e91e63', '#10b981']],
-            ['layer2ChartDPK', 'dpk', ['#3498db', '#10b981']],
-            ['layer2ChartATI', 'ati', ['#14b8a6', '#86efac']],
-            ['layer2ChartCKPN', 'ckpn', ['#f59e0b', '#10b981']],
-            ['layer2ChartLaba', 'laba', ['#8b5cf6', '#10b981']],
-            ['layer2ChartModal', 'modal', ['#1e3a5f', '#86efac']],
-            ['layer2ChartPendapatan', 'pendapatan', ['#10b981', '#86efac']],
-            ['layer2ChartBiaya', 'biaya', ['#ef4444', '#10b981']]
+            // [containerId, metricKey, [barColor, lineColor]]
+            ['layer2ChartAsset', 'asset', ['#3b82f6', '#10b981']],        // Blue bar, Green line
+            ['layer2ChartKredit', 'kredit', ['#1e3a5f', '#f59e0b']],      // Navy bar, Amber line
+            ['layer2ChartPembiayaan', 'pembiayaan', ['#8b5cf6', '#10b981']], // Purple bar, Green line
+            ['layer2ChartDPK', 'dpk', ['#0891b2', '#f59e0b']],            // Cyan bar, Amber line
+            ['layer2ChartATI', 'ati', ['#14b8a6', '#f97316']],            // Teal bar, Orange line
+            ['layer2ChartCKPN', 'ckpn', ['#f59e0b', '#ef4444']],          // Amber bar, Red line
+            ['layer2ChartLaba', 'laba', ['#10b981', '#6366f1']],          // Green bar, Indigo line
+            ['layer2ChartModal', 'modal', ['#1e3a5f', '#10b981']],        // Navy bar, Green line
+            ['layer2ChartPendapatan', 'pendapatan', ['#22c55e', '#3b82f6']], // Green bar, Blue line
+            ['layer2ChartBiaya', 'biaya', ['#ef4444', '#f59e0b']]         // Red bar, Amber line
         ];
         
         chartConfigs.forEach(([containerId, metricKey, colors]) => {
