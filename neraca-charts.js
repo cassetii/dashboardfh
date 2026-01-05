@@ -641,6 +641,12 @@ const NeracaCharts = {
             tooltip: {
                 y: { formatter: val => 'Rp ' + val.toLocaleString('id-ID', {maximumFractionDigits: 0}) + ' Juta' }
             },
+            dataLabels: {
+                enabled: true,
+                formatter: val => val.toLocaleString('id-ID', {maximumFractionDigits: 0}),
+                style: { fontSize: '9px', fontWeight: 600 },
+                offsetY: -5
+            },
             legend: { show: true, position: 'top', fontSize: '11px' },
             grid: { borderColor: '#e5e7eb', strokeDashArray: 3 }
         };
@@ -825,13 +831,16 @@ function changeLayer3Metric(metric) {
     const label = config?.label || metric;
     const unit = chartData.unit || 'T';
     
+    // Format number with thousand separator (Indonesian format)
+    const formatNumber = (val) => val.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
     document.getElementById('layer3SelectedMetric').textContent = label;
-    document.getElementById('layer3NilaiTerakhir').textContent = `Rp ${lastAktual.toFixed(2)} ${unit}`;
+    document.getElementById('layer3NilaiTerakhir').textContent = `Rp ${formatNumber(lastAktual)} ${unit}`;
     
     // Update target card with TRW info
     const targetElement = document.getElementById('layer3Target');
     if (targetElement) {
-        targetElement.textContent = lastTarget > 0 ? `Rp ${lastTarget.toFixed(2)} ${unit}` : '-';
+        targetElement.textContent = lastTarget > 0 ? `Rp ${formatNumber(lastTarget)} ${unit}` : '-';
     }
     
     // Update target label to show TRW (if element exists)
@@ -910,7 +919,7 @@ function renderLayer3YTDChart(data, currentTrw = 'I') {
         xaxis: { categories: ['Realisasi', `Target TRW ${currentTrw}`], labels: { style: { fontSize: '11px' } } },
         yaxis: { show: false },
         legend: { show: false },
-        dataLabels: { enabled: true, formatter: (val) => val.toFixed(2), style: { fontSize: '11px' } }
+        dataLabels: { enabled: true, formatter: (val) => val.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2}), style: { fontSize: '11px' } }
     };
     
     neracaLayer3Charts.ytd = new ApexCharts(element, options);
