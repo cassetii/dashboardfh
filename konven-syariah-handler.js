@@ -782,26 +782,32 @@ function updateKonvenSyariahFromDashboard() {
     const dpkKON = giroKON + tabunganKON + depositoKON;
     const dpkSYR = giroSYR + tabunganSYR + depositoSYR;
     
-    // Laba Bersih (sandi: 03.05.02.01.00.00)
-    const labaALL = getLabarugiValue('ALL', '03.05.02.01.00.00');
-    const labaKON = getLabarugiValue('KON', '03.05.02.01.00.00');
-    const labaSYR = getLabarugiValue('SYR', '03.05.02.01.00.00');
+    // Laba Bersih = Laba - Rugi (from NERACA, not labarugi)
+    const labaKON_pos = getNeracaValue('KON', '03.05.02.01.00.00');
+    const rugiKON_pos = getNeracaValue('KON', '03.05.02.02.00.00');
+    const labaKON = labaKON_pos - rugiKON_pos;
     
-    // Pendapatan (04.xx)
+    const labaSYR_pos = getNeracaValue('SYR', '03.05.02.01.00.00');
+    const rugiSYR_pos = getNeracaValue('SYR', '03.05.02.02.00.00');
+    const labaSYR = labaSYR_pos - rugiSYR_pos;
+    
+    const labaALL = labaKON + labaSYR;
+    
+    // Pendapatan (04.xx) - FIXED SANDI
     const pendapatanBungaKON = sumLabarugiByPrefix('KON', '04.11');
     const pendapatanBungaSYR = sumLabarugiByPrefix('SYR', '04.11');
-    const pendapatanOpKON = sumLabarugiByPrefix('KON', '04.12');
-    const pendapatanOpSYR = sumLabarugiByPrefix('SYR', '04.12');
-    const pendapatanNonOpKON = sumLabarugiByPrefix('KON', '04.20');
-    const pendapatanNonOpSYR = sumLabarugiByPrefix('SYR', '04.20');
+    const pendapatanOpKON = sumLabarugiByPrefix('KON', '04.20');
+    const pendapatanOpSYR = sumLabarugiByPrefix('SYR', '04.20');
+    const pendapatanNonOpKON = sumLabarugiByPrefix('KON', '04.99');
+    const pendapatanNonOpSYR = sumLabarugiByPrefix('SYR', '04.99');
     
-    // Beban (05.xx)
+    // Beban (05.xx) - FIXED SANDI
     const bebanBungaKON = sumLabarugiByPrefix('KON', '05.11');
     const bebanBungaSYR = sumLabarugiByPrefix('SYR', '05.11');
-    const bebanOpKON = sumLabarugiByPrefix('KON', '05.12');
-    const bebanOpSYR = sumLabarugiByPrefix('SYR', '05.12');
-    const bebanNonOpKON = sumLabarugiByPrefix('KON', '05.20');
-    const bebanNonOpSYR = sumLabarugiByPrefix('SYR', '05.20');
+    const bebanOpKON = sumLabarugiByPrefix('KON', '05.20');
+    const bebanOpSYR = sumLabarugiByPrefix('SYR', '05.20');
+    const bebanNonOpKON = sumLabarugiByPrefix('KON', '05.99');
+    const bebanNonOpSYR = sumLabarugiByPrefix('SYR', '05.99');
     
     // ========================================
     // DEBUG LOGGING - Remove in production
