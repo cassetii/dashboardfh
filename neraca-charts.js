@@ -373,6 +373,16 @@ const NeracaCharts = {
         // 4. Try single prefix
         if (config.prefix) {
             result = sumPrefix(config.prefix, config.excludeSummary);
+            
+            // FALLBACK: If excludeSummary is true but result is 0,
+            // try getting the summary sandi instead (for target data that only has summary)
+            if (result === 0 && config.excludeSummary) {
+                const summarySandi = config.prefix + '.00.00.00';
+                result = getValue(summarySandi);
+                if (result !== 0) {
+                    console.log(`   📊 Target fallback to summary sandi: ${summarySandi} = ${result.toLocaleString()}`);
+                }
+            }
         }
         
         return result;
