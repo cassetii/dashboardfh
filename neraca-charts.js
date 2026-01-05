@@ -74,6 +74,11 @@ const NeracaCharts = {
             // Laba Sebelum Pajak dari LABARUGI
             sandi: '03.05.02.01.10.00',
             sandiRugi: '03.05.02.02.10.00',
+            // Fallback sandi untuk target (jika 03.05.02.01.10.00 tidak ada)
+            fallbackSandi: '03.05.02.01.00.00',
+            // Alternative: calculate from labarugi components
+            labaComponents: ['03.05.02.01.11.20', '03.05.02.01.12.00'],
+            rugiComponents: ['03.05.02.02.11.20', '03.05.02.02.12.00'],
             isLabarugi: true,  // Ambil dari labarugi, bukan neraca
             label: 'Laba Sebelum Pajak',
             unit: 'Jt',
@@ -82,6 +87,15 @@ const NeracaCharts = {
         modal: {
             // Modal = sandi summary
             sandi: '03.00.00.00.00.00',
+            // Fallback: sum komponen modal jika summary tidak ada
+            modalComponents: [
+                '03.01.01.00.00.00', // Modal Disetor Dasar
+                '03.01.02.00.00.00', // Modal Disetor Lainnya
+                '03.03.01.00.00.00', // Cadangan Umum
+                '03.04.01.00.00.00', // PKL Keuntungan
+                '03.04.02.00.00.00', // PKL Kerugian
+                '03.05.02.01.00.00'  // Laba Bersih
+            ],
             label: 'Total Modal',
             unit: 'Jt',
             color: '#1e3a5f'
@@ -356,12 +370,76 @@ const NeracaCharts = {
                 result += getValue(config.sandiRugi);
             }
             if (result !== 0) return result;
+            
+            // FALLBACK: Try fallbackSandi if main sandi not found
+            // Note: fallbackSandi might be in different collection (neraca vs labarugi)
+            if (config.fallbackSandi) {
+                // Try in current collection first
+                result = getValue(config.fallbackSandi);
+                
+                // If not found and isLabarugi, try in neraca collection
+                if (result === 0 && config.isLabarugi) {
+                    const neracaData = targetLoader.targetNeracaData || [];
+                    const neracaItem = neracaData.find(d => 
+                        d.kode_cabang === kodeCabang && 
+                        d.periode === periode && 
+                        d.sandi === config.fallbackSandi
+                    );
+                    result = neracaItem?.total || 0;
+                }
+                
+                if (result !== 0) {
+                    console.log(`   📊 Target fallback sandi: ${config.fallbackSandi} = ${result.toLocaleString()}`);
+                    return result;
+                }
+            }
         }
         
         // 2. Try components
         if (config.components && config.components.length > 0) {
             result = sumComponents(config.components);
             if (result !== 0) return result;
+        }
+        
+        // 2b. Try labaComponents - rugiComponents (for laba calculation)
+        if (config.labaComponents && config.labaComponents.length > 0) {
+            const targetLabarugi = targetLoader.targetLabarugiData || [];
+            const getLabaValue = (sandi) => {
+                const item = targetLabarugi.find(d => 
+                    d.kode_cabang === kodeCabang && 
+                    d.periode === periode && 
+                    d.sandi === sandi
+                );
+                return item?.total || 0;
+            };
+            
+            const labaTotal = config.labaComponents.reduce((sum, s) => sum + getLabaValue(s), 0);
+            const rugiTotal = (config.rugiComponents || []).reduce((sum, s) => sum + getLabaValue(s), 0);
+            result = labaTotal - rugiTotal;
+            
+            if (result !== 0) {
+                console.log(`   📊 Target laba calculated: ${labaTotal.toLocaleString()} - ${rugiTotal.toLocaleString()} = ${result.toLocaleString()}`);
+                return result;
+            }
+        }
+        
+        // 2c. Try modalComponents (for modal calculation)
+        if (config.modalComponents && config.modalComponents.length > 0) {
+            const targetNeraca = targetLoader.targetNeracaData || [];
+            const getModalValue = (sandi) => {
+                const item = targetNeraca.find(d => 
+                    d.kode_cabang === kodeCabang && 
+                    d.periode === periode && 
+                    d.sandi === sandi
+                );
+                return item?.total || 0;
+            };
+            
+            result = config.modalComponents.reduce((sum, sandi) => sum + getModalValue(sandi), 0);
+            if (result !== 0) {
+                console.log(`   📊 Target modal from components: ${result.toLocaleString()}`);
+                return result;
+            }
         }
         
         // 3. Try prefixes
