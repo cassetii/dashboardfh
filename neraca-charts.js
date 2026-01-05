@@ -610,15 +610,58 @@ const NeracaCharts = {
         const currentTrw = chartData.trw || 'I';
         
         // ========================================
-        // BAR + LINE COMBO CHART
-        // Bar = Aktual (nilai realisasi)
-        // Line = Target (benchmark)
+        // HELPER: Format number with Indonesian separator
         // ========================================
+        const formatNumber = (val) => {
+            if (val === null || val === undefined) return '0';
+            return val.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        };
+        
+        const formatShort = (val) => {
+            if (val === null || val === undefined) return '0';
+            if (Math.abs(val) >= 1000000) {
+                return (val / 1000000).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' T';
+            } else if (Math.abs(val) >= 1000) {
+                return (val / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' M';
+            }
+            return formatNumber(val) + ' Jt';
+        };
+        
+        // ========================================
+        // CALCULATE GAP % - untuk visual clarity
+        // ========================================
+        const calculateGapPercent = (aktual, target) => {
+            if (!target || target === 0) return 0;
+            return ((aktual - target) / target * 100).toFixed(1);
+        };
+        
+        // Get max value for Y-axis padding (agar ada ruang antara bar dan target)
+        const allValues = [...chartData.aktual, ...chartData.target];
+        const maxVal = Math.max(...allValues);
+        const minVal = Math.min(...allValues.filter(v => v > 0));
+        const yAxisMax = maxVal * 1.15; // 15% padding di atas
+        
+        // ========================================
+        // BAR CHART WITH TARGET MARKERS
+        // Bar = Aktual dengan warna berdasarkan pencapaian
+        // Scatter = Target markers (titik/garis)
+        // ========================================
+        
+        // Determine bar colors based on achievement
+        const barColors = chartData.aktual.map((aktual, i) => {
+            const target = chartData.target[i] || 0;
+            if (target === 0) return colors[0]; // No target
+            const achievement = (aktual / target) * 100;
+            if (achievement >= 100) return '#10b981'; // Green - achieved
+            if (achievement >= 90) return '#f59e0b';  // Amber - close
+            return '#ef4444'; // Red - below target
+        });
+        
         const options = {
             series: [
                 { 
-                    name: 'Aktual', 
-                    type: 'column',
+                    name: 'Realisasi', 
+                    type: 'bar',
                     data: chartData.aktual 
                 },
                 { 
@@ -628,98 +671,110 @@ const NeracaCharts = {
                 }
             ],
             chart: {
-                type: 'line', // Base type for combo
-                height: 200,
+                type: 'line',
+                height: 220,
                 toolbar: { show: false },
-                animations: { enabled: true, speed: 500 },
-                dropShadow: {
-                    enabled: true,
-                    top: 2,
-                    left: 0,
-                    blur: 3,
-                    opacity: 0.1
-                }
+                animations: { enabled: true, speed: 400 },
+                fontFamily: 'Inter, sans-serif'
             },
-            colors: [colors[0], colors[1]], // [Bar color, Line color]
+            colors: [colors[0], '#1e3a5f'], // Bar color, Target line color
             stroke: { 
-                width: [0, 3], // 0 for bar, 3 for line
-                curve: 'smooth',
-                dashArray: [0, 0] // Solid line
+                width: [0, 3],
+                curve: 'straight',
+                dashArray: [0, 5] // Dashed line for target
             },
             fill: {
                 type: ['solid', 'solid'],
-                opacity: [0.9, 1]
+                opacity: [1, 1]
             },
             plotOptions: {
                 bar: {
-                    columnWidth: '50%',
+                    columnWidth: '45%',
                     borderRadius: 6,
+                    distributed: false,
                     dataLabels: { position: 'top' }
                 }
             },
             markers: {
-                size: [0, 5], // No markers for bar, show for line
-                colors: [colors[0], colors[1]],
+                size: [0, 8],
+                colors: ['transparent', '#1e3a5f'],
                 strokeColors: '#fff',
-                strokeWidth: 2,
+                strokeWidth: 3,
+                shape: 'circle',
                 hover: { sizeOffset: 2 }
             },
             xaxis: {
                 categories: chartData.labels,
                 labels: { 
-                    style: { fontSize: '11px', fontWeight: 500 },
-                    offsetY: 0
+                    style: { 
+                        fontSize: '12px', 
+                        fontWeight: 600,
+                        colors: '#374151'
+                    }
                 },
                 axisBorder: { show: false },
                 axisTicks: { show: false }
             },
             yaxis: {
+                min: 0,
+                max: yAxisMax,
+                tickAmount: 5,
                 labels: {
-                    style: { fontSize: '10px' },
-                    formatter: val => {
-                        if (val >= 1000) {
-                            return (val / 1000).toFixed(1) + ' T';
-                        }
-                        return val.toLocaleString('id-ID', {maximumFractionDigits: 0}) + ' Jt';
-                    }
-                },
-                min: 0
+                    style: { fontSize: '10px', colors: '#6b7280' },
+                    formatter: val => formatShort(val)
+                }
             },
             tooltip: {
                 shared: true,
                 intersect: false,
-                y: { 
-                    formatter: val => {
-                        if (val >= 1000) {
-                            return 'Rp ' + (val / 1000).toFixed(2) + ' Triliun';
-                        }
-                        return 'Rp ' + val.toLocaleString('id-ID', {maximumFractionDigits: 0}) + ' Juta';
-                    }
+                custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                    const aktual = series[0][dataPointIndex];
+                    const target = series[1][dataPointIndex];
+                    const gap = target > 0 ? ((aktual - target) / target * 100).toFixed(1) : 0;
+                    const gapClass = gap >= 0 ? 'color: #10b981' : 'color: #ef4444';
+                    const gapIcon = gap >= 0 ? '▲' : '▼';
+                    const label = w.globals.categoryLabels[dataPointIndex];
+                    
+                    return `
+                        <div style="padding: 12px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                            <div style="font-weight: 600; margin-bottom: 8px; color: #1e3a5f;">${label}</div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span style="color: #6b7280;">Realisasi:</span>
+                                <span style="font-weight: 600; color: ${colors[0]};">Rp ${formatNumber(aktual)} Jt</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span style="color: #6b7280;">Target:</span>
+                                <span style="font-weight: 600; color: #1e3a5f;">Rp ${formatNumber(target)} Jt</span>
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 6px; margin-top: 6px;">
+                                <span style="${gapClass}; font-weight: 600;">${gapIcon} ${Math.abs(gap)}% ${gap >= 0 ? 'di atas' : 'di bawah'} target</span>
+                            </div>
+                        </div>
+                    `;
                 }
             },
             dataLabels: {
                 enabled: true,
-                enabledOnSeries: [0], // Only show on bars (Aktual)
-                formatter: val => {
-                    if (val >= 1000) {
-                        return (val / 1000).toFixed(1) + 'T';
-                    }
-                    return val.toLocaleString('id-ID', {maximumFractionDigits: 0});
+                enabledOnSeries: [0],
+                formatter: (val, opts) => {
+                    const target = chartData.target[opts.dataPointIndex] || 0;
+                    const pct = target > 0 ? ((val / target) * 100).toFixed(0) : 100;
+                    return formatNumber(val);
                 },
                 style: { 
-                    fontSize: '10px', 
-                    fontWeight: 600,
+                    fontSize: '11px', 
+                    fontWeight: 700,
                     colors: ['#1e3a5f']
                 },
-                offsetY: -20,
+                offsetY: -25,
                 background: {
                     enabled: true,
-                    foreColor: '#fff',
+                    foreColor: '#1e3a5f',
                     borderRadius: 4,
-                    padding: 4,
+                    padding: 6,
                     opacity: 0.9,
-                    borderWidth: 0,
-                    dropShadow: { enabled: false }
+                    borderWidth: 1,
+                    borderColor: '#e5e7eb'
                 }
             },
             legend: { 
@@ -728,13 +783,39 @@ const NeracaCharts = {
                 horizontalAlign: 'right',
                 fontSize: '11px',
                 fontWeight: 500,
-                markers: { width: 10, height: 10, radius: 2 },
-                itemMargin: { horizontal: 10 }
+                markers: { 
+                    width: 12, 
+                    height: 12, 
+                    radius: 3,
+                    offsetX: -4
+                },
+                itemMargin: { horizontal: 12 }
             },
             grid: { 
-                borderColor: '#e5e7eb', 
-                strokeDashArray: 4,
-                padding: { left: 10, right: 10 }
+                borderColor: '#f3f4f6', 
+                strokeDashArray: 0,
+                padding: { left: 15, right: 15, top: 10, bottom: 5 },
+                xaxis: { lines: { show: false } },
+                yaxis: { lines: { show: true } }
+            },
+            annotations: {
+                // Add horizontal line annotations for each target value
+                yaxis: chartData.target[0] ? [{
+                    y: chartData.target[0],
+                    borderColor: '#1e3a5f',
+                    borderWidth: 0,
+                    label: {
+                        borderColor: 'transparent',
+                        style: {
+                            color: '#1e3a5f',
+                            background: 'transparent',
+                            fontSize: '10px',
+                            fontWeight: 600
+                        },
+                        text: '',
+                        position: 'right'
+                    }
+                }] : []
             }
         };
         
