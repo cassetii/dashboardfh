@@ -478,6 +478,30 @@ const NeracaCharts = {
         const target = [];
         const labels = [];
         
+        // Get current filter periode
+        const filters = window.DashboardFirebase?.getFilters?.() || {};
+        const currentPeriode = filters.periode; // e.g., "2025-06"
+        let filterMonth = 12; // Default: show all months
+        let filterYear = '2025';
+        
+        if (currentPeriode) {
+            const match = currentPeriode.match(/(\d{4})-(\d{2})/);
+            if (match) {
+                filterYear = match[1];
+                filterMonth = parseInt(match[2]);
+            }
+        }
+        
+        console.log(`   Filter periode: ${currentPeriode}, filterMonth: ${filterMonth}`);
+        
+        // Calculate TRW based on filter month
+        const filterTrw = Math.ceil(filterMonth / 3);
+        const trwRoman = ['I', 'II', 'III', 'IV'][filterTrw - 1] || 'I';
+        
+        // Store current TRW for use in chart rendering
+        this.currentTrw = trwRoman;
+        this.currentTrwNum = filterTrw;
+        
         // Get available periods from aktual data
         const data = window.DashboardFirebase?.getData?.();
         const allPeriods = new Set();
@@ -522,15 +546,27 @@ const NeracaCharts = {
             }
         }
         
-        // Map period to month and get values
+        // Map period to month and get values - ONLY 3 MONTHS FOR SELECTED TRW
+        // Calculate TRW month range
+        const trwStartMonth = (filterTrw - 1) * 3 + 1; // TRW I: 1, TRW II: 4, TRW III: 7, TRW IV: 10
+        const trwEndMonth = filterTrw * 3; // TRW I: 3, TRW II: 6, TRW III: 9, TRW IV: 12
+        
+        console.log(`   TRW ${trwRoman}: Bulan ${trwStartMonth} - ${trwEndMonth}`);
+        
         sortedPeriods.forEach(periode => {
             const match = periode.match(/(\d{4})-(\d{2})/);
             if (!match) return;
             
             const [, year, month] = match;
-            if (year !== '2025') return;
+            if (year !== filterYear) return;
             
-            const monthIdx = parseInt(month) - 1;
+            const monthNum = parseInt(month);
+            
+            // Only include months within TRW range AND up to filter month
+            if (monthNum < trwStartMonth || monthNum > trwEndMonth) return;
+            if (monthNum > filterMonth) return;
+            
+            const monthIdx = monthNum - 1;
             const monthName = months[monthIdx];
             
             labels.push(monthName);
@@ -540,16 +576,16 @@ const NeracaCharts = {
             console.log(`   ${monthName}: aktual raw = ${aktualVal.toLocaleString()}, after divisor = ${(aktualVal / divisor).toFixed(2)}`);
             aktual.push(aktualVal / divisor);
             
-            // Get target for corresponding triwulan
-            const trw = Math.ceil(parseInt(month) / 3);
-            const targetVal = this.getTargetValue(metricKey, trw, targetBranchCode);
+            // Get target for the FILTER's triwulan (not the month's triwulan)
+            // This ensures all months show the same target line for the selected TRW
+            const targetVal = this.getTargetValue(metricKey, filterTrw, targetBranchCode);
             target.push(targetVal / divisor);
         });
         
         console.log(`   Aktual values:`, aktual);
-        console.log(`   Target values:`, target);
+        console.log(`   Target values (TRW ${trwRoman}):`, target);
         
-        return { labels, aktual, target, unit };
+        return { labels, aktual, target, unit, trw: trwRoman, trwNum: filterTrw };
     },
     
     // ========================================
@@ -576,15 +612,8 @@ const NeracaCharts = {
             return;
         }
         
-        // Calculate current TRW based on last month in data
-        const lastMonth = chartData.labels[chartData.labels.length - 1];
-        const monthToTrw = {
-            'Jan': 'I', 'Feb': 'I', 'Mar': 'I',
-            'Apr': 'II', 'Mei': 'II', 'Jun': 'II',
-            'Jul': 'III', 'Agt': 'III', 'Sep': 'III',
-            'Okt': 'IV', 'Nov': 'IV', 'Des': 'IV'
-        };
-        const currentTrw = monthToTrw[lastMonth] || 'I';
+        // Get TRW from chartData (already calculated based on filter)
+        const currentTrw = chartData.trw || 'I';
         
         // Create chart options
         const options = {
@@ -696,22 +725,9 @@ function changeLayer3Metric(metric) {
         return;
     }
     
-    // Calculate current TRW based on last month in data
-    const lastMonth = chartData.labels[chartData.labels.length - 1];
-    const monthToTrw = {
-        'Jan': 'I', 'Feb': 'I', 'Mar': 'I',
-        'Apr': 'II', 'Mei': 'II', 'Jun': 'II',
-        'Jul': 'III', 'Agt': 'III', 'Sep': 'III',
-        'Okt': 'IV', 'Nov': 'IV', 'Des': 'IV'
-    };
-    const monthToTrwNum = {
-        'Jan': 1, 'Feb': 1, 'Mar': 1,
-        'Apr': 2, 'Mei': 2, 'Jun': 2,
-        'Jul': 3, 'Agt': 3, 'Sep': 3,
-        'Okt': 4, 'Nov': 4, 'Des': 4
-    };
-    const currentTrw = monthToTrw[lastMonth] || 'I';
-    const currentTrwNum = monthToTrwNum[lastMonth] || 1;
+    // Get TRW from chartData (already calculated based on filter)
+    const currentTrw = chartData.trw || 'I';
+    const currentTrwNum = chartData.trwNum || 1;
     
     // Calculate metrics
     const lastAktual = chartData.aktual[chartData.aktual.length - 1];
