@@ -71,16 +71,12 @@ const NeracaCharts = {
             color: '#f59e0b'
         },
         laba: {
-            // Laba Sebelum Pajak dari LABARUGI
-            sandi: '03.05.02.01.10.00',
-            sandiRugi: '03.05.02.02.10.00',
-            // Fallback sandi untuk target (jika 03.05.02.01.10.00 tidak ada)
-            fallbackSandi: '03.05.02.01.00.00',
-            // Alternative: calculate from labarugi components
-            labaComponents: ['03.05.02.01.11.20', '03.05.02.01.12.00'],
-            rugiComponents: ['03.05.02.02.11.20', '03.05.02.02.12.00'],
-            isLabarugi: true,  // Ambil dari labarugi, bukan neraca
-            label: 'Laba Sebelum Pajak',
+            // Laba Bersih (Setelah Pajak) dari NERACA
+            // Sandi 03.05.02.01.00.00 tersedia di aktual dan target
+            sandi: '03.05.02.01.00.00',
+            sandiRugi: '03.05.02.02.00.00', // Rugi Bersih
+            isLabarugi: false,  // Ambil dari neraca
+            label: 'Laba Bersih',
             unit: 'Jt',
             color: '#8b5cf6'
         },
@@ -580,11 +576,21 @@ const NeracaCharts = {
             return;
         }
         
+        // Calculate current TRW based on last month in data
+        const lastMonth = chartData.labels[chartData.labels.length - 1];
+        const monthToTrw = {
+            'Jan': 'I', 'Feb': 'I', 'Mar': 'I',
+            'Apr': 'II', 'Mei': 'II', 'Jun': 'II',
+            'Jul': 'III', 'Agt': 'III', 'Sep': 'III',
+            'Okt': 'IV', 'Nov': 'IV', 'Des': 'IV'
+        };
+        const currentTrw = monthToTrw[lastMonth] || 'I';
+        
         // Create chart options
         const options = {
             series: [
                 { name: 'Aktual', data: chartData.aktual },
-                { name: 'Target', data: chartData.target }
+                { name: `Target TRW ${currentTrw}`, data: chartData.target }
             ],
             chart: {
                 type: 'area',
@@ -612,7 +618,7 @@ const NeracaCharts = {
             tooltip: {
                 y: { formatter: val => 'Rp ' + val.toLocaleString('id-ID', {maximumFractionDigits: 0}) + ' Juta' }
             },
-            legend: { show: false },
+            legend: { show: true, position: 'top', fontSize: '11px' },
             grid: { borderColor: '#e5e7eb', strokeDashArray: 3 }
         };
         
@@ -690,6 +696,23 @@ function changeLayer3Metric(metric) {
         return;
     }
     
+    // Calculate current TRW based on last month in data
+    const lastMonth = chartData.labels[chartData.labels.length - 1];
+    const monthToTrw = {
+        'Jan': 'I', 'Feb': 'I', 'Mar': 'I',
+        'Apr': 'II', 'Mei': 'II', 'Jun': 'II',
+        'Jul': 'III', 'Agt': 'III', 'Sep': 'III',
+        'Okt': 'IV', 'Nov': 'IV', 'Des': 'IV'
+    };
+    const monthToTrwNum = {
+        'Jan': 1, 'Feb': 1, 'Mar': 1,
+        'Apr': 2, 'Mei': 2, 'Jun': 2,
+        'Jul': 3, 'Agt': 3, 'Sep': 3,
+        'Okt': 4, 'Nov': 4, 'Des': 4
+    };
+    const currentTrw = monthToTrw[lastMonth] || 'I';
+    const currentTrwNum = monthToTrwNum[lastMonth] || 1;
+    
     // Calculate metrics
     const lastAktual = chartData.aktual[chartData.aktual.length - 1];
     const lastTarget = chartData.target[chartData.target.length - 1];
@@ -716,15 +739,37 @@ function changeLayer3Metric(metric) {
     
     document.getElementById('layer3SelectedMetric').textContent = label;
     document.getElementById('layer3NilaiTerakhir').textContent = `Rp ${lastAktual.toFixed(2)} ${unit}`;
-    document.getElementById('layer3Target').textContent = lastTarget > 0 ? `Rp ${lastTarget.toFixed(2)} ${unit}` : '-';
+    
+    // Update target card with TRW info
+    const targetElement = document.getElementById('layer3Target');
+    if (targetElement) {
+        targetElement.textContent = lastTarget > 0 ? `Rp ${lastTarget.toFixed(2)} ${unit}` : '-';
+    }
+    
+    // Update target label to show TRW (if element exists)
+    const targetLabelElement = document.getElementById('layer3TargetLabel');
+    if (targetLabelElement) {
+        targetLabelElement.textContent = `Target TRW ${currentTrw}`;
+    }
+    
+    // Update TRW info card (if exists)
+    const trwInfoElement = document.getElementById('layer3TrwInfo');
+    if (trwInfoElement) {
+        trwInfoElement.textContent = `TRW ${currentTrw}`;
+    }
+    
     document.getElementById('layer3Pencapaian').textContent = `${pencapaian}%`;
     document.getElementById('layer3MoM').textContent = `${parseFloat(mom) >= 0 ? '+' : ''}${mom}%`;
     document.getElementById('layer3YoY').textContent = `${parseFloat(yoy) >= 0 ? '+' : ''}${yoy}%`;
     
+    // Store current TRW for charts
+    window.currentLayer3Trw = currentTrw;
+    window.currentLayer3TrwNum = currentTrwNum;
+    
     // Render charts
     setTimeout(() => {
         renderLayer3YoYChart(chartData);
-        renderLayer3YTDChart(chartData);
+        renderLayer3YTDChart(chartData, currentTrw);
         renderLayer3MoMChart(chartData);
     }, 200);
 }
@@ -758,7 +803,7 @@ function renderLayer3YoYChart(data) {
     neracaLayer3Charts.yoy.render();
 }
 
-function renderLayer3YTDChart(data) {
+function renderLayer3YTDChart(data, currentTrw = 'I') {
     const element = document.getElementById('layer3YTDChart');
     if (!element || typeof ApexCharts === 'undefined') return;
     
@@ -774,7 +819,7 @@ function renderLayer3YTDChart(data) {
         chart: { type: 'bar', height: 180, toolbar: { show: false } },
         colors: ['#3b82f6', '#10b981'],
         plotOptions: { bar: { horizontal: false, columnWidth: '50%', borderRadius: 8, distributed: true } },
-        xaxis: { categories: ['Realisasi', 'Target'], labels: { style: { fontSize: '11px' } } },
+        xaxis: { categories: ['Realisasi', `Target TRW ${currentTrw}`], labels: { style: { fontSize: '11px' } } },
         yaxis: { show: false },
         legend: { show: false },
         dataLabels: { enabled: true, formatter: (val) => val.toFixed(2), style: { fontSize: '11px' } }
