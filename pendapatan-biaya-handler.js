@@ -179,21 +179,21 @@ function updatePBFromFirebase() {
     
     // LABA BERSIH = Laba Tahun Berjalan - Rugi Tahun Berjalan
     const labaTahunBerjalan = getValueBySandi(targetKode, '03.05.02.01.00.00');
-    const rugiTahunBerjalan = getValueBySandi(targetKode, '03.05.02.02.00.00'); // sudah negatif
-    const labaAll = labaTahunBerjalan + rugiTahunBerjalan; // Laba - Rugi
+    const rugiTahunBerjalan = Math.abs(getValueBySandi(targetKode, '03.05.02.02.00.00')); // Make sure positive for subtraction
+    const labaAll = labaTahunBerjalan - rugiTahunBerjalan; // Laba - Rugi (FIXED!)
     
     const labaTahunBerjalanKon = targetKodeKon ? getValueBySandi(targetKodeKon, '03.05.02.01.00.00') : 0;
-    const rugiTahunBerjalanKon = targetKodeKon ? getValueBySandi(targetKodeKon, '03.05.02.02.00.00') : 0;
-    const labaKon = labaTahunBerjalanKon + rugiTahunBerjalanKon;
+    const rugiTahunBerjalanKon = targetKodeKon ? Math.abs(getValueBySandi(targetKodeKon, '03.05.02.02.00.00')) : 0;
+    const labaKon = labaTahunBerjalanKon - rugiTahunBerjalanKon;
     
     const labaTahunBerjalanSyr = targetKodeSyr ? getValueBySandi(targetKodeSyr, '03.05.02.01.00.00') : 0;
-    const rugiTahunBerjalanSyr = targetKodeSyr ? getValueBySandi(targetKodeSyr, '03.05.02.02.00.00') : 0;
-    const labaSyr = labaTahunBerjalanSyr + rugiTahunBerjalanSyr;
+    const rugiTahunBerjalanSyr = targetKodeSyr ? Math.abs(getValueBySandi(targetKodeSyr, '03.05.02.02.00.00')) : 0;
+    const labaSyr = labaTahunBerjalanSyr - rugiTahunBerjalanSyr;
     
     // LABA SEBELUM PAJAK = Laba Sebelum Pajak - Rugi Sebelum Pajak
     const labaSblmPajakPos = getValueBySandi(targetKode, '03.05.02.01.10.00');
-    const rugiSblmPajakPos = getValueBySandi(targetKode, '03.05.02.02.10.00'); // sudah negatif
-    const labaSblmPajak = labaSblmPajakPos + rugiSblmPajakPos;
+    const rugiSblmPajakPos = Math.abs(getValueBySandi(targetKode, '03.05.02.02.10.00')); // Make sure positive for subtraction
+    const labaSblmPajak = labaSblmPajakPos - rugiSblmPajakPos; // FIXED: subtract rugi!
     
     // PAJAK PENGHASILAN
     // 1. Taksiran pajak tahun berjalan -/-
