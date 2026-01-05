@@ -712,15 +712,12 @@ document.addEventListener('DOMContentLoaded', () => {
 // Listen to filter dropdowns directly
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
-        // Listen to month/period selector
-        const periodSelector = document.getElementById('filterPeriode') || 
-                               document.getElementById('periodSelector') ||
-                               document.querySelector('select[name="periode"]') ||
-                               document.querySelector('.filter-periode select');
+        // Listen to month selector - CORRECT ID: headerMonthSelect
+        const monthSelector = document.getElementById('headerMonthSelect');
         
-        if (periodSelector) {
-            periodSelector.addEventListener('change', () => {
-                console.log('📅 Period selector changed, refreshing charts...');
+        if (monthSelector) {
+            monthSelector.addEventListener('change', () => {
+                console.log('📅 Month selector changed, refreshing charts...');
                 setTimeout(() => {
                     NeracaCharts.renderAllCharts();
                     // Refresh Layer 3 too
@@ -728,15 +725,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (layer3Selector && typeof changeLayer3Metric === 'function') {
                         changeLayer3Metric(layer3Selector.value);
                     }
-                }, 500);
+                }, 800);
             });
-            console.log('✅ Period selector listener attached');
+            console.log('✅ headerMonthSelect listener attached');
+        } else {
+            console.warn('⚠️ headerMonthSelect not found');
         }
         
-        // Listen to year selector
-        const yearSelector = document.getElementById('filterTahun') ||
-                             document.getElementById('yearSelector') ||
-                             document.querySelector('select[name="tahun"]');
+        // Listen to year selector - CORRECT ID: headerYearSelect
+        const yearSelector = document.getElementById('headerYearSelect');
         
         if (yearSelector) {
             yearSelector.addEventListener('change', () => {
@@ -747,24 +744,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (layer3Selector && typeof changeLayer3Metric === 'function') {
                         changeLayer3Metric(layer3Selector.value);
                     }
-                }, 500);
+                }, 800);
             });
-            console.log('✅ Year selector listener attached');
+            console.log('✅ headerYearSelect listener attached');
+        } else {
+            console.warn('⚠️ headerYearSelect not found');
         }
         
-        // Also listen to any .filter-control changes
-        document.querySelectorAll('.filter-control select, .filter-dropdown select').forEach(select => {
-            select.addEventListener('change', () => {
-                console.log('🔄 Filter control changed, refreshing charts...');
+        // Listen to branch selector
+        const branchSelector = document.getElementById('branchSelector');
+        if (branchSelector) {
+            branchSelector.addEventListener('change', () => {
+                console.log('🏢 Branch selector changed, refreshing charts...');
                 setTimeout(() => {
                     NeracaCharts.renderAllCharts();
                     const layer3Selector = document.getElementById('layer3MetricSelector');
                     if (layer3Selector && typeof changeLayer3Metric === 'function') {
                         changeLayer3Metric(layer3Selector.value);
                     }
-                }, 500);
+                }, 800);
             });
-        });
+            console.log('✅ branchSelector listener attached');
+        }
         
     }, 4000); // Wait for DOM to be fully ready
 });
