@@ -195,6 +195,15 @@ function updatePBFromFirebase() {
     const rugiSblmPajakPos = Math.abs(getValueBySandi(targetKode, '03.05.02.02.10.00')); // Make sure positive for subtraction
     const labaSblmPajak = labaSblmPajakPos - rugiSblmPajakPos; // FIXED: subtract rugi!
     
+    // Laba Sebelum Pajak per segment (KON dan SYR)
+    const labaSblmPajakKonPos = targetKodeKon ? getValueBySandi(targetKodeKon, '03.05.02.01.10.00') : 0;
+    const rugiSblmPajakKonPos = targetKodeKon ? Math.abs(getValueBySandi(targetKodeKon, '03.05.02.02.10.00')) : 0;
+    const labaSblmPajakKon = labaSblmPajakKonPos - rugiSblmPajakKonPos;
+    
+    const labaSblmPajakSyrPos = targetKodeSyr ? getValueBySandi(targetKodeSyr, '03.05.02.01.10.00') : 0;
+    const rugiSblmPajakSyrPos = targetKodeSyr ? Math.abs(getValueBySandi(targetKodeSyr, '03.05.02.02.10.00')) : 0;
+    const labaSblmPajakSyr = labaSblmPajakSyrPos - rugiSblmPajakSyrPos;
+    
     // PAJAK PENGHASILAN
     // 1. Taksiran pajak tahun berjalan -/-
     const taksiranPajak = getValueBySandi(targetKode, '03.05.02.01.40.00'); // negatif
@@ -235,10 +244,10 @@ function updatePBFromFirebase() {
     updateEl('pbBiayaKonven', 'Konven: ' + formatMiliar(biayaKon));
     updateEl('pbBiayaSyariah', 'Syariah: ' + formatMiliar(biayaSyr));
     
-    // Update Laba
-    updateEl('pbLabaBersih', formatMiliar(labaAll) + ' <span>Rp</span>');
-    updateEl('pbLabaKonven', 'Konven: ' + formatMiliar(labaKon));
-    updateEl('pbLabaSyariah', 'Syariah: ' + formatMiliar(labaSyr));
+    // Update Laba Sebelum Pajak (bukan Laba Bersih)
+    updateEl('pbLabaBersih', formatMiliar(labaSblmPajak) + ' <span>Rp</span>');
+    updateEl('pbLabaKonven', 'Konven: ' + formatMiliar(labaSblmPajakKon));
+    updateEl('pbLabaSyariah', 'Syariah: ' + formatMiliar(labaSblmPajakSyr));
     
     // Update CTI
     updateEl('pbCostToIncome', cti.toFixed(2) + '<span>%</span>');
@@ -260,7 +269,7 @@ function updatePBFromFirebase() {
     // Update static data object for charts (in Miliar)
     PENDAPATAN_BIAYA_DATA.summary.totalPendapatan = finalPendapatanAll / 1e9;
     PENDAPATAN_BIAYA_DATA.summary.totalBiaya = finalBiayaAll / 1e9;
-    PENDAPATAN_BIAYA_DATA.summary.labaBersih = labaAll / 1e9;
+    PENDAPATAN_BIAYA_DATA.summary.labaSebelumPajak = labaSblmPajak / 1e9; // Changed from labaBersih
     PENDAPATAN_BIAYA_DATA.summary.costToIncomeRatio = cti;
     
     // Update detail pendapatan
@@ -331,7 +340,7 @@ const PENDAPATAN_BIAYA_DATA = {
     summary: {
         totalPendapatan: 2766.47,
         totalBiaya: 1537.15,
-        labaBersih: 904.70,
+        labaSebelumPajak: 904.70,
         costToIncomeRatio: 55.57
     },
     
