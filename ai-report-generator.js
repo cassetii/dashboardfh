@@ -1,6 +1,6 @@
 // ========================================
 // AI EXECUTIVE REPORT GENERATOR
-// Version: 3.1 - Format Bahasa Resmi Bank Sulselbar
+// Version: 4.0 - Format Lengkap Laporan Kinerja Keuangan Bank Sulselbar
 // ========================================
 
 const AIReportGenerator = (function() {
@@ -36,18 +36,18 @@ const AIReportGenerator = (function() {
         const sign = val < 0 ? '-' : '';
         
         if (unit === 'triliun' || (unit === 'auto' && abs >= 1e12)) {
-            return `Rp${(abs / 1e12).toFixed(3).replace('.', ',')} triliun`;
+            return `Rp${sign}${(abs / 1e12).toFixed(3).replace('.', ',')} triliun`;
         } else if (unit === 'miliar' || (unit === 'auto' && abs >= 1e9)) {
-            return `Rp${(abs / 1e9).toFixed(2).replace('.', ',')} miliar`;
+            return `Rp${sign}${(abs / 1e9).toFixed(2).replace('.', ',')} miliar`;
         } else if (unit === 'juta' || (unit === 'auto' && abs >= 1e6)) {
-            return `Rp${(abs / 1e6).toFixed(2).replace('.', ',')} juta`;
+            return `Rp${sign}${(abs / 1e6).toFixed(2).replace('.', ',')} juta`;
         }
-        return `Rp${abs.toLocaleString('id-ID')}`;
+        return `Rp${sign}${abs.toLocaleString('id-ID')}`;
     }
     
     function formatPersen(val, decimals = 2) {
         if (val === null || val === undefined || isNaN(val)) return 'N/A';
-        return `${val.toFixed(decimals)}%`;
+        return `${val.toFixed(decimals).replace('.', ',')}%`;
     }
     
     function calcAchievement(realisasi, target) {
@@ -295,72 +295,98 @@ const AIReportGenerator = (function() {
         const casaCalc = dpk > 0 ? ((giroKonven + tabunganKonven + giroSyariah + tabunganSyariah) / dpk * 100) : 0;
         const casaCalcYoY = dpkYoY > 0 ? ((giroKonvenYoY + tabunganKonvenYoY + giroSyariahYoY + tabunganSyariahYoY) / dpkYoY * 100) : 0;
         
+        // Calculate porsi DPK
+        const giroTotal = giroKonven + giroSyariah;
+        const tabunganTotal = tabunganKonven + tabunganSyariah;
+        const depositoTotal = depositoKonven + depositoSyariah;
+        const porsiGiro = dpk > 0 ? (giroTotal / dpk * 100) : 0;
+        const porsiTabungan = dpk > 0 ? (tabunganTotal / dpk * 100) : 0;
+        const porsiDeposito = dpk > 0 ? (depositoTotal / dpk * 100) : 0;
+        
         const ratios = {
             car: {
                 nama: 'KPMM (CAR)',
+                namaIndo: 'Rasio Kecukupan Modal (KPMM)',
                 realisasi: getRatio('CAR') || getRatio('KPMM'),
                 yoy: getRatioYoY('CAR') || getRatioYoY('KPMM'),
                 target: getTargetRatio('CAR') || getTargetRatio('KPMM') || 24.04
             },
             roe: {
                 nama: 'Return On Equity (ROE)',
+                namaIndo: 'Rasio Imbal Hasil Ekuitas (ROE)',
                 realisasi: getRatio('ROE'),
                 yoy: getRatioYoY('ROE'),
                 target: getTargetRatio('ROE') || 10
             },
             roa: {
                 nama: 'Return On Asset (ROA)',
+                namaIndo: 'Rasio Imbal Hasil Aset (ROA)',
                 realisasi: getRatio('ROA'),
                 yoy: getRatioYoY('ROA'),
                 target: getTargetRatio('ROA') || 2.13
             },
             nim: {
                 nama: 'Net Interest Margin (NIM)',
+                namaIndo: 'Rasio Marjin Bunga Bersih (NIM)',
                 realisasi: getRatio('NIM'),
                 yoy: getRatioYoY('NIM'),
                 target: getTargetRatio('NIM') || 5.28
             },
             bopo: {
                 nama: 'Biaya Operasional berbanding Pendapatan Operasional (BOPO)',
+                namaIndo: 'Rasio BOPO',
                 realisasi: getRatio('BOPO'),
                 yoy: getRatioYoY('BOPO'),
                 target: getTargetRatio('BOPO') || 76.97
             },
             ldr: {
                 nama: 'LDR',
+                namaIndo: 'Rasio Kredit terhadap Simpanan (LDR)',
                 realisasi: getRatio('LDR') || ldrCalc,
                 yoy: getRatioYoY('LDR') || ldrCalcYoY,
                 target: getTargetRatio('LDR') || 106.98
             },
             npl: {
                 nama: 'NPL Gross',
+                namaIndo: 'Rasio Kredit Bermasalah (NPL Gross)',
                 realisasi: getRatio('NPL'),
                 yoy: getRatioYoY('NPL'),
                 target: getTargetRatio('NPL') || 1.98
+            },
+            casa: {
+                nama: 'CASA Ratio',
+                namaIndo: 'Rasio Dana Murah (CASA)',
+                realisasi: casaCalc,
+                yoy: casaCalcYoY,
+                target: 40
             }
         };
         
         // ==========================================
         // RETURN DATA
         // ==========================================
-        
         return {
+            // Periode info
             periode: {
-                bulan: bulanNames[parseInt(bulan)],
-                tahun: tahun,
+                raw: periode,
                 full: `${bulanNames[parseInt(bulan)]} ${tahun}`,
+                tahun: tahun,
+                bulan: bulanNames[parseInt(bulan)],
                 prevYear: `${bulanNames[parseInt(bulan)]} ${parseInt(tahun) - 1}`,
                 triwulan: triwulan,
-                triwulanLabel: `Triwulan ${triwulanRomawi} – ${tahun}`,
-                targetPeriode: targetPeriode
+                triwulanLabel: `Triwulan ${triwulanRomawi} ${tahun}`
             },
-            tipe: tipeLabel,
-            kodeCabang: kode,
             
-            // Neraca & Laba Rugi
+            // Unit info
+            tipe: tipeLabel,
+            kode: kode,
+            
+            // Indikator Neraca & Laba Rugi
             indicators: {
                 totalAset: { realisasi: totalAset, target: totalAsetTarget, yoy: totalAsetYoY },
                 kreditPembiayaan: { realisasi: kreditPembiayaan, target: kreditPembiayaanTarget, yoy: kreditPembiayaanYoY },
+                kredit: { realisasi: kredit, target: kreditTarget, yoy: kreditYoY },
+                pembiayaan: { realisasi: pembiayaan, target: pembiayaanTarget, yoy: pembiayaanYoY },
                 dpk: { realisasi: dpk, target: dpkTarget, yoy: dpkYoY },
                 pendapatan: { realisasi: totalPendapatan, target: totalPendapatanTarget, yoy: totalPendapatanYoY },
                 biaya: { realisasi: totalBiaya, target: totalBiayaTarget, yoy: totalBiayaYoY },
@@ -373,9 +399,12 @@ const AIReportGenerator = (function() {
             
             // Additional data for analysis
             additional: {
-                giro: giroKonven + giroSyariah,
-                tabungan: tabunganKonven + tabunganSyariah,
-                deposito: depositoKonven + depositoSyariah,
+                giro: giroTotal,
+                tabungan: tabunganTotal,
+                deposito: depositoTotal,
+                porsiGiro: porsiGiro,
+                porsiTabungan: porsiTabungan,
+                porsiDeposito: porsiDeposito,
                 casa: casaCalc,
                 casaYoY: casaCalcYoY
             }
@@ -383,22 +412,26 @@ const AIReportGenerator = (function() {
     }
     
     // ========================================
-    // BUILD PROMPT
+    // BUILD PROMPT - FORMAT LENGKAP
     // ========================================
     
     function buildPrompt(data) {
         const { periode, tipe, indicators, ratios, additional } = data;
         
-        // Format indicator text
+        // ==========================================
+        // HELPER: Format Indicator Text
+        // ==========================================
         function formatIndicator(letter, nama, ind, unit) {
             const ach = calcAchievement(ind.realisasi, ind.target);
             const yoyPct = calcYoY(ind.realisasi, ind.yoy);
             const changeWord = yoyPct >= 0 ? 'peningkatan' : 'penurunan';
             
-            return `${letter}. Realisasi ${nama} pada ${periode.full} tercatat sebesar ${formatRupiah(ind.realisasi, unit)}, dengan pencapaian sebesar ${formatPersen(ach)} dari target ${periode.full} sebesar ${formatRupiah(ind.target, unit)}, dan mengalami ${changeWord} sebesar ${formatPersen(Math.abs(yoyPct))} yoy dibandingkan Realisasi ${periode.prevYear} yang sebesar ${formatRupiah(ind.yoy, unit)}.`;
+            return `${letter}. Realisasi ${nama} pada ${periode.full} tercatat sebesar ${formatRupiah(ind.realisasi, unit)}, dengan pencapaian sebesar ${formatPersen(ach)} dari target ${periode.full} sebesar ${formatRupiah(ind.target, unit)}, dan mengalami ${changeWord} sebesar ${formatPersen(Math.abs(yoyPct))} (yoy) dibandingkan Realisasi ${periode.prevYear} yang sebesar ${formatRupiah(ind.yoy, unit)}.`;
         }
         
-        // Format ratio text
+        // ==========================================
+        // HELPER: Format Ratio Text
+        // ==========================================
         function formatRatio(letter, ratio, isLowerBetter = false) {
             if (ratio.realisasi === null) return '';
             
@@ -422,10 +455,31 @@ const AIReportGenerator = (function() {
                 yoyStatus = ` dan mengalami ${yoyWord} sebesar ${formatPersen(Math.abs(yoyDiff))} dibandingkan ${periode.prevYear}`;
             }
             
-            return `${letter}. Realisasi Rasio ${ratio.nama} sebesar ${formatPersen(ratio.realisasi)} dari proyeksi sebesar ${formatPersen(ratio.target)}, atau ${targetStatus}${yoyStatus}.`;
+            return `${letter}. Realisasi ${ratio.namaIndo} sebesar ${formatPersen(ratio.realisasi)} dari proyeksi sebesar ${formatPersen(ratio.target)}, atau ${targetStatus}${yoyStatus}.`;
         }
         
-        // Build all indicators
+        // ==========================================
+        // BUILD DATA SECTIONS
+        // ==========================================
+        
+        // Calculate achievements and YoY for summary
+        const asetAch = calcAchievement(indicators.totalAset.realisasi, indicators.totalAset.target);
+        const asetYoY = calcYoY(indicators.totalAset.realisasi, indicators.totalAset.yoy);
+        const kreditAch = calcAchievement(indicators.kreditPembiayaan.realisasi, indicators.kreditPembiayaan.target);
+        const kreditYoY = calcYoY(indicators.kreditPembiayaan.realisasi, indicators.kreditPembiayaan.yoy);
+        const dpkAch = calcAchievement(indicators.dpk.realisasi, indicators.dpk.target);
+        const dpkYoY = calcYoY(indicators.dpk.realisasi, indicators.dpk.yoy);
+        const pendapatanAch = calcAchievement(indicators.pendapatan.realisasi, indicators.pendapatan.target);
+        const pendapatanYoY = calcYoY(indicators.pendapatan.realisasi, indicators.pendapatan.yoy);
+        const biayaAch = calcAchievement(indicators.biaya.realisasi, indicators.biaya.target);
+        const biayaYoY = calcYoY(indicators.biaya.realisasi, indicators.biaya.yoy);
+        const labaYoY = calcYoY(indicators.labaSebelumPajak.realisasi, indicators.labaSebelumPajak.yoy);
+        
+        // Porsi kredit terhadap aset
+        const porsiKredit = indicators.totalAset.realisasi > 0 
+            ? (indicators.kreditPembiayaan.realisasi / indicators.totalAset.realisasi * 100) : 0;
+        
+        // Build indicator texts
         const indicatorTexts = [
             formatIndicator('a', 'Total Aset', indicators.totalAset, 'triliun'),
             formatIndicator('b', 'Kredit & Pembiayaan', indicators.kreditPembiayaan, 'triliun'),
@@ -442,65 +496,126 @@ const AIReportGenerator = (function() {
             formatRatio('i', ratios.roe, false),
             formatRatio('j', ratios.roa, false),
             formatRatio('k', ratios.nim, false),
-            formatRatio('l', ratios.bopo, true), // lower is better
+            formatRatio('l', ratios.bopo, true),
             formatRatio('m', ratios.ldr, false),
-            formatRatio('n', ratios.npl, true)   // lower is better
+            formatRatio('n', ratios.npl, true)
         ].filter(t => t).join('\n\n');
+        
+        // ==========================================
+        // BUILD PROMPT
+        // ==========================================
         
         return `Anda adalah analis keuangan senior PT Bank Pembangunan Daerah Sulawesi Selatan dan Sulawesi Barat (Bank Sulselbar).
 
-TUGAS: Buat laporan kinerja keuangan dengan format PERSIS seperti contoh di bawah. JANGAN menambahkan analisis atau rekomendasi lain. Hanya gunakan format yang diberikan.
+TUGAS: Buat LAPORAN KINERJA KEUANGAN LENGKAP dengan 6 bagian menggunakan data yang diberikan.
 
 ═══════════════════════════════════════════════════════════════════════════════
-LAPORAN KINERJA KEUANGAN BANK SULSELBAR
-PERIODE: ${periode.full.toUpperCase()}
-UNIT: ${tipe.toUpperCase()}
+DATA PERIODE ${periode.full.toUpperCase()} - ${tipe.toUpperCase()}
 ═══════════════════════════════════════════════════════════════════════════════
 
-DATA NERACA DAN LABA RUGI (sudah dalam format yang benar):
-
+DATA INDIKATOR KINERJA (a-g):
 ${indicatorTexts}
 
-DATA RASIO KEUANGAN (perlu ditambahkan penjelasan kondisi penyebab):
-
+DATA RASIO KEUANGAN (h-n):
 ${ratioTexts}
 
+DATA TAMBAHAN:
+- Rasio Dana Murah (CASA): ${formatPersen(additional.casa)} (tahun lalu: ${formatPersen(additional.casaYoY)})
+- Komposisi DPK: Giro ${formatRupiah(additional.giro, 'triliun')} (${formatPersen(additional.porsiGiro)}), Tabungan ${formatRupiah(additional.tabungan, 'triliun')} (${formatPersen(additional.porsiTabungan)}), Deposito ${formatRupiah(additional.deposito, 'triliun')} (${formatPersen(additional.porsiDeposito)})
+- Kredit Konvensional: ${formatRupiah(indicators.kredit.realisasi, 'triliun')}, Pembiayaan Syariah: ${formatRupiah(indicators.pembiayaan.realisasi, 'triliun')}
+- Porsi Kredit terhadap Aset: ${formatPersen(porsiKredit)}
+- Target minimum regulasi: KPMM ≥12%, LDR 78%-92%, NPL ≤5%, BOPO ≤85%, ROA ≥1,25%, NIM ≥3,5%
+
+═══════════════════════════════════════════════════════════════════════════════
+FORMAT OUTPUT - WAJIB IKUTI PERSIS
 ═══════════════════════════════════════════════════════════════════════════════
 
-INSTRUKSI PENTING:
+Buat laporan dalam format HTML dengan 6 BAGIAN berikut:
 
-1. UNTUK INDIKATOR a-g (Neraca & Laba Rugi):
-   - Gunakan PERSIS teks yang sudah diberikan di atas
-   - TIDAK perlu mengubah atau menambahkan apapun
-   - Format sudah benar, langsung salin
+<!-- BAGIAN I: GAMBARAN UMUM KINERJA KEUANGAN -->
+<div class="report-section">
+<h3>I. GAMBARAN UMUM KINERJA KEUANGAN</h3>
+[Tulis 2-3 paragraf naratif yang menjelaskan kondisi umum kinerja keuangan bank, mencakup:
+- Total aset, pencapaian target, dan pertumbuhan YoY
+- Posisi kredit/pembiayaan dan DPK dengan pencapaian masing-masing  
+- Kondisi profitabilitas (ROA, ROE) dan permodalan (KPMM)
+- Gunakan angka PERSIS dari data, dengan format: <strong>Rp[X,XXX] triliun/miliar</strong> atau <strong>[X,XX]%</strong>]
+</div>
 
-2. UNTUK INDIKATOR h-n (Rasio Keuangan):
-   - Gunakan teks yang sudah diberikan sebagai AWAL kalimat
-   - TAMBAHKAN penjelasan kondisi/penyebab di AKHIR setiap poin
-   - Contoh penjelasan yang baik:
-     * "Kondisi ini disebabkan oleh..."
-     * "Deviasi tersebut disebabkan..."
-     * "Pelampauan/Penurunan tersebut karena..."
+<!-- BAGIAN II: GAMBARAN UMUM RASIO KEUANGAN -->
+<div class="report-section">
+<h3>II. GAMBARAN UMUM RASIO KEUANGAN</h3>
+[Tulis 2-3 paragraf naratif yang menjelaskan profil rasio keuangan bank, mencakup:
+- Rasio permodalan (KPMM) dan perbandingan dengan batas minimum OJK
+- Rasio profitabilitas (ROA, ROE, NIM) dan pencapaian target
+- Rasio efisiensi (BOPO) dan likuiditas (LDR, CASA)
+- Rasio kualitas aset (NPL)]
+</div>
 
-3. DATA TAMBAHAN untuk analisis rasio:
-   - CASA Ratio: ${formatPersen(additional.casa)} (tahun lalu: ${formatPersen(additional.casaYoY)})
-   - Komposisi DPK: Giro ${formatRupiah(additional.giro, 'triliun')}, Tabungan ${formatRupiah(additional.tabungan, 'triliun')}, Deposito ${formatRupiah(additional.deposito, 'triliun')}
-   - Pencapaian Laba Bersih: ${formatPersen(calcAchievement(indicators.labaSetelahPajak.realisasi, indicators.labaSetelahPajak.target))}
+<!-- BAGIAN III: PENJELASAN REALISASI INDIKATOR KINERJA -->
+<div class="report-section">
+<h3>III. PENJELASAN REALISASI INDIKATOR KINERJA</h3>
+[Salin PERSIS data indikator a-g yang sudah diberikan, masing-masing dalam tag <p>
+Tambahkan 1-2 kalimat penjelasan kondisi/penyebab di akhir setiap poin.
+Contoh penjelasan: "Kondisi ini disebabkan oleh...", "Pertumbuhan ini didorong oleh..."]
+</div>
 
-4. OUTPUT dalam format HTML:
-   - Setiap poin dalam tag <p>
-   - Bold untuk angka-angka penting menggunakan <strong>
-   - JANGAN gunakan bullet points atau list
-   - JANGAN tambahkan judul section
-   - JANGAN tambahkan ringkasan atau kesimpulan
-   - JANGAN tambahkan rekomendasi
+<!-- BAGIAN IV: PENJELASAN REALISASI RASIO KEUANGAN -->
+<div class="report-section">
+<h3>IV. PENJELASAN REALISASI RASIO KEUANGAN</h3>
+[Salin PERSIS data rasio h-n yang sudah diberikan, masing-masing dalam tag <p>
+Tambahkan 1-2 kalimat penjelasan kondisi/penyebab di akhir setiap poin.
+Gunakan istilah Indonesia: "Rasio Kecukupan Modal", "Rasio Imbal Hasil Ekuitas", dll.]
+</div>
 
-5. PENTING:
-   - SEMUA angka harus SAMA PERSIS dengan data yang diberikan
-   - Format angka: Rp[X,XXX] triliun/miliar, [X,XX]%
-   - Gunakan koma (,) sebagai pemisah desimal
+<!-- BAGIAN V: SOROTAN KINERJA POSITIF -->
+<div class="report-section">
+<h3>V. SOROTAN KINERJA POSITIF</h3>
+[Tulis 4-6 poin pencapaian positif berdasarkan data, masing-masing dalam tag <p> dengan bullet "•"
+Fokus pada: pencapaian yang melampaui target, pertumbuhan positif YoY, rasio di atas/bawah batas regulasi
+Format: <p>• <strong>[Judul]:</strong> [Penjelasan dengan angka]</p>]
+</div>
 
-OUTPUT: Hanya 14 paragraf (a sampai n) dalam format HTML, tanpa tambahan apapun.`;
+<!-- BAGIAN VI: AREA YANG MEMERLUKAN PERHATIAN -->
+<div class="report-section">
+<h3>VI. AREA YANG MEMERLUKAN PERHATIAN</h3>
+[Tulis 3-5 poin tantangan/risiko berdasarkan data, masing-masing dalam tag <p> dengan bullet "•"
+Fokus pada: pencapaian di bawah target, penurunan YoY, rasio di luar batas optimal
+Format setiap poin: <p>• <strong>[Judul]:</strong> [Deskripsi masalah]. Kondisi ini disebabkan oleh [penyebab]. Dampak potensial berupa [dampak]. Rekomendasi: [saran singkat].</p>]
+</div>
+
+═══════════════════════════════════════════════════════════════════════════════
+ATURAN PENTING - WAJIB DIPATUHI
+═══════════════════════════════════════════════════════════════════════════════
+
+1. GUNAKAN BAHASA INDONESIA FORMAL:
+   - ROA → "Rasio Imbal Hasil Aset"
+   - ROE → "Rasio Imbal Hasil Ekuitas"  
+   - NIM → "Rasio Marjin Bunga Bersih"
+   - NPL → "Rasio Kredit Bermasalah"
+   - CASA → "Rasio Dana Murah"
+   - LDR → "Rasio Kredit terhadap Simpanan"
+   - CAR/KPMM → "Rasio Kecukupan Modal"
+   - yoy → "(yoy)"
+
+2. FORMAT ANGKA:
+   - Semua angka HARUS SAMA PERSIS dengan data yang diberikan
+   - Gunakan koma (,) sebagai pemisah desimal: "28,39%" bukan "28.39%"
+   - Bold untuk angka penting: <strong>Rp24,380 triliun</strong>
+
+3. STRUKTUR:
+   - WAJIB ada 6 bagian dengan judul persis seperti format
+   - Setiap bagian dalam <div class="report-section">
+   - Judul bagian dalam <h3>
+   - Konten dalam <p>
+   - JANGAN gunakan <ul> atau <ol>, gunakan • dalam <p>
+
+4. GAYA PENULISAN:
+   - Naratif formal seperti laporan resmi bank
+   - Setiap paragraf minimal 2-3 kalimat
+   - Hubungkan antar indikator secara logis
+
+OUTPUT: Laporan lengkap dalam format HTML dengan 6 bagian seperti di atas.`;
     }
     
     // ========================================
@@ -576,21 +691,28 @@ OUTPUT: Hanya 14 paragraf (a sampai n) dalam format HTML, tanpa tambahan apapun.
         
         container.innerHTML = `
             <div class="ai-report">
-                <div class="report-header" style="background: linear-gradient(135deg, #1e3a5f 0%, #2e7d32 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-                    <h2 style="margin: 0; font-size: 1.4rem;">LAPORAN KINERJA KEUANGAN</h2>
-                    <p style="margin: 5px 0 0 0; opacity: 0.9;">PT Bank Pembangunan Daerah Sulawesi Selatan dan Sulawesi Barat</p>
-                    <p style="margin: 5px 0 0 0; opacity: 0.9;">Periode: ${data.periode.full} | ${data.tipe}</p>
-                    <p style="margin: 10px 0 0 0; font-size: 0.8rem; opacity: 0.7;">Generated: ${timestamp}</p>
+                <div class="report-header" style="background: linear-gradient(135deg, #1e3a5f 0%, #2e7d32 100%); color: white; padding: 24px; border-radius: 8px 8px 0 0;">
+                    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700;">LAPORAN KINERJA KEUANGAN</h2>
+                    <p style="margin: 8px 0 0 0; opacity: 0.95; font-size: 1rem;">PT Bank Pembangunan Daerah Sulawesi Selatan dan Sulawesi Barat</p>
+                    <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 0.95rem;">Periode: ${data.periode.full} | ${data.tipe}</p>
+                    <p style="margin: 12px 0 0 0; font-size: 0.8rem; opacity: 0.7;">Tanggal Pembuatan: ${timestamp}</p>
                 </div>
                 
-                <div class="report-body" style="padding: 25px; background: white; line-height: 1.9; text-align: justify;">
+                <div class="report-body" style="padding: 28px; background: white; line-height: 1.9; text-align: justify;">
+                    <style>
+                        .report-section { margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; }
+                        .report-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+                        .report-section h3 { color: #1e3a5f; font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #2e7d32; }
+                        .report-section p { color: #374151; font-size: 0.95rem; line-height: 1.85; margin-bottom: 12px; }
+                        .report-section strong { color: #1e3a5f; }
+                    </style>
                     ${reportHtml}
                 </div>
                 
-                <div class="report-footer" style="padding: 15px 20px; background: #f8f9fa; border-radius: 0 0 8px 8px; font-size: 0.85rem; color: #666;">
-                    <p style="margin: 0;"><em>Laporan ini di-generate berdasarkan data dashboard periode ${data.periode.full}. 
+                <div class="report-footer" style="padding: 16px 24px; background: #f8f9fa; border-radius: 0 0 8px 8px; font-size: 0.85rem; color: #666; border-top: 1px solid #e5e7eb;">
+                    <p style="margin: 0; text-align: center;"><em>Laporan ini disusun berdasarkan data dashboard periode ${data.periode.full}. 
                     Target berdasarkan RKAP ${data.periode.triwulanLabel}. 
-                    Perbandingan YoY dengan periode ${data.periode.prevYear}.</em></p>
+                    Perbandingan YoY dengan periode ${data.periode.prevYear}. Mohon verifikasi dengan data sumber untuk pengambilan keputusan.</em></p>
                 </div>
             </div>
         `;
@@ -623,8 +745,8 @@ OUTPUT: Hanya 14 paragraf (a sampai n) dalam format HTML, tanpa tambahan apapun.
         if (btn) {
             btn.disabled = generating;
             btn.innerHTML = generating 
-                ? '<i class="fas fa-spinner fa-spin"></i> Generating...'
-                : '<i class="fas fa-robot"></i> Generate AI Report';
+                ? '<i class="fas fa-spinner fa-spin"></i> Memproses...'
+                : '<i class="fas fa-robot"></i> Generate Laporan AI';
         }
         
         if (loader) loader.style.display = generating ? 'flex' : 'none';
@@ -686,4 +808,4 @@ OUTPUT: Hanya 14 paragraf (a sampai n) dalam format HTML, tanpa tambahan apapun.
 
 window.AIReportGenerator = AIReportGenerator;
 
-console.log('🤖 AI Report Generator v3.1 loaded - Format Bahasa Resmi Bank Sulselbar');
+console.log('🤖 AI Report Generator v4.0 loaded - Format Lengkap Laporan Kinerja Keuangan');
