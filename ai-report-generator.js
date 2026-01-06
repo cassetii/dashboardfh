@@ -1,22 +1,18 @@
 // ========================================
 // AI EXECUTIVE REPORT GENERATOR
-// Analytics Section - Bank Sulselbar Dashboard
-// Version: 2.0 - With Firebase Targets & Filter
+// Version: 3.1 - Format Bahasa Resmi Bank Sulselbar
 // ========================================
 
 const AIReportGenerator = (function() {
     'use strict';
     
-    // =============================================
-    // CLOUDFLARE WORKER URL
-    // =============================================
     const API_ENDPOINT = 'https://analyticsdashboard.syntaxvlad.workers.dev';
     
     let isGenerating = false;
     let lastReport = null;
     
     // ========================================
-    // HELPER: Convert Month to Triwulan
+    // HELPER FUNCTIONS
     // ========================================
     
     function getTriwulanFromMonth(month) {
@@ -24,7 +20,7 @@ const AIReportGenerator = (function() {
         if (m >= 1 && m <= 3) return 1;
         if (m >= 4 && m <= 6) return 2;
         if (m >= 7 && m <= 9) return 3;
-        return 4; // 10-12
+        return 4;
     }
     
     function getTargetPeriode(periode) {
@@ -34,8 +30,38 @@ const AIReportGenerator = (function() {
         return `TRW${triwulan}_${tahun}`;
     }
     
+    function formatRupiah(val, unit = 'auto') {
+        if (val === null || val === undefined || isNaN(val)) return 'N/A';
+        const abs = Math.abs(val);
+        const sign = val < 0 ? '-' : '';
+        
+        if (unit === 'triliun' || (unit === 'auto' && abs >= 1e12)) {
+            return `Rp${(abs / 1e12).toFixed(3).replace('.', ',')} triliun`;
+        } else if (unit === 'miliar' || (unit === 'auto' && abs >= 1e9)) {
+            return `Rp${(abs / 1e9).toFixed(2).replace('.', ',')} miliar`;
+        } else if (unit === 'juta' || (unit === 'auto' && abs >= 1e6)) {
+            return `Rp${(abs / 1e6).toFixed(2).replace('.', ',')} juta`;
+        }
+        return `Rp${abs.toLocaleString('id-ID')}`;
+    }
+    
+    function formatPersen(val, decimals = 2) {
+        if (val === null || val === undefined || isNaN(val)) return 'N/A';
+        return `${val.toFixed(decimals)}%`;
+    }
+    
+    function calcAchievement(realisasi, target) {
+        if (!target || target === 0) return null;
+        return (realisasi / target) * 100;
+    }
+    
+    function calcYoY(current, prev) {
+        if (!prev || prev === 0) return null;
+        return ((current - prev) / Math.abs(prev)) * 100;
+    }
+    
     // ========================================
-    // COLLECT DASHBOARD DATA WITH TARGETS
+    // COLLECT DASHBOARD DATA
     // ========================================
     
     function collectDashboardData() {
@@ -51,16 +77,21 @@ const AIReportGenerator = (function() {
         const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
                           'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         
-        // Target periode: TRW4_2025 for November
+        // Previous year periode for YoY
+        const prevYearPeriode = `${parseInt(tahun) - 1}-${bulan}`;
+        
+        // Target periode: TRW format
         const targetPeriode = getTargetPeriode(periode);
         const triwulan = getTriwulanFromMonth(bulan);
+        const triwulanRomawi = ['I', 'II', 'III', 'IV'][triwulan - 1];
         
         // Determine kode based on filter
         let kode = 'ALL';
         let tipeLabel = 'Konsolidasi';
         if (filters.cabang && filters.cabang !== 'ALL') {
             kode = filters.cabang;
-            tipeLabel = `Cabang ${kode}`;
+            const cabangInfo = neracaData.find(d => d.kode_cabang === kode && !d.is_ratio);
+            tipeLabel = cabangInfo?.nama_cabang || `Cabang ${kode}`;
         } else if (filters.tipe === 'konvensional') {
             kode = 'KON';
             tipeLabel = 'Konvensional';
@@ -69,17 +100,18 @@ const AIReportGenerator = (function() {
             tipeLabel = 'Syariah';
         }
         
-        console.log(`📊 AI Report: Periode=${periode}, TargetPeriode=${targetPeriode}, Kode=${kode}`);
+        console.log(`📊 AI Report: Periode=${periode}, YoY=${prevYearPeriode}, Target=${targetPeriode}, Kode=${kode}`);
         
         // ==========================================
-        // HELPER FUNCTIONS
+        // HELPER: Get Value from Data
         // ==========================================
         
-        function getValue(sandi, source = 'neraca') {
+        function getValue(sandi, source = 'neraca', periodeOverride = null) {
             const dataSource = source === 'neraca' ? neracaData : labarugiData;
+            const targetPeriod = periodeOverride || periode;
             const item = dataSource.find(d => 
                 d.kode_cabang === kode && 
-                d.periode === periode && 
+                d.periode === targetPeriod && 
                 d.sandi === sandi &&
                 !d.is_ratio
             );
@@ -96,10 +128,11 @@ const AIReportGenerator = (function() {
             return item ? (item.total || 0) : 0;
         }
         
-        function getValueByPrefix(prefix, source = 'neraca') {
+        function getValueByPrefix(prefix, source = 'neraca', periodeOverride = null) {
             const dataSource = source === 'neraca' ? neracaData : labarugiData;
+            const targetPeriod = periodeOverride || periode;
             return dataSource
-                .filter(d => d.kode_cabang === kode && d.periode === periode && 
+                .filter(d => d.kode_cabang === kode && d.periode === targetPeriod && 
                             d.sandi && d.sandi.startsWith(prefix) && !d.is_ratio)
                 .reduce((sum, d) => sum + (d.total || 0), 0);
         }
@@ -112,338 +145,382 @@ const AIReportGenerator = (function() {
                 .reduce((sum, d) => sum + (d.total || 0), 0);
         }
         
-        // Format helpers
-        function formatTriliun(val) {
-            if (Math.abs(val) >= 1e12) return (val / 1e12).toFixed(2) + ' T';
-            if (Math.abs(val) >= 1e9) return (val / 1e9).toFixed(2) + ' M';
-            if (Math.abs(val) >= 1e6) return (val / 1e6).toFixed(2) + ' Jt';
-            return val.toFixed(0);
-        }
-        
-        function formatMiliar(val) {
-            if (Math.abs(val) >= 1e12) return (val / 1e12).toFixed(2) + ' T';
-            return (val / 1e9).toFixed(2) + ' M';
-        }
-        
-        function calcAchievement(current, target) {
-            if (!target || target === 0) return null;
-            return (current / target * 100);
-        }
-        
-        function calcDeviation(current, target) {
-            if (!target) return null;
-            return current - target;
-        }
-        
-        function formatAchievement(val) {
-            if (val === null || isNaN(val)) return 'N/A';
-            return `${val.toFixed(1)}%`;
-        }
-        
-        function formatDeviation(val, isTriliun = false) {
-            if (val === null || isNaN(val)) return 'N/A';
-            const sign = val >= 0 ? '+' : '';
-            if (isTriliun) {
-                return `${sign}${(val / 1e12).toFixed(2)} T`;
-            }
-            return `${sign}${(val / 1e9).toFixed(2)} M`;
-        }
-        
-        // ==========================================
-        // REALISASI DATA
-        // ==========================================
-        const totalAset = getValue('01.00.00.00.00.00');
-        const kredit = getValue('01.09.01.00.00.00');
-        const pembiayaan = getValueByPrefix('01.09.03');
-        
-        // DPK
-        const giro = getValue('02.01.01.00.00.00') + getValueByPrefix('02.01.02');
-        const tabungan = getValue('02.02.01.00.00.00') + getValueByPrefix('02.02.02');
-        const deposito = getValue('02.03.01.00.00.00') + getValueByPrefix('02.03.02');
-        const dpk = giro + tabungan + deposito;
-        
-        const modal = getValue('03.00.00.00.00.00');
-        
-        // Laba Sebelum Pajak
-        const labaSebelumPajakPos = getValue('03.05.02.01.10.00', 'labarugi');
-        const rugiSebelumPajakPos = Math.abs(getValue('03.05.02.02.10.00', 'labarugi'));
-        const labaSebelumPajak = labaSebelumPajakPos - rugiSebelumPajakPos;
-        
-        // ==========================================
-        // TARGET DATA FROM FIREBASE
-        // ==========================================
-        const targetTotalAset = getTarget('01.00.00.00.00.00');
-        const targetKredit = getTarget('01.09.01.00.00.00');
-        const targetPembiayaan = getTargetByPrefix('01.09.03');
-        
-        // DPK Target
-        const targetGiro = getTarget('02.01.01.00.00.00') + getTargetByPrefix('02.01.02');
-        const targetTabungan = getTarget('02.02.01.00.00.00') + getTargetByPrefix('02.02.02');
-        const targetDeposito = getTarget('02.03.01.00.00.00') + getTargetByPrefix('02.03.02');
-        const targetDPK = targetGiro + targetTabungan + targetDeposito;
-        
-        const targetModal = getTarget('03.00.00.00.00.00');
-        
-        // Laba Target
-        const targetLabaPos = getTarget('03.05.02.01.10.00', 'labarugi');
-        const targetRugiPos = Math.abs(getTarget('03.05.02.02.10.00', 'labarugi'));
-        const targetLaba = targetLabaPos - targetRugiPos;
-        
-        console.log(`📊 Targets loaded: Aset=${formatTriliun(targetTotalAset)}, Kredit=${formatTriliun(targetKredit)}, DPK=${formatTriliun(targetDPK)}`);
-        
-        // ==========================================
-        // RATIOS FROM EXCEL
-        // ==========================================
-        function getRatioFromExcel(ratioName) {
+        function getRatio(ratioName) {
             const ratioItem = neracaData.find(d => 
                 d.kode_cabang === kode && 
                 d.periode === periode && 
                 d.is_ratio === true &&
                 (d.ratio_name || '').toUpperCase() === ratioName.toUpperCase()
             );
-            
-            // Fallback untuk cabang Syariah
-            if (!ratioItem && ['510', '520', '530', '540', '500'].includes(kode)) {
-                const fallback = neracaData.find(d => 
-                    d.kode_cabang === 'SYR' && 
-                    d.periode === periode && 
-                    d.is_ratio === true &&
-                    (d.ratio_name || '').toUpperCase() === ratioName.toUpperCase()
-                );
-                return fallback ? (fallback.value || 0) * 100 : null;
-            }
-            
-            // Fallback untuk cabang Konvensional
-            if (!ratioItem && !['510', '520', '530', '540', '500', 'SYR', 'KON', 'ALL'].includes(kode)) {
-                const fallback = neracaData.find(d => 
-                    d.kode_cabang === 'KON' && 
-                    d.periode === periode && 
-                    d.is_ratio === true &&
-                    (d.ratio_name || '').toUpperCase() === ratioName.toUpperCase()
-                );
-                return fallback ? (fallback.value || 0) * 100 : null;
-            }
-            
             return ratioItem ? (ratioItem.value || 0) * 100 : null;
         }
         
-        const ldr = getRatioFromExcel('LDR') || (dpk > 0 ? ((kredit + pembiayaan) / dpk * 100) : 0);
-        const casa = getRatioFromExcel('CASA') || (dpk > 0 ? ((giro + tabungan) / dpk * 100) : 0);
-        const bopo = getRatioFromExcel('BOPO') || 0;
-        const npl = getRatioFromExcel('NPL') || 0;
-        const roa = getRatioFromExcel('ROA') || 0;
-        const roe = getRatioFromExcel('ROE') || 0;
-        const nim = getRatioFromExcel('NIM') || 0;
-        const car = getRatioFromExcel('CAR') || 0;
+        function getRatioYoY(ratioName) {
+            const ratioItem = neracaData.find(d => 
+                d.kode_cabang === kode && 
+                d.periode === prevYearPeriode && 
+                d.is_ratio === true &&
+                (d.ratio_name || '').toUpperCase() === ratioName.toUpperCase()
+            );
+            return ratioItem ? (ratioItem.value || 0) * 100 : null;
+        }
         
-        // Ratio targets (regulatory)
-        const ratioTargets = {
-            ldr: { min: 78, max: 92, target: 85 },
-            casa: { target: 40 },
-            bopo: { target: 85 },
-            npl: { target: 5 },
-            roa: { target: 1.25 },
-            roe: { target: 10 },
-            nim: { target: 3.5 },
-            car: { target: 12 }
-        };
-        
-        // ==========================================
-        // BUILD KPI WITH ACHIEVEMENT
-        // ==========================================
-        
-        const kpiNeraca = [
-            {
-                nama: 'Total Aset',
-                realisasi: totalAset,
-                target: targetTotalAset,
-                formatted: formatTriliun(totalAset),
-                targetFormatted: formatTriliun(targetTotalAset),
-                achievement: calcAchievement(totalAset, targetTotalAset),
-                achievementFormatted: formatAchievement(calcAchievement(totalAset, targetTotalAset)),
-                deviation: calcDeviation(totalAset, targetTotalAset),
-                deviationFormatted: formatDeviation(calcDeviation(totalAset, targetTotalAset), true)
-            },
-            {
-                nama: 'Kredit yang Diberikan',
-                realisasi: kredit,
-                target: targetKredit,
-                formatted: formatTriliun(kredit),
-                targetFormatted: formatTriliun(targetKredit),
-                achievement: calcAchievement(kredit, targetKredit),
-                achievementFormatted: formatAchievement(calcAchievement(kredit, targetKredit)),
-                deviation: calcDeviation(kredit, targetKredit),
-                deviationFormatted: formatDeviation(calcDeviation(kredit, targetKredit), true)
-            },
-            {
-                nama: 'Pembiayaan Syariah',
-                realisasi: pembiayaan,
-                target: targetPembiayaan,
-                formatted: formatTriliun(pembiayaan),
-                targetFormatted: formatTriliun(targetPembiayaan),
-                achievement: calcAchievement(pembiayaan, targetPembiayaan),
-                achievementFormatted: formatAchievement(calcAchievement(pembiayaan, targetPembiayaan)),
-                deviation: calcDeviation(pembiayaan, targetPembiayaan),
-                deviationFormatted: formatDeviation(calcDeviation(pembiayaan, targetPembiayaan), true)
-            },
-            {
-                nama: 'Dana Pihak Ketiga (DPK)',
-                realisasi: dpk,
-                target: targetDPK,
-                formatted: formatTriliun(dpk),
-                targetFormatted: formatTriliun(targetDPK),
-                achievement: calcAchievement(dpk, targetDPK),
-                achievementFormatted: formatAchievement(calcAchievement(dpk, targetDPK)),
-                deviation: calcDeviation(dpk, targetDPK),
-                deviationFormatted: formatDeviation(calcDeviation(dpk, targetDPK), true)
-            },
-            {
-                nama: 'Modal (Ekuitas)',
-                realisasi: modal,
-                target: targetModal,
-                formatted: formatTriliun(modal),
-                targetFormatted: formatTriliun(targetModal),
-                achievement: calcAchievement(modal, targetModal),
-                achievementFormatted: formatAchievement(calcAchievement(modal, targetModal)),
-                deviation: calcDeviation(modal, targetModal),
-                deviationFormatted: formatDeviation(calcDeviation(modal, targetModal), true)
-            },
-            {
-                nama: 'Laba Sebelum Pajak',
-                realisasi: labaSebelumPajak,
-                target: targetLaba,
-                formatted: formatMiliar(labaSebelumPajak),
-                targetFormatted: formatMiliar(targetLaba),
-                achievement: calcAchievement(labaSebelumPajak, targetLaba),
-                achievementFormatted: formatAchievement(calcAchievement(labaSebelumPajak, targetLaba)),
-                deviation: calcDeviation(labaSebelumPajak, targetLaba),
-                deviationFormatted: formatDeviation(calcDeviation(labaSebelumPajak, targetLaba), false)
-            }
-        ];
+        function getTargetRatio(ratioName) {
+            const ratioItem = targetNeracaData.find(d => 
+                d.kode_cabang === kode && 
+                d.periode === targetPeriode && 
+                d.is_ratio === true &&
+                (d.ratio_name || '').toUpperCase() === ratioName.toUpperCase()
+            );
+            return ratioItem ? (ratioItem.value || 0) * 100 : null;
+        }
         
         // ==========================================
-        // FILTER: Only < 90% or > 110%
+        // A. TOTAL ASET
         // ==========================================
-        
-        const outliers = kpiNeraca.filter(kpi => {
-            if (kpi.achievement === null || kpi.target === 0) return false;
-            return kpi.achievement < 90 || kpi.achievement > 110;
-        });
-        
-        const excellent = outliers.filter(kpi => kpi.achievement > 110);
-        const needsAttention = outliers.filter(kpi => kpi.achievement < 90);
-        const normal = kpiNeraca.filter(kpi => {
-            if (kpi.achievement === null || kpi.target === 0) return true;
-            return kpi.achievement >= 90 && kpi.achievement <= 110;
-        });
+        const totalAset = getValue('01.00.00.00.00.00');
+        const totalAsetYoY = getValue('01.00.00.00.00.00', 'neraca', prevYearPeriode);
+        const totalAsetTarget = getTarget('01.00.00.00.00.00');
         
         // ==========================================
-        // KPI RATIO
+        // B. KREDIT & PEMBIAYAAN
+        // ==========================================
+        const kredit = getValue('01.09.01.00.00.00');
+        const kreditYoY = getValue('01.09.01.00.00.00', 'neraca', prevYearPeriode);
+        const kreditTarget = getTarget('01.09.01.00.00.00');
+        
+        const pembiayaan = getValueByPrefix('01.09.03');
+        const pembiayaanYoY = getValueByPrefix('01.09.03', 'neraca', prevYearPeriode);
+        const pembiayaanTarget = getTargetByPrefix('01.09.03');
+        
+        const kreditPembiayaan = kredit + pembiayaan;
+        const kreditPembiayaanYoY = kreditYoY + pembiayaanYoY;
+        const kreditPembiayaanTarget = kreditTarget + pembiayaanTarget;
+        
+        // ==========================================
+        // C. DANA PIHAK KETIGA (DPK)
+        // ==========================================
+        const giroKonven = getValue('02.01.01.00.00.00');
+        const tabunganKonven = getValue('02.02.01.00.00.00');
+        const depositoKonven = getValue('02.03.01.00.00.00');
+        const giroSyariah = getValueByPrefix('02.01.02');
+        const tabunganSyariah = getValueByPrefix('02.02.02');
+        const depositoSyariah = getValueByPrefix('02.03.02');
+        const dpk = giroKonven + tabunganKonven + depositoKonven + giroSyariah + tabunganSyariah + depositoSyariah;
+        
+        const giroKonvenYoY = getValue('02.01.01.00.00.00', 'neraca', prevYearPeriode);
+        const tabunganKonvenYoY = getValue('02.02.01.00.00.00', 'neraca', prevYearPeriode);
+        const depositoKonvenYoY = getValue('02.03.01.00.00.00', 'neraca', prevYearPeriode);
+        const giroSyariahYoY = getValueByPrefix('02.01.02', 'neraca', prevYearPeriode);
+        const tabunganSyariahYoY = getValueByPrefix('02.02.02', 'neraca', prevYearPeriode);
+        const depositoSyariahYoY = getValueByPrefix('02.03.02', 'neraca', prevYearPeriode);
+        const dpkYoY = giroKonvenYoY + tabunganKonvenYoY + depositoKonvenYoY + giroSyariahYoY + tabunganSyariahYoY + depositoSyariahYoY;
+        
+        const dpkTarget = getTarget('02.01.01.00.00.00') + getTarget('02.02.01.00.00.00') + getTarget('02.03.01.00.00.00') +
+                          getTargetByPrefix('02.01.02') + getTargetByPrefix('02.02.02') + getTargetByPrefix('02.03.02');
+        
+        // ==========================================
+        // D. PENDAPATAN
+        // ==========================================
+        const pendapatanBunga = Math.abs(getValue('04.11.00.00.00.00', 'labarugi')) || Math.abs(getValueByPrefix('04.11', 'labarugi'));
+        const pendapatanOpLain = Math.abs(getValue('04.12.00.00.00.00', 'labarugi')) || Math.abs(getValueByPrefix('04.12', 'labarugi'));
+        const pendapatanNonOp = Math.abs(getValue('04.20.00.00.00.00', 'labarugi')) || Math.abs(getValueByPrefix('04.20', 'labarugi'));
+        const totalPendapatan = pendapatanBunga + pendapatanOpLain + pendapatanNonOp;
+        
+        const pendapatanBungaYoY = Math.abs(getValue('04.11.00.00.00.00', 'labarugi', prevYearPeriode)) || Math.abs(getValueByPrefix('04.11', 'labarugi', prevYearPeriode));
+        const pendapatanOpLainYoY = Math.abs(getValue('04.12.00.00.00.00', 'labarugi', prevYearPeriode)) || Math.abs(getValueByPrefix('04.12', 'labarugi', prevYearPeriode));
+        const pendapatanNonOpYoY = Math.abs(getValue('04.20.00.00.00.00', 'labarugi', prevYearPeriode)) || Math.abs(getValueByPrefix('04.20', 'labarugi', prevYearPeriode));
+        const totalPendapatanYoY = pendapatanBungaYoY + pendapatanOpLainYoY + pendapatanNonOpYoY;
+        
+        const totalPendapatanTarget = Math.abs(getTarget('04.11.00.00.00.00', 'labarugi')) + 
+                                      Math.abs(getTarget('04.12.00.00.00.00', 'labarugi')) + 
+                                      Math.abs(getTarget('04.20.00.00.00.00', 'labarugi'));
+        
+        // ==========================================
+        // E. BIAYA
+        // ==========================================
+        const bebanBunga = Math.abs(getValue('05.11.00.00.00.00', 'labarugi')) || Math.abs(getValueByPrefix('05.11', 'labarugi'));
+        const bebanOpLain = Math.abs(getValue('05.12.00.00.00.00', 'labarugi')) || Math.abs(getValueByPrefix('05.12', 'labarugi'));
+        const bebanNonOp = Math.abs(getValue('05.20.00.00.00.00', 'labarugi')) || Math.abs(getValueByPrefix('05.20', 'labarugi'));
+        const totalBiaya = bebanBunga + bebanOpLain + bebanNonOp;
+        
+        const bebanBungaYoY = Math.abs(getValue('05.11.00.00.00.00', 'labarugi', prevYearPeriode)) || Math.abs(getValueByPrefix('05.11', 'labarugi', prevYearPeriode));
+        const bebanOpLainYoY = Math.abs(getValue('05.12.00.00.00.00', 'labarugi', prevYearPeriode)) || Math.abs(getValueByPrefix('05.12', 'labarugi', prevYearPeriode));
+        const bebanNonOpYoY = Math.abs(getValue('05.20.00.00.00.00', 'labarugi', prevYearPeriode)) || Math.abs(getValueByPrefix('05.20', 'labarugi', prevYearPeriode));
+        const totalBiayaYoY = bebanBungaYoY + bebanOpLainYoY + bebanNonOpYoY;
+        
+        const totalBiayaTarget = Math.abs(getTarget('05.11.00.00.00.00', 'labarugi')) + 
+                                 Math.abs(getTarget('05.12.00.00.00.00', 'labarugi')) + 
+                                 Math.abs(getTarget('05.20.00.00.00.00', 'labarugi'));
+        
+        // ==========================================
+        // F. LABA RUGI SEBELUM PAJAK
+        // ==========================================
+        const labaSebelumPajakPos = getValue('03.05.02.01.10.00', 'labarugi');
+        const rugiSebelumPajakPos = Math.abs(getValue('03.05.02.02.10.00', 'labarugi'));
+        const labaSebelumPajak = labaSebelumPajakPos - rugiSebelumPajakPos;
+        
+        const labaSebelumPajakPosYoY = getValue('03.05.02.01.10.00', 'labarugi', prevYearPeriode);
+        const rugiSebelumPajakPosYoY = Math.abs(getValue('03.05.02.02.10.00', 'labarugi', prevYearPeriode));
+        const labaSebelumPajakYoY = labaSebelumPajakPosYoY - rugiSebelumPajakPosYoY;
+        
+        const labaSebelumPajakTargetPos = getTarget('03.05.02.01.10.00', 'labarugi');
+        const rugiSebelumPajakTargetPos = Math.abs(getTarget('03.05.02.02.10.00', 'labarugi'));
+        const labaSebelumPajakTarget = labaSebelumPajakTargetPos - rugiSebelumPajakTargetPos;
+        
+        // ==========================================
+        // G. LABA RUGI SETELAH PAJAK
+        // ==========================================
+        const labaBersihPos = getValue('03.05.02.01.00.00', 'labarugi');
+        const rugiBersihPos = Math.abs(getValue('03.05.02.02.00.00', 'labarugi'));
+        const labaBersih = labaBersihPos - rugiBersihPos;
+        
+        const labaBersihPosYoY = getValue('03.05.02.01.00.00', 'labarugi', prevYearPeriode);
+        const rugiBersihPosYoY = Math.abs(getValue('03.05.02.02.00.00', 'labarugi', prevYearPeriode));
+        const labaBersihYoY = labaBersihPosYoY - rugiBersihPosYoY;
+        
+        const labaBersihTargetPos = getTarget('03.05.02.01.00.00', 'labarugi');
+        const rugiBersihTargetPos = Math.abs(getTarget('03.05.02.02.00.00', 'labarugi'));
+        const labaBersihTarget = labaBersihTargetPos - rugiBersihTargetPos;
+        
+        // ==========================================
+        // H-N. RASIO KEUANGAN
         // ==========================================
         
-        const kpiRatio = {
-            ldr: {
-                nama: 'LDR (Loan to Deposit Ratio)',
-                nilai: ldr.toFixed(2),
-                target: `${ratioTargets.ldr.min}%-${ratioTargets.ldr.max}%`,
-                status: ldr >= ratioTargets.ldr.min && ldr <= ratioTargets.ldr.max ? '✅ SEHAT' : (ldr > ratioTargets.ldr.max ? '⚠️ TINGGI' : '⚠️ RENDAH'),
-                keterangan: ldr >= ratioTargets.ldr.min && ldr <= ratioTargets.ldr.max ? 'Dalam batas sehat' : 'Perlu perhatian'
-            },
-            casa: {
-                nama: 'CASA Ratio',
-                nilai: casa.toFixed(2),
-                target: `≥${ratioTargets.casa.target}%`,
-                status: casa >= ratioTargets.casa.target ? '✅ BAIK' : '⚠️ PERLU DITINGKATKAN',
-                keterangan: casa >= ratioTargets.casa.target ? 'Mencapai target' : 'Di bawah target'
-            },
-            bopo: {
-                nama: 'BOPO',
-                nilai: bopo.toFixed(2),
-                target: `≤${ratioTargets.bopo.target}%`,
-                status: bopo <= ratioTargets.bopo.target ? '✅ EFISIEN' : (bopo <= 90 ? '⚠️ CUKUP' : '❌ TIDAK EFISIEN'),
-                keterangan: bopo <= ratioTargets.bopo.target ? 'Operasional efisien' : 'Perlu efisiensi biaya'
-            },
-            npl: {
-                nama: 'NPL (Non Performing Loan)',
-                nilai: npl.toFixed(2),
-                target: `≤${ratioTargets.npl.target}%`,
-                status: npl <= ratioTargets.npl.target ? '✅ SEHAT' : '❌ BERISIKO',
-                keterangan: npl <= ratioTargets.npl.target ? 'Kualitas kredit baik' : 'Risiko kredit tinggi'
-            },
-            roa: {
-                nama: 'ROA (Return on Asset)',
-                nilai: roa.toFixed(2),
-                target: `≥${ratioTargets.roa.target}%`,
-                status: roa >= ratioTargets.roa.target ? '✅ SANGAT BAIK' : (roa >= 1.0 ? '⚠️ BAIK' : '❌ KURANG'),
-                keterangan: roa >= ratioTargets.roa.target ? 'Profitabilitas tinggi' : 'Perlu peningkatan laba'
+        // Calculate LDR manually if not available
+        const ldrCalc = dpk > 0 ? (kreditPembiayaan / dpk * 100) : 0;
+        const ldrCalcYoY = dpkYoY > 0 ? (kreditPembiayaanYoY / dpkYoY * 100) : 0;
+        
+        // Calculate CASA manually if not available
+        const casaCalc = dpk > 0 ? ((giroKonven + tabunganKonven + giroSyariah + tabunganSyariah) / dpk * 100) : 0;
+        const casaCalcYoY = dpkYoY > 0 ? ((giroKonvenYoY + tabunganKonvenYoY + giroSyariahYoY + tabunganSyariahYoY) / dpkYoY * 100) : 0;
+        
+        const ratios = {
+            car: {
+                nama: 'KPMM (CAR)',
+                realisasi: getRatio('CAR') || getRatio('KPMM'),
+                yoy: getRatioYoY('CAR') || getRatioYoY('KPMM'),
+                target: getTargetRatio('CAR') || getTargetRatio('KPMM') || 24.04
             },
             roe: {
-                nama: 'ROE (Return on Equity)',
-                nilai: roe.toFixed(2),
-                target: `≥${ratioTargets.roe.target}%`,
-                status: roe >= ratioTargets.roe.target ? '✅ BAIK' : '⚠️ PERLU DITINGKATKAN',
-                keterangan: roe >= ratioTargets.roe.target ? 'Return modal optimal' : 'Optimalisasi modal'
+                nama: 'Return On Equity (ROE)',
+                realisasi: getRatio('ROE'),
+                yoy: getRatioYoY('ROE'),
+                target: getTargetRatio('ROE') || 10
+            },
+            roa: {
+                nama: 'Return On Asset (ROA)',
+                realisasi: getRatio('ROA'),
+                yoy: getRatioYoY('ROA'),
+                target: getTargetRatio('ROA') || 2.13
             },
             nim: {
-                nama: 'NIM (Net Interest Margin)',
-                nilai: nim.toFixed(2),
-                target: `≥${ratioTargets.nim.target}%`,
-                status: nim >= ratioTargets.nim.target ? '✅ BAIK' : '⚠️ PERLU DITINGKATKAN',
-                keterangan: nim >= ratioTargets.nim.target ? 'Margin bunga optimal' : 'Perlu optimalisasi'
+                nama: 'Net Interest Margin (NIM)',
+                realisasi: getRatio('NIM'),
+                yoy: getRatioYoY('NIM'),
+                target: getTargetRatio('NIM') || 5.28
             },
-            car: {
-                nama: 'CAR/KPMM',
-                nilai: car.toFixed(2),
-                target: `≥${ratioTargets.car.target}%`,
-                status: car >= ratioTargets.car.target ? '✅ MEMENUHI' : '❌ TIDAK MEMENUHI',
-                keterangan: car >= ratioTargets.car.target ? 'Modal mencukupi' : 'Perlu penambahan modal'
+            bopo: {
+                nama: 'Biaya Operasional berbanding Pendapatan Operasional (BOPO)',
+                realisasi: getRatio('BOPO'),
+                yoy: getRatioYoY('BOPO'),
+                target: getTargetRatio('BOPO') || 76.97
+            },
+            ldr: {
+                nama: 'LDR',
+                realisasi: getRatio('LDR') || ldrCalc,
+                yoy: getRatioYoY('LDR') || ldrCalcYoY,
+                target: getTargetRatio('LDR') || 106.98
+            },
+            npl: {
+                nama: 'NPL Gross',
+                realisasi: getRatio('NPL'),
+                yoy: getRatioYoY('NPL'),
+                target: getTargetRatio('NPL') || 1.98
             }
         };
         
         // ==========================================
-        // DPK COMPOSITION
+        // RETURN DATA
         // ==========================================
-        const dpkComposition = {
-            giro: { nilai: giro, formatted: formatTriliun(giro), share: dpk > 0 ? (giro / dpk * 100).toFixed(1) : 0 },
-            tabungan: { nilai: tabungan, formatted: formatTriliun(tabungan), share: dpk > 0 ? (tabungan / dpk * 100).toFixed(1) : 0 },
-            deposito: { nilai: deposito, formatted: formatTriliun(deposito), share: dpk > 0 ? (deposito / dpk * 100).toFixed(1) : 0 }
-        };
         
-        // ==========================================
-        // SUMMARY OBJECT
-        // ==========================================
         return {
             periode: {
                 bulan: bulanNames[parseInt(bulan)],
                 tahun: tahun,
                 full: `${bulanNames[parseInt(bulan)]} ${tahun}`,
-                triwulan: `TRW${triwulan}`,
+                prevYear: `${bulanNames[parseInt(bulan)]} ${parseInt(tahun) - 1}`,
+                triwulan: triwulan,
+                triwulanLabel: `Triwulan ${triwulanRomawi} – ${tahun}`,
                 targetPeriode: targetPeriode
             },
             tipe: tipeLabel,
             kodeCabang: kode,
             
-            // KPI Neraca with achievement
-            kpiNeraca: kpiNeraca,
+            // Neraca & Laba Rugi
+            indicators: {
+                totalAset: { realisasi: totalAset, target: totalAsetTarget, yoy: totalAsetYoY },
+                kreditPembiayaan: { realisasi: kreditPembiayaan, target: kreditPembiayaanTarget, yoy: kreditPembiayaanYoY },
+                dpk: { realisasi: dpk, target: dpkTarget, yoy: dpkYoY },
+                pendapatan: { realisasi: totalPendapatan, target: totalPendapatanTarget, yoy: totalPendapatanYoY },
+                biaya: { realisasi: totalBiaya, target: totalBiayaTarget, yoy: totalBiayaYoY },
+                labaSebelumPajak: { realisasi: labaSebelumPajak, target: labaSebelumPajakTarget, yoy: labaSebelumPajakYoY },
+                labaSetelahPajak: { realisasi: labaBersih, target: labaBersihTarget, yoy: labaBersihYoY }
+            },
             
-            // Filtered outliers
-            excellent: excellent,
-            needsAttention: needsAttention,
-            normal: normal,
+            // Rasio
+            ratios: ratios,
             
-            // Ratios
-            kpiRatio: kpiRatio,
-            
-            // DPK Composition
-            dpkComposition: dpkComposition,
-            
-            // Raw values for additional analysis
-            raw: {
-                totalAset, kredit, pembiayaan, dpk, modal, labaSebelumPajak,
-                giro, tabungan, deposito,
-                ldr, casa, bopo, npl, roa, roe, nim, car
+            // Additional data for analysis
+            additional: {
+                giro: giroKonven + giroSyariah,
+                tabungan: tabunganKonven + tabunganSyariah,
+                deposito: depositoKonven + depositoSyariah,
+                casa: casaCalc,
+                casaYoY: casaCalcYoY
             }
         };
+    }
+    
+    // ========================================
+    // BUILD PROMPT
+    // ========================================
+    
+    function buildPrompt(data) {
+        const { periode, tipe, indicators, ratios, additional } = data;
+        
+        // Format indicator text
+        function formatIndicator(letter, nama, ind, unit) {
+            const ach = calcAchievement(ind.realisasi, ind.target);
+            const yoyPct = calcYoY(ind.realisasi, ind.yoy);
+            const changeWord = yoyPct >= 0 ? 'peningkatan' : 'penurunan';
+            
+            return `${letter}. Realisasi ${nama} pada ${periode.full} tercatat sebesar ${formatRupiah(ind.realisasi, unit)}, dengan pencapaian sebesar ${formatPersen(ach)} dari target ${periode.full} sebesar ${formatRupiah(ind.target, unit)}, dan mengalami ${changeWord} sebesar ${formatPersen(Math.abs(yoyPct))} yoy dibandingkan Realisasi ${periode.prevYear} yang sebesar ${formatRupiah(ind.yoy, unit)}.`;
+        }
+        
+        // Format ratio text
+        function formatRatio(letter, ratio, isLowerBetter = false) {
+            if (ratio.realisasi === null) return '';
+            
+            const diff = ratio.realisasi - ratio.target;
+            const yoyDiff = ratio.yoy !== null ? (ratio.realisasi - ratio.yoy) : null;
+            
+            let targetStatus;
+            if (isLowerBetter) {
+                targetStatus = diff <= 0 
+                    ? `dibawah target sebesar ${formatPersen(Math.abs(diff))}`
+                    : `melampaui target sebesar ${formatPersen(Math.abs(diff))}`;
+            } else {
+                targetStatus = diff >= 0 
+                    ? `melampaui target ${formatPersen(Math.abs(diff))}`
+                    : `deviasi sebesar ${formatPersen(Math.abs(diff))}`;
+            }
+            
+            let yoyStatus = '';
+            if (yoyDiff !== null) {
+                const yoyWord = yoyDiff >= 0 ? 'peningkatan' : 'penurunan';
+                yoyStatus = ` dan mengalami ${yoyWord} sebesar ${formatPersen(Math.abs(yoyDiff))} dibandingkan ${periode.prevYear}`;
+            }
+            
+            return `${letter}. Realisasi Rasio ${ratio.nama} sebesar ${formatPersen(ratio.realisasi)} dari proyeksi sebesar ${formatPersen(ratio.target)}, atau ${targetStatus}${yoyStatus}.`;
+        }
+        
+        // Build all indicators
+        const indicatorTexts = [
+            formatIndicator('a', 'Total Aset', indicators.totalAset, 'triliun'),
+            formatIndicator('b', 'Kredit & Pembiayaan', indicators.kreditPembiayaan, 'triliun'),
+            formatIndicator('c', 'Dana Pihak Ketiga (DPK)', indicators.dpk, 'triliun'),
+            formatIndicator('d', 'Pendapatan', indicators.pendapatan, 'miliar'),
+            formatIndicator('e', 'Biaya', indicators.biaya, 'miliar'),
+            formatIndicator('f', 'Laba Rugi Sebelum Pajak', indicators.labaSebelumPajak, 'miliar'),
+            formatIndicator('g', 'Laba Rugi Setelah Pajak', indicators.labaSetelahPajak, 'miliar')
+        ].join('\n\n');
+        
+        // Build ratio texts
+        const ratioTexts = [
+            formatRatio('h', ratios.car, false),
+            formatRatio('i', ratios.roe, false),
+            formatRatio('j', ratios.roa, false),
+            formatRatio('k', ratios.nim, false),
+            formatRatio('l', ratios.bopo, true), // lower is better
+            formatRatio('m', ratios.ldr, false),
+            formatRatio('n', ratios.npl, true)   // lower is better
+        ].filter(t => t).join('\n\n');
+        
+        return `Anda adalah analis keuangan senior PT Bank Pembangunan Daerah Sulawesi Selatan dan Sulawesi Barat (Bank Sulselbar).
+
+TUGAS: Buat laporan kinerja keuangan dengan format PERSIS seperti contoh di bawah. JANGAN menambahkan analisis atau rekomendasi lain. Hanya gunakan format yang diberikan.
+
+═══════════════════════════════════════════════════════════════════════════════
+LAPORAN KINERJA KEUANGAN BANK SULSELBAR
+PERIODE: ${periode.full.toUpperCase()}
+UNIT: ${tipe.toUpperCase()}
+═══════════════════════════════════════════════════════════════════════════════
+
+DATA NERACA DAN LABA RUGI (sudah dalam format yang benar):
+
+${indicatorTexts}
+
+DATA RASIO KEUANGAN (perlu ditambahkan penjelasan kondisi penyebab):
+
+${ratioTexts}
+
+═══════════════════════════════════════════════════════════════════════════════
+
+INSTRUKSI PENTING:
+
+1. UNTUK INDIKATOR a-g (Neraca & Laba Rugi):
+   - Gunakan PERSIS teks yang sudah diberikan di atas
+   - TIDAK perlu mengubah atau menambahkan apapun
+   - Format sudah benar, langsung salin
+
+2. UNTUK INDIKATOR h-n (Rasio Keuangan):
+   - Gunakan teks yang sudah diberikan sebagai AWAL kalimat
+   - TAMBAHKAN penjelasan kondisi/penyebab di AKHIR setiap poin
+   - Contoh penjelasan yang baik:
+     * "Kondisi ini disebabkan oleh..."
+     * "Deviasi tersebut disebabkan..."
+     * "Pelampauan/Penurunan tersebut karena..."
+
+3. DATA TAMBAHAN untuk analisis rasio:
+   - CASA Ratio: ${formatPersen(additional.casa)} (tahun lalu: ${formatPersen(additional.casaYoY)})
+   - Komposisi DPK: Giro ${formatRupiah(additional.giro, 'triliun')}, Tabungan ${formatRupiah(additional.tabungan, 'triliun')}, Deposito ${formatRupiah(additional.deposito, 'triliun')}
+   - Pencapaian Laba Bersih: ${formatPersen(calcAchievement(indicators.labaSetelahPajak.realisasi, indicators.labaSetelahPajak.target))}
+
+4. OUTPUT dalam format HTML:
+   - Setiap poin dalam tag <p>
+   - Bold untuk angka-angka penting menggunakan <strong>
+   - JANGAN gunakan bullet points atau list
+   - JANGAN tambahkan judul section
+   - JANGAN tambahkan ringkasan atau kesimpulan
+   - JANGAN tambahkan rekomendasi
+
+5. PENTING:
+   - SEMUA angka harus SAMA PERSIS dengan data yang diberikan
+   - Format angka: Rp[X,XXX] triliun/miliar, [X,XX]%
+   - Gunakan koma (,) sebagai pemisah desimal
+
+OUTPUT: Hanya 14 paragraf (a sampai n) dalam format HTML, tanpa tambahan apapun.`;
+    }
+    
+    // ========================================
+    // CALL API
+    // ========================================
+    
+    async function callClaudeAPI(prompt) {
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok || result.error) {
+            throw new Error(result.error || `API Error: ${response.status}`);
+        }
+        
+        return result.content;
     }
     
     // ========================================
@@ -484,131 +561,7 @@ const AIReportGenerator = (function() {
     }
     
     // ========================================
-    // BUILD PROMPT WITH FILTERED DATA
-    // ========================================
-    
-    function buildPrompt(data) {
-        // Build KPI Table
-        const kpiRows = data.kpiNeraca.map(kpi => 
-            `│ ${kpi.nama.padEnd(25)} │ Rp ${kpi.formatted.padStart(12)} │ Rp ${kpi.targetFormatted.padStart(12)} │ ${kpi.achievementFormatted.padStart(10)} │ ${kpi.deviationFormatted.padStart(12)} │`
-        ).join('\n');
-        
-        // Build Excellent List
-        const excellentList = data.excellent.length > 0 
-            ? data.excellent.map(kpi => `✅ ${kpi.nama}: ${kpi.achievementFormatted} (${kpi.deviationFormatted})`).join('\n')
-            : 'Tidak ada indikator yang melebihi 110% dari target.';
-        
-        // Build Needs Attention List
-        const attentionList = data.needsAttention.length > 0
-            ? data.needsAttention.map(kpi => `⚠️ ${kpi.nama}: ${kpi.achievementFormatted} (${kpi.deviationFormatted})`).join('\n')
-            : 'Tidak ada indikator yang di bawah 90% dari target.';
-        
-        // Build Ratio Table
-        const ratioRows = Object.values(data.kpiRatio).map(r => 
-            `│ ${r.nama.padEnd(30)} │ ${(r.nilai + '%').padStart(10)} │ ${r.target.padStart(12)} │ ${r.status.padStart(18)} │`
-        ).join('\n');
-        
-        return `Anda adalah analis keuangan senior PT Bank Pembangunan Daerah Sulawesi Selatan dan Sulawesi Barat (Bank Sulselbar).
-
-Berdasarkan data kinerja keuangan berikut, buatkan EXECUTIVE SUMMARY yang KOMPREHENSIF dan FOKUS untuk dilaporkan kepada Direksi dan Dewan Komisaris.
-
-═══════════════════════════════════════════════════════════════════════════════
-LAPORAN KINERJA KEUANGAN PERIODE ${data.periode.full.toUpperCase()} - ${data.tipe.toUpperCase()}
-Target: ${data.periode.targetPeriode} (Triwulan ${data.periode.triwulan.replace('TRW', '')})
-═══════════════════════════════════════════════════════════════════════════════
-
-╔═══════════════════════════════════════════════════════════════════════════════╗
-║                        📊 INDIKATOR KINERJA UTAMA (KPI)                        ║
-╠═════════════════════════╦══════════════╦══════════════╦════════════╦══════════════╣
-║ Indikator               ║ Realisasi    ║ Target       ║ Pencapaian ║ Deviasi      ║
-╠═════════════════════════╬══════════════╬══════════════╬════════════╬══════════════╣
-${kpiRows}
-╚═════════════════════════╩══════════════╩══════════════╩════════════╩══════════════╝
-
-═══════════════════════════════════════════════════════════════════════════════
-🌟 HIGHLIGHT KINERJA (MELEBIHI TARGET >110%)
-═══════════════════════════════════════════════════════════════════════════════
-${excellentList}
-
-═══════════════════════════════════════════════════════════════════════════════
-⚠️ AREA PERLU PERHATIAN (DI BAWAH TARGET <90%)
-═══════════════════════════════════════════════════════════════════════════════
-${attentionList}
-
-═══════════════════════════════════════════════════════════════════════════════
-💰 KOMPOSISI DANA PIHAK KETIGA (DPK)
-═══════════════════════════════════════════════════════════════════════════════
-• Giro: Rp ${data.dpkComposition.giro.formatted} (${data.dpkComposition.giro.share}%)
-• Tabungan: Rp ${data.dpkComposition.tabungan.formatted} (${data.dpkComposition.tabungan.share}%)
-• Deposito: Rp ${data.dpkComposition.deposito.formatted} (${data.dpkComposition.deposito.share}%)
-• CASA Ratio: ${data.raw.casa.toFixed(2)}%
-
-═══════════════════════════════════════════════════════════════════════════════
-📈 RASIO KEUANGAN
-═══════════════════════════════════════════════════════════════════════════════
-╠══════════════════════════════╬════════════╬══════════════╬════════════════════╣
-${ratioRows}
-╚══════════════════════════════╩════════════╩══════════════╩════════════════════╝
-
-═══════════════════════════════════════════════════════════════════════════════
-
-INSTRUKSI UNTUK LAPORAN:
-
-1. RINGKASAN EKSEKUTIF (3-4 paragraf):
-   - Gambaran umum kondisi keuangan bank periode ${data.periode.full}
-   - Highlight pencapaian target ${data.periode.targetPeriode}
-   - Posisi keuangan (aset, kredit, DPK, modal)
-   - Profitabilitas dan efisiensi
-
-2. TABEL KPI NERACA:
-   - Tampilkan tabel lengkap dengan Realisasi, Target, Pencapaian %, dan Deviasi
-   - Gunakan format HTML table yang rapi
-
-3. ANALISIS KINERJA BERDASARKAN PENCAPAIAN TARGET:
-   - FOKUS pada indikator yang MELEBIHI TARGET (>110%) - jelaskan faktor pendorong
-   - FOKUS pada indikator yang DI BAWAH TARGET (<90%) - jelaskan penyebab dan rekomendasi
-   - Indikator dalam range normal (90-110%) cukup disebutkan singkat
-   
-4. TABEL RASIO KEUANGAN:
-   - Tampilkan tabel dengan Nilai, Target, Status
-   - Berikan penjelasan singkat untuk setiap rasio
-
-5. REKOMENDASI STRATEGIS:
-   - Berdasarkan area yang perlu perhatian
-   - Actionable dan specific
-
-FORMAT OUTPUT:
-- Gunakan HTML dengan styling inline
-- Gunakan warna hijau (#10b981) untuk positif, merah (#ef4444) untuk negatif
-- Tabel dengan border dan padding yang rapi
-- Paragraf justified dengan line-height 1.8
-
-CATATAN PENTING:
-- Data YoY tidak tersedia karena keterbatasan data historis
-- Fokus analisis pada PENCAPAIAN TARGET periode berjalan
-- Laporan ini untuk DIREKSI dan DEWAN KOMISARIS, harus PROFESIONAL`;
-    }
-    
-    async function callClaudeAPI(prompt) {
-        const response = await fetch(API_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ prompt })
-        });
-        
-        const result = await response.json();
-        
-        if (!response.ok || result.error) {
-            throw new Error(result.error || `API Error: ${response.status}`);
-        }
-        
-        return result.content;
-    }
-    
-    // ========================================
-    // DISPLAY REPORT
+    // DISPLAY
     // ========================================
     
     function displayReport(reportHtml, data) {
@@ -617,34 +570,27 @@ CATATAN PENTING:
         
         const now = new Date();
         const timestamp = now.toLocaleString('id-ID', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            day: '2-digit', month: 'long', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
         });
         
         container.innerHTML = `
             <div class="ai-report">
-                <div class="report-header">
-                    <div class="report-title">
-                        <h2>📊 EXECUTIVE REPORT</h2>
-                        <p class="report-subtitle">Bank Sulselbar - ${data.periode.full}</p>
-                    </div>
-                    <div class="report-meta">
-                        <span class="report-badge ${data.tipe.toLowerCase()}">${data.tipe}</span>
-                        <span class="report-timestamp">Generated: ${timestamp}</span>
-                    </div>
+                <div class="report-header" style="background: linear-gradient(135deg, #1e3a5f 0%, #2e7d32 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+                    <h2 style="margin: 0; font-size: 1.4rem;">LAPORAN KINERJA KEUANGAN</h2>
+                    <p style="margin: 5px 0 0 0; opacity: 0.9;">PT Bank Pembangunan Daerah Sulawesi Selatan dan Sulawesi Barat</p>
+                    <p style="margin: 5px 0 0 0; opacity: 0.9;">Periode: ${data.periode.full} | ${data.tipe}</p>
+                    <p style="margin: 10px 0 0 0; font-size: 0.8rem; opacity: 0.7;">Generated: ${timestamp}</p>
                 </div>
                 
-                <div class="report-body">
+                <div class="report-body" style="padding: 25px; background: white; line-height: 1.9; text-align: justify;">
                     ${reportHtml}
                 </div>
                 
-                <div class="report-footer">
-                    <p><em>Report ini di-generate oleh AI berdasarkan data dashboard. 
-                    Target berdasarkan RKAP ${data.periode.targetPeriode}.
-                    Mohon verifikasi dengan data sumber untuk pengambilan keputusan.</em></p>
+                <div class="report-footer" style="padding: 15px 20px; background: #f8f9fa; border-radius: 0 0 8px 8px; font-size: 0.85rem; color: #666;">
+                    <p style="margin: 0;"><em>Laporan ini di-generate berdasarkan data dashboard periode ${data.periode.full}. 
+                    Target berdasarkan RKAP ${data.periode.triwulanLabel}. 
+                    Perbandingan YoY dengan periode ${data.periode.prevYear}.</em></p>
                 </div>
             </div>
         `;
@@ -658,35 +604,34 @@ CATATAN PENTING:
         if (!container) return;
         
         container.innerHTML = `
-            <div class="ai-report-error">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>Gagal Generate Report</h3>
-                <p>${message}</p>
-                <button class="btn-retry" onclick="AIReportGenerator.generate()">
-                    <i class="fas fa-redo"></i> Coba Lagi
+            <div style="text-align: center; padding: 40px;">
+                <div style="font-size: 3rem; color: #ef4444;">⚠️</div>
+                <h3 style="margin: 15px 0;">Gagal Generate Report</h3>
+                <p style="color: #666;">${message}</p>
+                <button onclick="AIReportGenerator.generate()" 
+                    style="margin-top: 15px; padding: 10px 20px; background: #2e7d32; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    🔄 Coba Lagi
                 </button>
             </div>
         `;
     }
     
-    function updateUIGenerating(isGenerating) {
+    function updateUIGenerating(generating) {
         const btn = document.getElementById('generateReportBtn');
         const loader = document.getElementById('reportLoader');
         
         if (btn) {
-            btn.disabled = isGenerating;
-            btn.innerHTML = isGenerating 
+            btn.disabled = generating;
+            btn.innerHTML = generating 
                 ? '<i class="fas fa-spinner fa-spin"></i> Generating...'
                 : '<i class="fas fa-robot"></i> Generate AI Report';
         }
         
-        if (loader) {
-            loader.style.display = isGenerating ? 'flex' : 'none';
-        }
+        if (loader) loader.style.display = generating ? 'flex' : 'none';
     }
     
     // ========================================
-    // EXPORT PDF
+    // EXPORT
     // ========================================
     
     async function exportPDF() {
@@ -701,30 +646,22 @@ CATATAN PENTING:
             const element = document.querySelector('.ai-report');
             if (!element) throw new Error('Report element not found');
             
-            const opt = {
-                margin: [10, 10, 10, 10],
-                filename: `Executive_Report_${lastReport.data.periode.full.replace(' ', '_')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            
             if (typeof html2pdf !== 'undefined') {
-                await html2pdf().set(opt).from(element).save();
+                await html2pdf().set({
+                    margin: [10, 10, 10, 10],
+                    filename: `Laporan_Kinerja_${lastReport.data.periode.full.replace(' ', '_')}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(element).save();
                 showToast('PDF berhasil di-download!', 'success');
             } else {
                 window.print();
             }
-            
         } catch (error) {
-            console.error('PDF Export error:', error);
             showToast('Gagal export PDF: ' + error.message, 'error');
         }
     }
-    
-    // ========================================
-    // HELPER
-    // ========================================
     
     function showToast(message, type = 'info') {
         if (typeof window.showToast === 'function') {
@@ -747,7 +684,6 @@ CATATAN PENTING:
     
 })();
 
-// Make globally available
 window.AIReportGenerator = AIReportGenerator;
 
-console.log('🤖 AI Report Generator v2.0 loaded - With Firebase Targets');
+console.log('🤖 AI Report Generator v3.1 loaded - Format Bahasa Resmi Bank Sulselbar');
