@@ -1,13 +1,13 @@
 /**
  * Dashboard Firebase Integration - FIXED VERSION
  * ===============================================
- * Version: 9.0 - Working Ratio Calculation
+ * Version: 10.0 - Working Ratio Calculation + Target Loading
  */
 
 (function() {
     'use strict';
 
-    console.log('🚀 Dashboard Firebase Integration v9.0 - FIXED');
+    console.log('🚀 Dashboard Firebase Integration v10.0 - WITH TARGET');
 
     // ==========================================
     // LOADING OVERLAY
@@ -288,6 +288,8 @@
     let db = null;
     let neracaData = [];
     let labarugiData = [];
+    let targetNeracaData = [];    // NEW v10: Target Neraca
+    let targetLabarugiData = [];  // NEW v10: Target Laba Rugi
     let isDataLoaded = false;
     let availablePeriodes = [];
     
@@ -296,6 +298,26 @@
         tipe: 'konsolidasi',
         cabang: null
     };
+
+    // ==========================================
+    // HELPER: Convert Month to Triwulan (NEW v10)
+    // ==========================================
+    
+    function getTriwulanFromMonth(month) {
+        const m = parseInt(month);
+        if (m >= 1 && m <= 3) return 1;
+        if (m >= 4 && m <= 6) return 2;
+        if (m >= 7 && m <= 9) return 3;
+        return 4; // 10-12
+    }
+    
+    function getTargetPeriode(periode) {
+        // Convert "2025-11" to "TRW4_2025"
+        if (!periode) return null;
+        const [tahun, bulan] = periode.split('-');
+        const triwulan = getTriwulanFromMonth(bulan);
+        return `TRW${triwulan}_${tahun}`;
+    }
 
     // ==========================================
     // INITIALIZATION
@@ -326,7 +348,7 @@
     }
 
     // ==========================================
-    // DATA LOADING
+    // DATA LOADING - UPDATED v10 with Targets
     // ==========================================
     
     async function loadData() {
@@ -339,6 +361,9 @@
         }
         
         try {
+            // ==========================================
+            // LOAD NERACA (Realisasi)
+            // ==========================================
             console.log('📥 Fetching banksulselbar_neraca...');
             const neracaSnapshot = await db.collection('banksulselbar_neraca').get();
             console.log('📥 Neraca snapshot size:', neracaSnapshot.size);
@@ -349,6 +374,9 @@
             });
             console.log('✅ Neraca loaded:', neracaData.length, 'documents');
 
+            // ==========================================
+            // LOAD LABARUGI (Realisasi)
+            // ==========================================
             console.log('📥 Fetching banksulselbar_labarugi...');
             const labarugiSnapshot = await db.collection('banksulselbar_labarugi').get();
             console.log('📥 Labarugi snapshot size:', labarugiSnapshot.size);
@@ -358,6 +386,32 @@
                 labarugiData.push({ id: doc.id, ...doc.data() });
             });
             console.log('✅ Labarugi loaded:', labarugiData.length, 'documents');
+
+            // ==========================================
+            // LOAD TARGET NERACA (NEW v10)
+            // ==========================================
+            console.log('📥 Fetching banksulselbar_target_neraca...');
+            const targetNeracaSnapshot = await db.collection('banksulselbar_target_neraca').get();
+            console.log('📥 Target Neraca snapshot size:', targetNeracaSnapshot.size);
+            
+            targetNeracaData = [];
+            targetNeracaSnapshot.forEach(doc => {
+                targetNeracaData.push({ id: doc.id, ...doc.data() });
+            });
+            console.log('✅ Target Neraca loaded:', targetNeracaData.length, 'documents');
+
+            // ==========================================
+            // LOAD TARGET LABARUGI (NEW v10)
+            // ==========================================
+            console.log('📥 Fetching banksulselbar_target_labarugi...');
+            const targetLabarugiSnapshot = await db.collection('banksulselbar_target_labarugi').get();
+            console.log('📥 Target Labarugi snapshot size:', targetLabarugiSnapshot.size);
+            
+            targetLabarugiData = [];
+            targetLabarugiSnapshot.forEach(doc => {
+                targetLabarugiData.push({ id: doc.id, ...doc.data() });
+            });
+            console.log('✅ Target Labarugi loaded:', targetLabarugiData.length, 'documents');
 
             // Extract available periodes
             const periodeSet = new Set();
@@ -373,6 +427,7 @@
             updatePeriodDropdown();
 
             console.log(`✅ Loaded: ${neracaData.length} neraca, ${labarugiData.length} labarugi`);
+            console.log(`✅ Loaded: ${targetNeracaData.length} target neraca, ${targetLabarugiData.length} target labarugi`);
             console.log(`📅 Periodes: ${availablePeriodes.join(', ')}`);
 
             isDataLoaded = true;
@@ -489,6 +544,34 @@
             }
             
             return item.kode_cabang === 'ALL'; // Default ke konsolidasi
+        });
+    }
+    
+    // ==========================================
+    // FILTER TARGET DATA (NEW v10)
+    // ==========================================
+    
+    function filterTargetData(data) {
+        const targetPeriode = getTargetPeriode(currentFilters.periode);
+        
+        return data.filter(item => {
+            if (item.periode !== targetPeriode) return false;
+            
+            if (currentFilters.cabang) {
+                return item.kode_cabang === currentFilters.cabang;
+            }
+            
+            if (currentFilters.tipe === 'konsolidasi') {
+                return item.kode_cabang === 'ALL';
+            }
+            if (currentFilters.tipe === 'konvensional') {
+                return item.kode_cabang === 'KON';
+            }
+            if (currentFilters.tipe === 'syariah') {
+                return item.kode_cabang === 'SYR';
+            }
+            
+            return item.kode_cabang === 'ALL';
         });
     }
 
@@ -1445,7 +1528,7 @@
                 
                 // Verifikasi data loaded
                 if (neracaData.length > 0) {
-                    console.log(`✅ Init success! Loaded ${neracaData.length} neraca documents`);
+                    console.log(`✅ Init success! Loaded ${neracaData.length} neraca, ${targetNeracaData.length} target neraca`);
                     return;
                 } else {
                     console.warn('⚠️ Init completed but no data loaded, retrying...');
@@ -1460,7 +1543,7 @@
     }
 
     // ==========================================
-    // PUBLIC API
+    // PUBLIC API - UPDATED v10
     // ==========================================
     
     window.DashboardFirebase = {
@@ -1499,9 +1582,19 @@
             }));
             console.log('✅ filterChanged event dispatched');
         },
-        getData: () => ({ neraca: neracaData, labarugi: labarugiData }),
+        // UPDATED v10: Include target data
+        getData: () => ({ 
+            neraca: neracaData, 
+            labarugi: labarugiData,
+            targetNeraca: targetNeracaData,
+            targetLabarugi: targetLabarugiData
+        }),
         getMetrics: calculateMetrics,
-        getPeriodes: () => availablePeriodes
+        getPeriodes: () => availablePeriodes,
+        // NEW v10: Helper functions for target
+        getTargetPeriode: getTargetPeriode,
+        getTriwulanFromMonth: getTriwulanFromMonth,
+        filterTargetData: filterTargetData
     };
 
     // AUTO INIT
