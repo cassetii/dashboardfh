@@ -1,13 +1,13 @@
 // ========================================
 // NERACA CARD TARGET HANDLER
 // Progress Bar + MoM/YoY/YTD Indicators
-// Version: 2.1 - FIXED with debugging
+// Version: 2.2 - Filter hooks + Target debug
 // ========================================
 
 (function() {
     'use strict';
     
-    console.log('🎯 Neraca Card Target Handler v2.1 (FIXED) loading...');
+    console.log('🎯 Neraca Card Target Handler v2.2 loading...');
     
     // ==========================================
     // CARD LABEL TO CONFIG MAPPING
@@ -845,7 +845,7 @@
     // ==========================================
     
     function init() {
-        console.log('🎯 Initializing Neraca Card Target Handler v2.1...');
+        console.log('🎯 Initializing Neraca Card Target Handler v2.2...');
         
         // Inject styles
         injectStyles();
@@ -857,7 +857,7 @@
         
         // Listen for filter changes
         window.addEventListener('filterChanged', () => {
-            console.log('🔄 Filter changed, updating card targets...');
+            console.log('🔄 Filter changed event, updating card targets...');
             setTimeout(() => updateAllCards(false), 500);
         });
         
@@ -872,12 +872,132 @@
             setTimeout(() => updateAllCards(false), 500);
         });
         
+        // ==========================================
+        // HOOK INTO EXISTING FILTER FUNCTIONS
+        // ==========================================
+        
+        // Hook into header period selects
+        const yearSelect = document.getElementById('headerYearSelect');
+        const monthSelect = document.getElementById('headerMonthSelect');
+        
+        if (yearSelect) {
+            yearSelect.addEventListener('change', () => {
+                console.log('🔄 Year filter changed');
+                setTimeout(() => updateAllCards(false), 1000);
+            });
+        }
+        
+        if (monthSelect) {
+            monthSelect.addEventListener('change', () => {
+                console.log('🔄 Month filter changed');
+                setTimeout(() => updateAllCards(false), 1000);
+            });
+        }
+        
+        // Hook into business line filter buttons
+        const filterButtons = document.querySelectorAll('.filter-btn[data-business-line]');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                console.log('🔄 Business line filter clicked:', btn.dataset.businessLine);
+                setTimeout(() => updateAllCards(false), 1000);
+            });
+        });
+        
+        // Hook into branch selector
+        const branchSelector = document.getElementById('branchSelector');
+        if (branchSelector) {
+            branchSelector.addEventListener('change', () => {
+                console.log('🔄 Branch filter changed');
+                setTimeout(() => updateAllCards(false), 1000);
+            });
+        }
+        
+        // Observe DashboardFirebase filter changes via polling
+        let lastPeriode = '';
+        let lastTipe = '';
+        setInterval(() => {
+            const filters = window.DashboardFirebase?.getFilters?.();
+            if (filters) {
+                const currentPeriode = filters.periode || '';
+                const currentTipe = filters.tipe || '';
+                
+                if (currentPeriode !== lastPeriode || currentTipe !== lastTipe) {
+                    console.log(`🔄 Filter change detected: ${lastPeriode} → ${currentPeriode}, ${lastTipe} → ${currentTipe}`);
+                    lastPeriode = currentPeriode;
+                    lastTipe = currentTipe;
+                    updateAllCards(false);
+                }
+            }
+        }, 2000); // Check every 2 seconds
+        
         // Expose functions globally
         window.refreshNeracaCardTargets = () => updateAllCards(false);
         window.debugNeracaCardTargets = debugData;
+        window.debugTargetData = debugTargetData;
         
-        console.log('✅ Neraca Card Target Handler v2.1 initialized');
-        console.log('💡 TIP: Run debugNeracaCardTargets() in console to diagnose issues');
+        console.log('✅ Neraca Card Target Handler v2.2 initialized');
+        console.log('💡 TIP: Run debugNeracaCardTargets() or debugTargetData() in console');
+    }
+    
+    // ==========================================
+    // DEBUG TARGET DATA SPECIFICALLY
+    // ==========================================
+    
+    function debugTargetData() {
+        console.log('\n========== DEBUG TARGET DATA ==========');
+        
+        const data = window.DashboardFirebase?.getData?.();
+        if (!data) {
+            console.log('❌ No data available');
+            return;
+        }
+        
+        const { targetNeraca, targetLabarugi } = data;
+        
+        console.log('\n1. TARGET NERACA:');
+        console.log('   Total records:', targetNeraca?.length || 0);
+        
+        if (targetNeraca?.length > 0) {
+            // Get unique sandi values
+            const sandiValues = [...new Set(targetNeraca.map(d => d.sandi))].sort();
+            console.log('   Unique sandi values:', sandiValues);
+            
+            // Get unique kode values
+            const kodeValues = [...new Set(targetNeraca.map(d => d.kode_cabang || d.kode))];
+            console.log('   Unique kode values:', kodeValues);
+            
+            // Check for specific sandi we need
+            const neededSandi = [
+                '01.00.00.00.00.00', // Total Aset
+                '01.09.01.00.00.00', // Kredit
+                '02.01.01.00.00.00', // DPK - Giro
+                '03.00.00.00.00.00', // Modal
+            ];
+            
+            console.log('\n   Checking needed sandi:');
+            neededSandi.forEach(sandi => {
+                const found = targetNeraca.filter(d => d.sandi === sandi);
+                console.log(`   - ${sandi}: ${found.length} records`, found.length > 0 ? found[0] : '');
+            });
+        }
+        
+        console.log('\n2. TARGET LABARUGI:');
+        console.log('   Total records:', targetLabarugi?.length || 0);
+        
+        if (targetLabarugi?.length > 0) {
+            const sandiValues = [...new Set(targetLabarugi.map(d => d.sandi))].sort();
+            console.log('   Unique sandi values:', sandiValues);
+            
+            // Check for laba sebelum pajak sandi
+            const labaSandi = ['03.05.02.01.10.00', '03.05.02.02.10.00'];
+            console.log('\n   Checking laba sandi:');
+            labaSandi.forEach(sandi => {
+                const found = targetLabarugi.filter(d => d.sandi === sandi);
+                console.log(`   - ${sandi}: ${found.length} records`);
+            });
+        }
+        
+        console.log('\n========== END DEBUG ==========\n');
     }
     
     // ==========================================
@@ -899,6 +1019,7 @@
         refresh: () => updateAllCards(false),
         refreshDebug: () => updateAllCards(true),
         debug: debugData,
+        debugTarget: debugTargetData,
         calculateIndicators
     };
     
