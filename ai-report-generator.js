@@ -124,10 +124,11 @@ const AIReportGenerator = (function() {
         
         const modal = getValue('03.00.00.00.00.00');
         
-        // Laba Bersih = 03.05.02.01.00.00 - 03.05.02.02.00.00
-        const labaSebelumPajak = getValue('03.05.02.01.00.00', 'neraca') || getValue('03.05.02.01.00.00', 'labarugi');
-        const pajakLaba = getValue('03.05.02.02.00.00', 'neraca') || getValue('03.05.02.02.00.00', 'labarugi');
-        const labaBersih = labaSebelumPajak - pajakLaba;
+        // LABA SEBELUM PAJAK = Laba Sblm Pajak - Rugi Sblm Pajak (dari NERACA)
+        // Sandi: 03.05.02.01.10.00 (Laba Sblm Pajak) - 03.05.02.02.10.00 (Rugi Sblm Pajak)
+        const labaSebelumPajakPos = getValue('03.05.02.01.10.00', 'neraca');
+        const rugiSebelumPajakPos = Math.abs(getValue('03.05.02.02.10.00', 'neraca'));
+        const labaSebelumPajak = labaSebelumPajakPos - rugiSebelumPajakPos;
         
         // Pendapatan & Biaya
         const pendapatanBunga = getValue('01.00.00.00.00.00', 'labarugi');
@@ -146,8 +147,8 @@ const AIReportGenerator = (function() {
                        getValue('02.03.01.00.00.00', 'neraca', prevYearPeriode) + 
                        getValueByPrefix('02.03.02', 'neraca', prevYearPeriode);
         const modalYoY = getValue('03.00.00.00.00.00', 'neraca', prevYearPeriode);
-        const labaBersihYoY = getValue('03.05.02.01.00.00', 'neraca', prevYearPeriode) - 
-                              getValue('03.05.02.02.00.00', 'neraca', prevYearPeriode);
+        const labaBersihYoY = getValue('03.05.02.01.10.00', 'neraca', prevYearPeriode) - 
+                              Math.abs(getValue('03.05.02.02.10.00', 'neraca', prevYearPeriode));
         
         // ==========================================
         // TARGET DATA (December)
@@ -160,7 +161,7 @@ const AIReportGenerator = (function() {
         const targetTotalAset = branchTargets.totalAset || totalAset * 1.1;
         const targetKredit = branchTargets.kredit || kredit * 1.08;
         const targetDPK = branchTargets.dpk || dpk * 1.08;
-        const targetLabaBersih = branchTargets.labaBersih || labaBersih * 1.1;
+        const targetLabaBersih = branchTargets.labaBersih || labaSebelumPajak * 1.1;
         
         // ==========================================
         // RATIOS FROM EXCEL
@@ -219,17 +220,33 @@ const AIReportGenerator = (function() {
         const nimYoY = getRatioFromExcel('NIM', prevYearPeriode);
         const carYoY = getRatioFromExcel('CAR', prevYearPeriode);
         
-        // Ratio targets (regulatory/internal)
-        const ratioTargets = {
-            ldr: { min: 80, max: 92, target: 85 },
-            casa: { target: 50 },
-            bopo: { target: 85 },
-            npl: { target: 5 },
-            roa: { target: 1.5 },
-            roe: { target: 15 },
-            nim: { target: 5 },
-            car: { target: 12 }
+        // Ratio targets - Regulator (OJK) vs Internal Bank (Risk Appetite)
+        const ratioTargetsRegulator = {
+            ldr: { min: 78, max: 92, target: 85, label: '78-92%' },
+            casa: { target: 40, label: '≥40%' },
+            bopo: { target: 85, label: '≤85%' },
+            npl: { target: 5, label: '≤5%' },
+            roa: { target: 1.25, label: '≥1.25%' },
+            roe: { target: 10, label: '≥10%' },
+            nim: { target: 3.5, label: '≥3.5%' },
+            car: { target: 12, label: '≥12%' }
         };
+        
+        const ratioTargetsInternal = {
+            ldr: { min: 80, max: 90, target: 85, label: '80-90%' },
+            casa: { target: 50, label: '≥50%' },
+            bopo: { target: 75, label: '≤75%' },
+            npl: { target: 3, label: '≤3%' },
+            roa: { target: 2.0, label: '≥2.0%' },
+            roe: { target: 15, label: '≥15%' },
+            nim: { target: 4.5, label: '≥4.5%' },
+            car: { target: 15, label: '≥15%' }
+        };
+        
+        // Get current standard from FinancialRatioHandler or default to 'regulator'
+        const currentStandard = window.FinancialRatioHandler?.currentStandard || 'regulator';
+        const ratioTargets = currentStandard === 'internal' ? ratioTargetsInternal : ratioTargetsRegulator;
+        const standardLabel = currentStandard === 'internal' ? 'Risk Appetite Bank' : 'Regulator (OJK)';
         
         // Helper for formatting growth
         function formatGrowth(val) {
@@ -262,6 +279,7 @@ const AIReportGenerator = (function() {
             },
             tipe: tipeLabel,
             kodeCabang: kode,
+            ratioStandard: standardLabel, // 'Regulator (OJK)' or 'Risk Appetite Bank'
             
             // ==========================================
             // KPI NERACA - AKTIVA
@@ -392,16 +410,16 @@ const AIReportGenerator = (function() {
                     achievement: 'N/A',
                     deviation: 'N/A'
                 },
-                labaBersih: {
-                    nama: 'Laba Bersih',
-                    nilai: labaBersih,
-                    formatted: formatMiliar(labaBersih),
+                labaSebelumPajak: {
+                    nama: 'Laba Sebelum Pajak',
+                    nilai: labaSebelumPajak,
+                    formatted: formatMiliar(labaSebelumPajak),
                     yoyValue: labaBersihYoY,
-                    yoyGrowth: formatGrowth(calcYoY(labaBersih, labaBersihYoY)),
+                    yoyGrowth: formatGrowth(calcYoY(labaSebelumPajak, labaBersihYoY)),
                     target: targetLabaBersih,
                     targetFormatted: formatMiliar(targetLabaBersih),
-                    achievement: formatAchievement(calcAchievement(labaBersih, targetLabaBersih)),
-                    deviation: formatDeviation(calcDeviation(labaBersih, targetLabaBersih), false)
+                    achievement: formatAchievement(calcAchievement(labaSebelumPajak, targetLabaBersih)),
+                    deviation: formatDeviation(calcDeviation(labaSebelumPajak, targetLabaBersih), false)
                 }
             },
             
@@ -534,9 +552,9 @@ const AIReportGenerator = (function() {
             },
             
             labaRugi: {
-                labaBersih: {
-                    nilai: labaBersih,
-                    formatted: formatMiliar(labaBersih)
+                labaSebelumPajak: {
+                    nilai: labaSebelumPajak,
+                    formatted: formatMiliar(labaSebelumPajak)
                 }
             },
             
@@ -687,7 +705,7 @@ Perbandingan Year-on-Year (YoY): ${data.periode.prevYear}
 ║   • Tabungan (${data.kpiPasiva.tabungan.share}%)               ║ Rp ${data.kpiPasiva.tabungan.formatted.padStart(10)} ║ ${data.kpiPasiva.tabungan.yoyGrowth.padStart(10)} ║ ${data.kpiPasiva.tabungan.achievement.padStart(10)} ║ ${data.kpiPasiva.tabungan.deviation.padStart(12)} ║
 ║   • Deposito (${data.kpiPasiva.deposito.share}%)               ║ Rp ${data.kpiPasiva.deposito.formatted.padStart(10)} ║ ${data.kpiPasiva.deposito.yoyGrowth.padStart(10)} ║ ${data.kpiPasiva.deposito.achievement.padStart(10)} ║ ${data.kpiPasiva.deposito.deviation.padStart(12)} ║
 ║ Modal (Ekuitas)                ║ Rp ${data.kpiPasiva.modal.formatted.padStart(10)} ║ ${data.kpiPasiva.modal.yoyGrowth.padStart(10)} ║ ${data.kpiPasiva.modal.achievement.padStart(10)} ║ ${data.kpiPasiva.modal.deviation.padStart(12)} ║
-║ Laba Bersih                    ║ Rp ${data.kpiPasiva.labaBersih.formatted.padStart(10)} ║ ${data.kpiPasiva.labaBersih.yoyGrowth.padStart(10)} ║ ${data.kpiPasiva.labaBersih.achievement.padStart(10)} ║ ${data.kpiPasiva.labaBersih.deviation.padStart(12)} ║
+║ Laba Sebelum Pajak             ║ Rp ${data.kpiPasiva.labaSebelumPajak.formatted.padStart(10)} ║ ${data.kpiPasiva.labaSebelumPajak.yoyGrowth.padStart(10)} ║ ${data.kpiPasiva.labaSebelumPajak.achievement.padStart(10)} ║ ${data.kpiPasiva.labaSebelumPajak.deviation.padStart(12)} ║
 ╚════════════════════════════════╩══════════════╩════════════╩════════════╩══════════════╝
 
 ╔═════════════════════════════════════════════════════════════════════════════════════╗
@@ -773,7 +791,7 @@ HANYA berikan konten HTML (tanpa tag html, head, body):
         <tr style="background: #f8f9fa;"><td style="padding: 8px; padding-left: 20px;">• Tabungan (${data.kpiPasiva.tabungan.share}%)</td><td style="padding: 8px; text-align: right;">Rp ${data.kpiPasiva.tabungan.formatted}</td><td style="padding: 8px; text-align: center;">${data.kpiPasiva.tabungan.yoyGrowth}</td><td style="padding: 8px; text-align: center;">${data.kpiPasiva.tabungan.achievement}</td><td style="padding: 8px; text-align: right;">${data.kpiPasiva.tabungan.deviation}</td></tr>
         <tr style="background: #f8f9fa;"><td style="padding: 8px; padding-left: 20px;">• Deposito (${data.kpiPasiva.deposito.share}%)</td><td style="padding: 8px; text-align: right;">Rp ${data.kpiPasiva.deposito.formatted}</td><td style="padding: 8px; text-align: center;">${data.kpiPasiva.deposito.yoyGrowth}</td><td style="padding: 8px; text-align: center;">${data.kpiPasiva.deposito.achievement}</td><td style="padding: 8px; text-align: right;">${data.kpiPasiva.deposito.deviation}</td></tr>
         <tr style="background: #d4edda;"><td style="padding: 8px; font-weight: bold;">Modal (Ekuitas)</td><td style="padding: 8px; text-align: right;">Rp ${data.kpiPasiva.modal.formatted}</td><td style="padding: 8px; text-align: center;">${data.kpiPasiva.modal.yoyGrowth}</td><td style="padding: 8px; text-align: center;">${data.kpiPasiva.modal.achievement}</td><td style="padding: 8px; text-align: right;">${data.kpiPasiva.modal.deviation}</td></tr>
-        <tr style="background: #d4edda;"><td style="padding: 8px; font-weight: bold;">Laba Bersih</td><td style="padding: 8px; text-align: right;">Rp ${data.kpiPasiva.labaBersih.formatted}</td><td style="padding: 8px; text-align: center;">${data.kpiPasiva.labaBersih.yoyGrowth}</td><td style="padding: 8px; text-align: center;">${data.kpiPasiva.labaBersih.achievement}</td><td style="padding: 8px; text-align: right;">${data.kpiPasiva.labaBersih.deviation}</td></tr>
+        <tr style="background: #d4edda;"><td style="padding: 8px; font-weight: bold;">Laba Sebelum Pajak</td><td style="padding: 8px; text-align: right;">Rp ${data.kpiPasiva.labaSebelumPajak.formatted}</td><td style="padding: 8px; text-align: center;">${data.kpiPasiva.labaSebelumPajak.yoyGrowth}</td><td style="padding: 8px; text-align: center;">${data.kpiPasiva.labaSebelumPajak.achievement}</td><td style="padding: 8px; text-align: right;">${data.kpiPasiva.labaSebelumPajak.deviation}</td></tr>
     </table>
 </div>
 
@@ -805,7 +823,7 @@ HANYA berikan konten HTML (tanpa tag html, head, body):
     <div style="background: #d4edda; border-left: 4px solid #198754; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #0f5132; margin-top: 0;">💵 MODAL & LABA BERSIH</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            <strong>Modal (Ekuitas)</strong> Bank tercatat sebesar <strong>Rp ${data.kpiPasiva.modal.formatted}</strong> dengan pertumbuhan YoY sebesar <strong>${data.kpiPasiva.modal.yoyGrowth}</strong>. Pertumbuhan modal didorong oleh akumulasi laba ditahan serta kebijakan manajemen untuk memperkuat struktur permodalan. <strong>Laba Bersih</strong> periode ${data.periode.full} tercatat sebesar <strong>Rp ${data.kpiPasiva.labaBersih.formatted}</strong> atau mencapai <strong>${data.kpiPasiva.labaBersih.achievement}</strong> dari target dengan deviasi sebesar <strong>${data.kpiPasiva.labaBersih.deviation}</strong>. Secara year-on-year, laba bersih tumbuh sebesar <strong>${data.kpiPasiva.labaBersih.yoyGrowth}</strong>. Pertumbuhan laba didorong oleh peningkatan pendapatan bunga dari ekspansi kredit dan efisiensi biaya operasional dengan BOPO sebesar ${data.kpiRatio.bopo.nilai}%. Rasio kecukupan modal (CAR) sebesar ${data.kpiRatio.car.nilai}% jauh di atas batas minimum OJK 12%, menunjukkan bank memiliki kapasitas yang memadai untuk ekspansi bisnis.
+            <strong>Modal (Ekuitas)</strong> Bank tercatat sebesar <strong>Rp ${data.kpiPasiva.modal.formatted}</strong> dengan pertumbuhan YoY sebesar <strong>${data.kpiPasiva.modal.yoyGrowth}</strong>. Pertumbuhan modal didorong oleh akumulasi laba ditahan serta kebijakan manajemen untuk memperkuat struktur permodalan. <strong>Laba Sebelum Pajak</strong> periode ${data.periode.full} tercatat sebesar <strong>Rp ${data.kpiPasiva.labaSebelumPajak.formatted}</strong> atau mencapai <strong>${data.kpiPasiva.labaSebelumPajak.achievement}</strong> dari target dengan deviasi sebesar <strong>${data.kpiPasiva.labaSebelumPajak.deviation}</strong>. Secara year-on-year, laba sebelum pajak tumbuh sebesar <strong>${data.kpiPasiva.labaSebelumPajak.yoyGrowth}</strong>. Pertumbuhan laba didorong oleh peningkatan pendapatan bunga dari ekspansi kredit dan efisiensi biaya operasional dengan BOPO sebesar ${data.kpiRatio.bopo.nilai}%. Rasio kecukupan modal (CAR) sebesar ${data.kpiRatio.car.nilai}% jauh di atas batas minimum OJK 12%, menunjukkan bank memiliki kapasitas yang memadai untuk ekspansi bisnis.
         </p>
     </div>
 </div>
@@ -851,14 +869,14 @@ HANYA berikan konten HTML (tanpa tag html, head, body):
     <div style="background: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #28a745; margin-top: 0;"><span style="background: #28a745; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">2</span> Realisasi Rasio Return On Equity (ROE) sebesar ${data.kpiRatio.roe.nilai}%</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            Realisasi Rasio Return On Equity (ROE) sebesar <strong>${data.kpiRatio.roe.nilai}%</strong> dari proyeksi sebesar <strong>${data.kpiRatio.roe.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.roe.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.roe.prevYearValue}%</strong>. Perubahan ROE dipengaruhi oleh perbandingan pertumbuhan Laba Bersih sebesar ${data.kpiPasiva.labaBersih.yoyGrowth} dengan pertumbuhan Modal sebesar ${data.kpiPasiva.modal.yoyGrowth}. Peningkatan kinerja ROE dibandingkan tahun sebelumnya menunjukkan efektivitas penggunaan modal pemegang saham dalam menghasilkan keuntungan. ROE yang positif mencerminkan kemampuan bank dalam memberikan return yang memadai kepada pemegang saham, meskipun masih terdapat ruang untuk optimalisasi lebih lanjut.
+            Realisasi Rasio Return On Equity (ROE) sebesar <strong>${data.kpiRatio.roe.nilai}%</strong> dari proyeksi sebesar <strong>${data.kpiRatio.roe.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.roe.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.roe.prevYearValue}%</strong>. Perubahan ROE dipengaruhi oleh perbandingan pertumbuhan Laba Sebelum Pajak sebesar ${data.kpiPasiva.labaSebelumPajak.yoyGrowth} dengan pertumbuhan Modal sebesar ${data.kpiPasiva.modal.yoyGrowth}. Peningkatan kinerja ROE dibandingkan tahun sebelumnya menunjukkan efektivitas penggunaan modal pemegang saham dalam menghasilkan keuntungan. ROE yang positif mencerminkan kemampuan bank dalam memberikan return yang memadai kepada pemegang saham, meskipun masih terdapat ruang untuk optimalisasi lebih lanjut.
         </p>
     </div>
     
     <div style="background: #f8f9fa; border-left: 4px solid #17a2b8; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;">
         <h4 style="color: #17a2b8; margin-top: 0;"><span style="background: #17a2b8; color: white; padding: 5px 12px; border-radius: 50%; margin-right: 10px;">3</span> Realisasi Rasio Return On Asset (ROA) sebesar ${data.kpiRatio.roa.nilai}%</h4>
         <p style="text-align: justify; line-height: 1.8;">
-            Realisasi Rasio Return On Asset (ROA) sebesar <strong>${data.kpiRatio.roa.nilai}%</strong> dari proyeksi sebesar <strong>${data.kpiRatio.roa.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.roa.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.roa.prevYearValue}%</strong>. Kondisi ini mencerminkan perbandingan antara pencapaian Aset sebesar ${data.kpiAktiva.totalAset.achievement} dari target dengan pencapaian Laba Bersih sebesar ${data.kpiPasiva.labaBersih.achievement}. Pertumbuhan Laba Bersih Bank sebesar ${data.kpiPasiva.labaBersih.yoyGrowth} dibandingkan pertumbuhan Aset Bank sebesar ${data.kpiAktiva.totalAset.yoyGrowth} menunjukkan tingkat efektivitas penggunaan aset dalam menghasilkan laba. ROA di atas 1,5% mengindikasikan bank berada dalam kategori sangat baik dalam hal profitabilitas aset.
+            Realisasi Rasio Return On Asset (ROA) sebesar <strong>${data.kpiRatio.roa.nilai}%</strong> dari proyeksi sebesar <strong>${data.kpiRatio.roa.target}</strong>, dengan perubahan sebesar <strong>${data.kpiRatio.roa.yoyChange}</strong> dibandingkan ${data.periode.prevYear} yang tercatat sebesar <strong>${data.kpiRatio.roa.prevYearValue}%</strong>. Kondisi ini mencerminkan perbandingan antara pencapaian Aset sebesar ${data.kpiAktiva.totalAset.achievement} dari target dengan pencapaian Laba Sebelum Pajak sebesar ${data.kpiPasiva.labaSebelumPajak.achievement}. Pertumbuhan Laba Sebelum Pajak Bank sebesar ${data.kpiPasiva.labaSebelumPajak.yoyGrowth} dibandingkan pertumbuhan Aset Bank sebesar ${data.kpiAktiva.totalAset.yoyGrowth} menunjukkan tingkat efektivitas penggunaan aset dalam menghasilkan laba. ROA di atas 1,5% mengindikasikan bank berada dalam kategori sangat baik dalam hal profitabilitas aset.
         </p>
     </div>
     
