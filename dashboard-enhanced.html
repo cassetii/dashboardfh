@@ -769,6 +769,24 @@
                     <h3><span class="layer-badge">Layer 1</span> Indikator Utama</h3>
                 </div>
 
+                <!-- Ratio Standard Toggle -->
+                <div class="ratio-standard-toggle" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; background: #f8f9fa; padding: 1rem 1.5rem; border-radius: 12px; align-items: center;">
+                    <span style="font-weight: 600; color: #1e3a5f; margin-right: 1rem;">
+                        <i class="fas fa-ruler"></i> Standar Pengukuran:
+                    </span>
+                    <div class="btn-group" role="group" style="display: flex; gap: 0.5rem;">
+                        <button type="button" class="ratio-std-btn active" id="btnRegulator" onclick="switchRatioStandard('regulator')" style="padding: 0.5rem 1.25rem; border: 2px solid #1e3a5f; background: #1e3a5f; color: white; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-landmark"></i> Regulator (OJK)
+                        </button>
+                        <button type="button" class="ratio-std-btn" id="btnInternal" onclick="switchRatioStandard('internal')" style="padding: 0.5rem 1.25rem; border: 2px solid #1e3a5f; background: transparent; color: #1e3a5f; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-building"></i> Internal Bank (Risk Appetite)
+                        </button>
+                    </div>
+                    <span class="ratio-standard-info" id="ratioStandardInfo" style="margin-left: auto; font-size: 0.85rem; color: #6b7280;">
+                        <i class="fas fa-info-circle"></i> Menggunakan threshold OJK
+                    </span>
+                </div>
+
                 <div class="indicators-grid">
                     <!-- CAR Card -->
                     <div class="indicator-card safe clickable" data-ratio="car" onclick="showRatioDetailModal('CAR')">
@@ -1068,30 +1086,6 @@
                         </div>
                         <div class="indicator-sparkline" id="casaSparkline"></div>
                         <div class="card-click-hint"><i class="fas fa-chart-line"></i> Klik untuk detail</div>
-                    </div>
-                </div>
-
-                <!-- Layer 3: Historical Trends -->
-                <div class="layer-header">
-                    <h3><span class="layer-badge">Layer 3</span> Trend Historical (YoY, MoM)</h3>
-                </div>
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Trend Semua Rasio Keuangan</h3>
-                        <div class="chart-actions">
-                            <div class="chart-legend-toggle">
-                                <button class="legend-btn active" data-series="all">All</button>
-                                <button class="legend-btn" data-series="ldr">LDR</button>
-                                <button class="legend-btn" data-series="npl">NPL</button>
-                                <button class="legend-btn" data-series="roa">ROA</button>
-                                <button class="legend-btn" data-series="car">CAR</button>
-                            </div>
-                            <button class="chart-action-btn"><i class="fas fa-download"></i></button>
-                        </div>
-                    </div>
-                    <div class="chart-body">
-                        <div id="historicalTrendChart"></div>
                     </div>
                 </div>
 
@@ -1936,7 +1930,7 @@
                             <i class="fas fa-chart-line"></i>
                         </div>
                         <div class="pb-summary-content">
-                            <h4>Laba Bersih</h4>
+                            <h4>Laba Sebelum Pajak</h4>
                             <p class="pb-value" id="pbLabaBersih">Memuat... <span></span></p>
                             <div class="pb-detail">
                                 <span id="pbLabaKonven">Konven: Memuat...</span>
@@ -3322,6 +3316,9 @@
     
     <!-- Financial Ratio Layer 3 Handler -->
     <script src="ratio-layer3-handler.js"></script>
+    
+    <!-- Financial Ratio Handler (Regulator vs Internal) -->
+    <script src="financial-ratio-handler.js"></script>
     
     <!-- AI Report Generator -->
     <script src="ai-report-generator.js"></script>
