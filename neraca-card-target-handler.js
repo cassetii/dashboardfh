@@ -55,13 +55,10 @@
             sandi: '03.00.00.00.00.00',
             type: 'neraca'
         },
-        'Laba Sebelum Pajak': {
-            key: 'labaSebelumPajak',
-            sandiCalc: [
-                { sandi: '03.05.02.01.10.00', sign: 1 },
-                { sandi: '03.05.02.02.10.00', sign: -1 }
-            ],
-            type: 'labarugi'
+        'Laba Bersih': {
+            key: 'labaBersih',
+            sandi: '03.05.02.01.00.00',
+            type: 'neraca'
         },
         'Total Pendapatan': {
             key: 'pendapatan',
